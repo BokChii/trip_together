@@ -1,22 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 import { ItineraryRequest } from "../types";
 
-// Declare process to ensure TS compatibility and follow guidelines to use process.env.API_KEY
-declare const process: {
-  env: {
-    API_KEY: string;
-  }
-};
-
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateItinerary = async (request: ItineraryRequest): Promise<string> => {
   const { destination, startDate, endDate } = request;
-
-  if (!process.env.API_KEY) {
-      console.error("Gemini API Key is missing. Please check environment variables.");
-      return "시스템 설정 오류: API 키가 설정되지 않았습니다.";
-  }
 
   const prompt = `
     ${destination}로 떠나는 단체 여행을 위한 재미있고 간결한 여행 일정을 짜줘.
