@@ -3,7 +3,7 @@ import { Calendar } from './components/Calendar';
 import { ModeToggle } from './components/ModeToggle';
 import { Button } from './components/Button';
 import { DateVote, User, VoteType } from './types';
-import { Users, MapPin, Sparkles, Share2, Check, AlertCircle } from 'lucide-react';
+import { Users, MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart } from 'lucide-react';
 import { generateItinerary } from './services/geminiService';
 
 // 백엔드가 없으므로 시뮬레이션을 위한 한국 이름 데이터
@@ -46,7 +46,7 @@ const App: React.FC = () => {
   
   // Share State
   const [isCopied, setIsCopied] = useState(false);
-  const [isBlobEnv, setIsBlobEnv] = useState(false);
+  const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   
   // AI Itinerary State
   const [destination, setDestination] = useState('제주도');
@@ -55,9 +55,6 @@ const App: React.FC = () => {
 
   // Initialize Data from LocalStorage and URL
   useEffect(() => {
-    // Check environment
-    setIsBlobEnv(window.location.protocol === 'blob:');
-
     const initData = () => {
       // 1. Load Local User
       const savedUserStr = localStorage.getItem('tripsync_user');
@@ -133,31 +130,71 @@ const App: React.FC = () => {
     e.preventDefault();
     if (!nameInput.trim()) return;
     
+    // Check if user already exists in the list (simple name check for safety)
+    const existing = users.find(u => u.name === nameInput.trim());
+    if (existing) {
+        if (!window.confirm(`${existing.name}님으로 계속하시겠습니까?`)) {
+            return;
+        }
+        confirmUser(existing);
+        return;
+    }
+
     const newUser: User = {
       id: generateId(),
       name: nameInput.trim()
     };
     
-    setCurrentUser(newUser);
-    setUsers(prev => {
-        if (prev.find(u => u.id === newUser.id)) return prev;
-        return [...prev, newUser];
-    });
-    localStorage.setItem('tripsync_user', JSON.stringify(newUser));
+    confirmUser(newUser);
   };
 
-  const handleVote = (dateIso: string) => {
+  const confirmUser = (user: User) => {
+    setCurrentUser(user);
+    setUsers(prev => {
+        if (prev.find(u => u.id === user.id)) return prev;
+        return [...prev, user];
+    });
+    localStorage.setItem('tripsync_user', JSON.stringify(user));
+  };
+
+  /**
+   * 투표 처리 함수
+   * @param dateIsoOrList 날짜 문자열 또는 날짜 문자열 배열
+   * @param shouldRemove true일 경우 해당 날짜의 투표를 삭제(취소)함. undefined일 경우 기존 토글 로직.
+   */
+  const handleVote = (dateIsoOrList: string | string[], shouldRemove?: boolean) => {
     if (!currentUser) return;
 
+    const datesToUpdate = Array.isArray(dateIsoOrList) ? dateIsoOrList : [dateIsoOrList];
+
     setVotes(prev => {
-      const filtered = prev.filter(v => !(v.date === dateIso && v.userId === currentUser.id));
-      const existingVote = prev.find(v => v.date === dateIso && v.userId === currentUser.id);
-      
-      if (existingVote && existingVote.type === voteMode) {
-        return filtered;
+      // 1. 해당 날짜들에 대한 내 기존 투표를 모두 제거 (Clean slate)
+      const filteredVotes = prev.filter(v => 
+        !(datesToUpdate.includes(v.date) && v.userId === currentUser.id)
+      );
+
+      // 2. 삭제(취소) 모드라면 여기서 종료
+      if (shouldRemove) {
+          return filteredVotes;
       }
-      
-      return [...filtered, { date: dateIso, userId: currentUser.id, type: voteMode }];
+
+      // 3. shouldRemove가 명시되지 않은 단일 클릭의 경우 (Legacy Toggle)
+      //    -> 이미 선택된 상태였다면 제거된 상태 그대로 반환 (Toggle Off)
+      if (shouldRemove === undefined && !Array.isArray(dateIsoOrList)) {
+         const existingVote = prev.find(v => v.date === dateIsoOrList && v.userId === currentUser.id);
+         if (existingVote && existingVote.type === voteMode) {
+             return filteredVotes; 
+         }
+      }
+
+      // 4. 새로운 투표 추가
+      const newEntries = datesToUpdate.map(date => ({
+        date,
+        userId: currentUser.id,
+        type: voteMode
+      }));
+
+      return [...filteredVotes, ...newEntries];
     });
   };
 
@@ -187,15 +224,7 @@ const App: React.FC = () => {
   };
 
   const handleShare = async () => {
-    if (isBlobEnv) {
-        alert("주의: 현재 브라우저 프리뷰(Blob URL) 환경에서는 공유 링크가 외부에서 작동하지 않습니다. 실제 서버에 배포 후 테스트해주세요.");
-        // 계속 진행은 하되 사용자에게 알림
-    }
-
-    // 1. Minify Users
     const minUsers: MinUser[] = users.map(u => ({ i: u.id, n: u.name }));
-    
-    // 2. Minify Votes (Use User Index to save space)
     const minVotes: MinVote[] = votes.map(v => {
       const userIndex = users.findIndex(u => u.id === v.userId);
       return {
@@ -216,19 +245,23 @@ const App: React.FC = () => {
       const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
       const urlSafeEncoded = encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
       
-      // Construct URL carefully
       let baseUrl = window.location.href.split('?')[0];
-      // remove hash if present for cleaner url
       baseUrl = baseUrl.split('#')[0];
       
       const url = `${baseUrl}?d=${urlSafeEncoded}`;
       
-      await navigator.clipboard.writeText(url);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
+      setGeneratedUrl(url); 
+      
+      try {
+        await navigator.clipboard.writeText(url);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      } catch (clipErr) {
+        console.warn("Clipboard failed", clipErr);
+      }
     } catch (e) {
-      console.error("Failed to copy", e);
-      alert("링크 복사에 실패했습니다.");
+      console.error("Failed to generate URL", e);
+      alert("링크 생성에 실패했습니다.");
     }
   };
 
@@ -264,47 +297,76 @@ const App: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#fff7ed] p-4 font-sans">
+        <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-orange-100 max-w-md w-full text-center border border-orange-50">
           <div className="mb-6 flex justify-center">
-            <div className="bg-indigo-100 p-4 rounded-full">
-              <Sparkles className="w-8 h-8 text-indigo-600" />
+            <div className="bg-orange-100 p-5 rounded-full animate-bounce">
+              <Plane className="w-10 h-10 text-orange-500" strokeWidth={2.5} />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">TripSync에 오신 것을 환영합니다</h1>
-          <p className="text-gray-500 mb-6">친구들과 여행 날짜를 쉽고 간편하게 조율해보세요.</p>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <h1 className="text-3xl font-hand font-bold text-gray-800 mb-3">언제갈래? ✈️</h1>
+          <p className="text-gray-500 mb-8 leading-relaxed">
+            친구들과 떠나는 설레는 여행!<br/>
+            우리 언제 만날지 여기서 정해봐요.
+          </p>
+          
+          <form onSubmit={handleLogin} className="space-y-4 mb-8">
             <input
               type="text"
-              placeholder="이름을 입력하세요"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+              placeholder="닉네임이 뭐에요?"
+              className="w-full px-6 py-4 rounded-full bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition-all text-center text-lg font-medium placeholder:text-gray-400 text-gray-900"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               required
             />
-            <Button type="submit" className="w-full" size="lg">시작하기</Button>
+            <Button type="submit" className="w-full text-lg shadow-lg shadow-orange-200" size="lg">시작하기</Button>
           </form>
+
+          {/* Existing Users Selection for Re-login */}
+          {users.length > 0 && (
+              <div className="border-t border-gray-100 pt-6">
+                  <p className="text-sm text-gray-400 mb-3 font-medium">이미 참여하고 있나요?</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                      {users.map(u => (
+                          <button
+                            key={u.id}
+                            onClick={() => confirmUser(u)}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-orange-50 text-gray-600 hover:text-orange-600 rounded-full text-sm border-2 border-gray-100 hover:border-orange-200 transition-all"
+                          >
+                              <span className="font-bold">{u.name}</span>
+                              <ArrowRight className="w-3 h-3" />
+                          </button>
+                      ))}
+                  </div>
+              </div>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 pb-20">
+    <div className="min-h-screen bg-[#fff7ed] text-gray-900 pb-20 font-sans">
       {/* Navbar */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-orange-100">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-2">
-               <Sparkles className="w-5 h-5 text-indigo-600" />
-               <span className="font-bold text-lg text-gray-900 tracking-tight">TripSync</span>
+               <div className="bg-orange-500 p-1.5 rounded-lg">
+                   <Plane className="w-4 h-4 text-white" fill="currentColor" />
+               </div>
+               <span className="font-hand font-bold text-2xl text-gray-800 tracking-tight pt-1">언제갈래</span>
             </div>
             <div className="flex items-center gap-4">
-              <span className="hidden sm:inline-block text-sm text-gray-500">안녕하세요, <strong>{currentUser.name}</strong>님</span>
+              <span className="hidden sm:inline-block text-sm text-gray-500 bg-orange-50 px-3 py-1 rounded-full">
+                반가워요, <strong className="text-orange-600">{currentUser.name}</strong>님! 👋
+              </span>
               <button onClick={() => {
-                  setCurrentUser(null);
-                  localStorage.removeItem('tripsync_user');
-              }} className="text-xs text-gray-400 hover:text-gray-600">로그아웃</button>
+                  if(window.confirm("정말 나가시겠어요?")) {
+                    setCurrentUser(null);
+                    localStorage.removeItem('tripsync_user');
+                  }
+              }} className="text-xs font-medium text-gray-400 hover:text-orange-500 transition-colors">나가기</button>
             </div>
           </div>
         </div>
@@ -312,43 +374,61 @@ const App: React.FC = () => {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        {/* Environment Warning */}
-        {isBlobEnv && (
-            <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
-                <div className="flex items-start">
-                    <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 mr-3" />
-                    <p className="text-sm text-amber-700">
-                        현재 <strong>프리뷰 모드(Blob URL)</strong>에서 실행 중입니다. 생성된 공유 링크는 외부에서 접속이 불가능할 수 있습니다. 
-                        정상적인 공유 기능을 테스트하려면 앱을 배포해주세요.
-                    </p>
-                </div>
-            </div>
-        )}
-
         {/* Controls */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-           <div className="flex flex-col gap-1">
-             <h2 className="text-lg font-semibold text-gray-900">날짜 선택</h2>
-             <p className="text-sm text-gray-500">가능한 날짜와 불가능한 날짜를 표시해주세요.</p>
+        <div className="flex flex-col gap-5 bg-white p-5 sm:p-6 rounded-[2rem] shadow-sm border border-orange-50">
+           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+             <div className="flex flex-col gap-1">
+               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                   <CalendarHeart className="w-6 h-6 text-orange-500" />
+                   언제가 좋으세요?
+               </h2>
+               <p className="text-sm text-gray-500 pl-1">드래그해서 여러 날짜를 쓱- 선택해보세요.</p>
+             </div>
+             
+             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+               <ModeToggle mode={voteMode} setMode={setVoteMode} />
+               <div className="h-8 w-px bg-gray-100 hidden sm:block mx-1"></div>
+               <Button variant="ghost" size="sm" onClick={addFakeFriend} className="gap-2 text-xs hidden sm:flex">
+                  <Users className="w-3 h-3" />
+                  테스트 친구
+               </Button>
+               <Button 
+                  variant="secondary" 
+                  size="md" 
+                  onClick={handleShare} 
+                  className={`gap-2 flex-1 sm:flex-none justify-center transition-all duration-300 ${isCopied ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
+               >
+                  {isCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                  {isCopied ? "복사완료!" : "초대하기"}
+               </Button>
+             </div>
            </div>
-           
-           <div className="flex flex-wrap items-center gap-3">
-             <ModeToggle mode={voteMode} setMode={setVoteMode} />
-             <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
-             <Button variant="secondary" size="sm" onClick={addFakeFriend} className="gap-2">
-                <Users className="w-4 h-4" />
-                친구 추가 시뮬레이션
-             </Button>
-             <Button 
-                variant="secondary" 
-                size="sm" 
-                onClick={handleShare} 
-                className={`gap-2 min-w-[110px] transition-all duration-200 ${isCopied ? 'bg-green-50 text-green-700 border-green-200' : ''}`}
-             >
-                {isCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-                {isCopied ? "복사됨!" : "공유하기"}
-             </Button>
-           </div>
+
+           {/* Generated Link Display */}
+           {generatedUrl && (
+             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+               <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
+                 <input 
+                   type="text" 
+                   readOnly 
+                   value={generatedUrl} 
+                   className="flex-1 bg-white border border-orange-200 rounded-lg px-4 py-2.5 text-xs sm:text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                   onClick={(e) => e.currentTarget.select()}
+                 />
+                 <Button size="sm" onClick={() => {
+                    navigator.clipboard.writeText(generatedUrl);
+                    setIsCopied(true);
+                    setTimeout(() => setIsCopied(false), 2000);
+                 }}>
+                   {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                 </Button>
+                 <button onClick={() => setGeneratedUrl(null)} className="p-2 text-gray-400 hover:text-gray-600">
+                    <X className="w-4 h-4" />
+                 </button>
+               </div>
+               <p className="text-xs text-orange-600 mt-2 ml-2 font-medium">✨ 이 링크를 친구들에게 보내주세요!</p>
+             </div>
+           )}
         </div>
 
         {/* Calendar */}
@@ -363,49 +443,55 @@ const App: React.FC = () => {
         />
 
         {/* AI Itinerary Section */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 sm:p-10 text-white shadow-lg">
-           <div className="flex flex-col md:flex-row gap-8 items-start">
+        <div className="bg-gradient-to-br from-orange-400 to-rose-400 rounded-[2rem] p-6 sm:p-10 text-white shadow-xl shadow-orange-200 overflow-hidden relative">
+           {/* Background Decoration */}
+           <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+           <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-yellow-300/20 rounded-full blur-2xl"></div>
+
+           <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
              <div className="flex-1 space-y-4">
-                <div className="flex items-center gap-2 text-indigo-100 font-medium">
-                  <Sparkles className="w-5 h-5" />
+                <div className="flex items-center gap-2 text-orange-50 font-medium bg-white/20 w-fit px-3 py-1 rounded-full backdrop-blur-sm">
+                  <MapPin className="w-4 h-4" />
                   <span>AI 여행 플래너</span>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold">
-                    완벽한 날짜를 찾으셨나요?
+                <h3 className="text-2xl sm:text-4xl font-hand font-bold leading-tight">
+                    어디로 떠나볼까요?
                 </h3>
-                <p className="text-indigo-100 max-w-md">
-                    가장 많이 선택된 날짜를 기반으로 Gemini가 맞춤형 여행 일정을 짜드립니다.
+                <p className="text-orange-50 opacity-90 max-w-md">
+                    날짜가 정해졌나요? 여행지만 알려주세요.<br/>
+                    Gemini가 <strong>딱 맞는 일정</strong>을 추천해드릴게요! 🏝️
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-2 max-w-md mt-4">
+                <div className="flex flex-col sm:flex-row gap-2 max-w-md mt-6">
                     <div className="relative flex-grow">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input 
                             type="text" 
                             value={destination}
                             onChange={(e) => setDestination(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2.5 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-white/50 border-none"
-                            placeholder="여행지 입력 (예: 제주도)"
+                            className="w-full pl-11 pr-4 py-3.5 rounded-full text-gray-900 placeholder:text-gray-400 focus:ring-4 focus:ring-orange-300/50 border-none shadow-lg"
+                            placeholder="예: 제주도, 오사카..."
                         />
                     </div>
                     <Button 
                         onClick={handleGenerateItinerary} 
                         isLoading={isGenerating}
-                        className="bg-white text-indigo-600 hover:bg-indigo-50 border-none"
+                        className="bg-white text-orange-600 hover:bg-orange-50 border-none shadow-lg px-8 py-3.5"
                     >
-                        일정 생성
+                        추천받기
                     </Button>
                 </div>
              </div>
              
              {/* Itinerary Result */}
              {itinerary && (
-                 <div className="flex-1 w-full bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                    <h4 className="font-semibold mb-4 flex items-center gap-2">
-                        {destination} 추천 여행 일정
+                 <div className="flex-1 w-full bg-white/90 backdrop-blur-md rounded-[1.5rem] p-6 text-gray-800 shadow-lg border border-white/50">
+                    <h4 className="font-bold text-lg mb-4 flex items-center gap-2 text-orange-600">
+                        <Plane className="w-5 h-5" />
+                        {destination} 추천 코스
                     </h4>
-                    <div className="prose prose-sm prose-invert max-h-80 overflow-y-auto custom-scrollbar">
-                        <div className="whitespace-pre-wrap leading-relaxed text-sm">
+                    <div className="prose prose-sm prose-orange max-h-80 overflow-y-auto custom-scrollbar pr-2">
+                        <div className="whitespace-pre-wrap leading-relaxed text-sm text-gray-600">
                            {itinerary}
                         </div>
                     </div>

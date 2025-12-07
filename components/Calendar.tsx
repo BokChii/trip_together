@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { ChevronLeft, ChevronRight, User as UserIcon, Crown } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, User as UserIcon, Crown, Heart } from 'lucide-react';
 import { CalendarDay, DateVote, User, VoteType } from '../types';
 
 interface CalendarProps {
@@ -9,7 +9,7 @@ interface CalendarProps {
   users: User[];
   currentUserId: string;
   voteMode: VoteType;
-  onVote: (dateIso: string) => void;
+  onVote: (dateIso: string | string[], shouldRemove?: boolean) => void;
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -21,6 +21,13 @@ export const Calendar: React.FC<CalendarProps> = ({
   voteMode,
   onVote,
 }) => {
+  // Dragging State
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<string | null>(null);
+  const [dragEnd, setDragEnd] = useState<string | null>(null);
+  // 'add' = selecting, 'remove' = deselecting
+  const [dragMode, setDragMode] = useState<'add' | 'remove' | null>(null);
+
   const daysInMonth = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -29,8 +36,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     
     const days: CalendarDay[] = [];
     
-    // Padding for previous month
-    const startPadding = firstDay.getDay(); // 0 is Sunday
+    const startPadding = firstDay.getDay(); 
     for (let i = startPadding - 1; i >= 0; i--) {
       const d = new Date(year, month, -i);
       days.push({
@@ -41,7 +47,6 @@ export const Calendar: React.FC<CalendarProps> = ({
       });
     }
 
-    // Days in current month
     for (let i = 1; i <= lastDay.getDate(); i++) {
       const d = new Date(year, month, i);
       const isToday = new Date().toDateString() === d.toDateString();
@@ -53,7 +58,6 @@ export const Calendar: React.FC<CalendarProps> = ({
       });
     }
 
-    // Padding for next month to complete the grid
     const remaining = 42 - days.length;
     for (let i = 1; i <= remaining; i++) {
       const d = new Date(year, month + 1, i);
@@ -84,41 +88,115 @@ export const Calendar: React.FC<CalendarProps> = ({
     return { availableCount, unavailableCount, myVote, dateVotes };
   };
 
+  const getRange = (start: string, end: string): string[] => {
+      const s = new Date(start);
+      const e = new Date(end);
+      const range: string[] = [];
+      
+      const startDate = s < e ? s : e;
+      const endDate = s < e ? e : s;
+
+      const current = new Date(startDate);
+      while (current <= endDate) {
+          range.push(current.toISOString().split('T')[0]);
+          current.setDate(current.getDate() + 1);
+      }
+      return range;
+  };
+
+  const handlePointerDown = (isoDate: string) => {
+      // Determine intent based on the starting cell's current state
+      const { myVote } = getDayStats(isoDate);
+      
+      // If I already voted for this date with the CURRENT vote mode, my intent is to remove it.
+      // Otherwise (no vote, or different vote type), my intent is to add/overwrite.
+      const intent = (myVote === voteMode) ? 'remove' : 'add';
+
+      setIsDragging(true);
+      setDragStart(isoDate);
+      setDragEnd(isoDate);
+      setDragMode(intent);
+  };
+
+  const handlePointerEnter = (isoDate: string) => {
+      if (isDragging) {
+          setDragEnd(isoDate);
+      }
+  };
+
+  const handlePointerUp = () => {
+      if (isDragging && dragStart && dragEnd && dragMode) {
+          const range = getRange(dragStart, dragEnd);
+          onVote(range, dragMode === 'remove');
+      }
+      setIsDragging(false);
+      setDragStart(null);
+      setDragEnd(null);
+      setDragMode(null);
+  };
+
+  useEffect(() => {
+    const handleGlobalUp = () => {
+      if (isDragging) {
+        handlePointerUp();
+      }
+    };
+    window.addEventListener('pointerup', handleGlobalUp);
+    return () => window.removeEventListener('pointerup', handleGlobalUp);
+  }, [isDragging, dragStart, dragEnd, dragMode]);
+
   const getCellStyles = (isoDate: string, isCurrentMonth: boolean) => {
-    if (!isCurrentMonth) return "bg-gray-50 text-gray-300 cursor-default";
+    if (!isCurrentMonth) return "bg-gray-50/50 text-gray-300 cursor-default";
 
     const { availableCount, unavailableCount, myVote } = getDayStats(isoDate);
     const totalUsers = users.length;
     const isPerfectMatch = totalUsers > 0 && availableCount === totalUsers;
     
-    // Base styles
-    let classes = "cursor-pointer transition-all duration-200 relative ";
-    
-    // My Vote Highlight (Border)
-    if (myVote === 'available') {
-      classes += "ring-2 ring-inset ring-green-500 ";
-    } else if (myVote === 'unavailable') {
-      classes += "ring-2 ring-inset ring-rose-500 ";
+    let isInDragRange = false;
+    if (isDragging && dragStart && dragEnd) {
+        const s = new Date(dragStart);
+        const e = new Date(dragEnd);
+        const c = new Date(isoDate);
+        if ((c >= s && c <= e) || (c >= e && c <= s)) {
+            isInDragRange = true;
+        }
     }
 
-    // Heatmap Logic
+    let classes = "cursor-pointer transition-all duration-200 relative select-none ";
+    
+    // Drag Preview Styles
+    if (isInDragRange) {
+        if (dragMode === 'remove') {
+            // "Eraser" visual feedback
+            return classes + "bg-gray-50 opacity-60 ring-1 ring-inset ring-gray-300 rounded-lg scale-[0.95] grayscale z-10 ";
+        } else {
+            // "Adding" visual feedback
+            if (voteMode === 'available') return classes + "bg-orange-100 ring-2 ring-inset ring-orange-400 rounded-lg scale-[0.95] z-10 ";
+            if (voteMode === 'unavailable') return classes + "bg-gray-200 ring-2 ring-inset ring-gray-400 rounded-lg scale-[0.95] z-10 ";
+        }
+    }
+
+    // My Vote Highlight (Border)
+    if (myVote === 'available') {
+      classes += "ring-2 ring-inset ring-orange-400 rounded-lg z-[2] ";
+    } else if (myVote === 'unavailable') {
+      classes += "ring-2 ring-inset ring-gray-300 rounded-lg z-[2] ";
+    }
+
+    // Heatmap Logic (Orange Theme)
     if (isPerfectMatch) {
-      // 모두가 가능한 날: 특별 강조 (남색 배경 + 황금 테두리 효과 느낌)
-      classes += "bg-indigo-600 text-white shadow-lg ring-4 ring-yellow-400/70 z-10 scale-[1.02] ";
+      // 모두 가능: 진한 오렌지/레드오렌지
+      classes += "bg-gradient-to-br from-orange-400 to-red-400 text-white shadow-md scale-[1.03] z-[5] rounded-xl ";
     } else if (totalUsers > 0 && availableCount > 0) {
       const intensity = availableCount / totalUsers;
-      
-      // 일반적인 히트맵 (초록색)
-      if (intensity >= 0.75) classes += "bg-green-500 text-white hover:bg-green-600 ";
-      else if (intensity >= 0.5) classes += "bg-green-400 text-white hover:bg-green-500 ";
-      else if (intensity >= 0.25) classes += "bg-green-200 text-green-900 hover:bg-green-300 ";
-      else classes += "bg-green-50 text-green-900 hover:bg-green-100 ";
+      if (intensity >= 0.75) classes += "bg-orange-300 text-white hover:bg-orange-400 rounded-lg ";
+      else if (intensity >= 0.5) classes += "bg-orange-200 text-orange-900 hover:bg-orange-300 rounded-lg ";
+      else if (intensity >= 0.25) classes += "bg-orange-100 text-orange-800 hover:bg-orange-200 rounded-lg ";
+      else classes += "bg-orange-50 text-orange-800 hover:bg-orange-100 rounded-lg ";
     } else if (availableCount === 0 && unavailableCount > 0) {
-       // 불가능만 있는 경우
-       classes += "bg-rose-50 text-gray-900 hover:bg-rose-100 ";
+       classes += "bg-gray-100 text-gray-400 hover:bg-gray-200 rounded-lg ";
     } else {
-      // 아무도 선택 안함
-      classes += "bg-white hover:bg-gray-50 text-gray-900 ";
+      classes += "bg-white hover:bg-orange-50 text-gray-700 rounded-lg ";
     }
     
     return classes;
@@ -127,84 +205,90 @@ export const Calendar: React.FC<CalendarProps> = ({
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+    <div className="w-full max-w-4xl mx-auto bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-orange-100/50 overflow-hidden select-none">
       {/* Header */}
-      <div className="p-6 flex items-center justify-between border-b border-gray-100">
+      <div className="p-6 flex items-center justify-between border-b border-orange-100">
         <div className="flex items-center gap-4">
-          <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-gray-100 rounded-full text-gray-600">
-            <ChevronLeft className="w-5 h-5" />
+          <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-orange-50 rounded-full text-orange-400 transition-colors">
+            <ChevronLeft className="w-6 h-6" strokeWidth={3} />
           </button>
-          <h2 className="text-xl font-bold text-gray-800">
+          <h2 className="text-2xl font-bold text-gray-800 tracking-wide">
             {currentDate.toLocaleString('ko-KR', { month: 'long', year: 'numeric' })}
           </h2>
-          <button onClick={() => changeMonth(1)} className="p-2 hover:bg-gray-100 rounded-full text-gray-600">
-            <ChevronRight className="w-5 h-5" />
+          <button onClick={() => changeMonth(1)} className="p-2 hover:bg-orange-50 rounded-full text-orange-400 transition-colors">
+            <ChevronRight className="w-6 h-6" strokeWidth={3} />
           </button>
         </div>
         
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-full text-sm text-orange-600 font-medium">
           <UserIcon className="w-4 h-4" />
-          <span>{users.length}명 참여 중</span>
+          <span>{users.length}명 참여중</span>
         </div>
       </div>
 
       {/* Grid Header */}
-      <div className="grid grid-cols-7 border-b border-gray-100">
+      <div className="grid grid-cols-7 border-b border-orange-50 bg-white">
         {weekDays.map((day, i) => (
-          <div key={day} className={`py-3 text-center text-xs font-semibold uppercase tracking-wider ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
+          <div key={day} className={`py-4 text-center text-sm font-bold ${i === 0 ? 'text-rose-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
             {day}
           </div>
         ))}
       </div>
 
       {/* Grid Body */}
-      <div className="grid grid-cols-7 auto-rows-fr">
+      <div className="grid grid-cols-7 auto-rows-fr p-2 gap-1 sm:gap-2 bg-orange-50/30" style={{ touchAction: 'none' }}>
         {daysInMonth.map((day, idx) => {
           const { availableCount, dateVotes } = getDayStats(day.isoString);
           const totalUsers = users.length;
           const isPerfectMatch = day.isCurrentMonth && totalUsers > 0 && availableCount === totalUsers;
+          const isDisabled = !day.isCurrentMonth;
 
           return (
             <div
               key={day.isoString + idx}
-              onClick={() => day.isCurrentMonth && onVote(day.isoString)}
+              onPointerDown={() => !isDisabled && handlePointerDown(day.isoString)}
+              onPointerEnter={() => !isDisabled && handlePointerEnter(day.isoString)}
               className={`
-                min-h-[110px] sm:min-h-[130px] p-2 flex flex-col items-start justify-start border-b border-r border-gray-50
+                min-h-[100px] sm:min-h-[120px] p-2 flex flex-col items-start justify-start shadow-sm
                 ${getCellStyles(day.isoString, day.isCurrentMonth)}
               `}
             >
-              <div className="w-full flex justify-between items-start mb-1">
-                <span className={`text-sm font-medium ${day.isToday ? 'bg-white text-indigo-600 shadow-sm w-6 h-6 flex items-center justify-center rounded-full' : ''}`}>
+              <div className="w-full flex justify-between items-start mb-1 pointer-events-none">
+                <span className={`text-sm font-bold ${day.isToday ? 'bg-orange-400 text-white shadow-sm w-7 h-7 flex items-center justify-center rounded-full' : ''}`}>
                   {day.date.getDate()}
                 </span>
                 {isPerfectMatch && (
-                  <Crown className="w-4 h-4 text-yellow-300 fill-yellow-300 animate-pulse" />
+                  <Crown className="w-5 h-5 text-yellow-300 fill-yellow-300 animate-bounce" />
                 )}
               </div>
 
               {/* User Names List */}
               {day.isCurrentMonth && (
-                <div className="w-full flex flex-col gap-0.5 overflow-y-auto max-h-[80px] custom-scrollbar">
+                <div className="w-full flex flex-col gap-1 overflow-y-auto max-h-[70px] custom-scrollbar pointer-events-none mt-1">
                   {dateVotes.map((vote) => {
                     const user = users.find(u => u.id === vote.userId);
                     if (!user) return null;
                     const isAvailable = vote.type === 'available';
                     
-                    // 텍스트 색상: 셀 배경이 어두울 때(PerfectMatch, High Heat)는 흰색/밝은색, 아닐 땐 어두운색
-                    // PerfectMatch(Indigo) or High Heat(Green-500/600) -> Text White
-                    // Low Heat(Green-100/200) -> Text Gray-900
-                    const isDarkBackground = isPerfectMatch || (totalUsers > 0 && (availableCount / totalUsers) >= 0.5);
-                    const textColor = isDarkBackground ? 'text-white/90' : 'text-gray-700';
+                    // Contrast Logic Improved
+                    // Perfect Match: White text with shadow
+                    // Others: Dark text (Gray-900 or Gray-500) for readability
+                    const textColor = isPerfectMatch 
+                        ? 'text-white drop-shadow-md' 
+                        : (isAvailable ? 'text-gray-900' : 'text-gray-500');
+
                     const iconColor = isAvailable 
-                        ? (isDarkBackground ? 'text-green-300' : 'text-green-600')
-                        : (isDarkBackground ? 'text-rose-300' : 'text-rose-500');
+                        ? (isPerfectMatch ? 'text-yellow-200 drop-shadow-sm' : 'text-orange-500')
+                        : 'text-gray-400';
 
                     return (
-                      <div key={vote.userId + vote.date} className={`text-[10px] flex items-center gap-1 leading-tight ${textColor}`}>
-                         <span className={`${iconColor} font-bold text-[10px]`}>
-                           {isAvailable ? '●' : '×'}
-                         </span>
-                         <span className="truncate max-w-[50px] sm:max-w-[70px]">{user.name}</span>
+                      <div key={vote.userId + vote.date} className={`text-[11px] flex items-center gap-1.5 leading-tight ${textColor}`}>
+                         {isAvailable ? (
+                             <Heart className={`w-2.5 h-2.5 ${iconColor} fill-current`} />
+                         ) : (
+                             <span className={`${iconColor} font-bold text-[10px]`}>-</span>
+                         )}
+                         <span className="truncate max-w-[50px] sm:max-w-[70px] font-bold">{user.name}</span>
                       </div>
                     );
                   })}
@@ -216,30 +300,30 @@ export const Calendar: React.FC<CalendarProps> = ({
       </div>
       
       {/* Legend */}
-      <div className="p-4 bg-gray-50 flex flex-wrap gap-4 text-xs text-gray-600 justify-center border-t border-gray-100">
+      <div className="p-5 bg-white flex flex-wrap gap-6 text-xs text-gray-500 justify-center border-t border-orange-100 font-medium">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-white border border-gray-200 rounded"></div>
-          <span>입력 없음</span>
+          <div className="w-5 h-5 bg-white border-2 border-orange-100 rounded-lg"></div>
+          <span>선택안함</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-200 rounded"></div>
-          <span>일부 가능</span>
+          <div className="w-5 h-5 bg-orange-100 rounded-lg"></div>
+          <span>가능</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-500 rounded"></div>
-          <span>대부분 가능</span>
+          <div className="w-5 h-5 bg-orange-300 rounded-lg"></div>
+          <span>인기</span>
         </div>
-        <div className="flex items-center gap-2 font-semibold text-indigo-700">
-            <div className="w-4 h-4 bg-indigo-600 ring-2 ring-yellow-400 rounded flex items-center justify-center">
-                <Crown className="w-2.5 h-2.5 text-white" />
+        <div className="flex items-center gap-2 font-bold text-orange-600">
+            <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-red-400 rounded-lg flex items-center justify-center shadow-sm">
+                <Crown className="w-3 h-3 text-white" />
             </div>
-            <span>모두 가능! (추천)</span>
+            <span>완전 딱이야!</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-rose-50 border border-rose-200 rounded relative">
-            <div className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-rose-500 rounded-full"></div>
+          <div className="w-5 h-5 bg-gray-100 rounded-lg flex items-center justify-center">
+            <span className="w-2 h-2 bg-gray-300 rounded-full"></span>
           </div>
-          <span>불가능 있음</span>
+          <span>불가능</span>
         </div>
       </div>
     </div>
