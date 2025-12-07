@@ -469,7 +469,7 @@ const App: React.FC = () => {
                             type="text" 
                             value={destination}
                             onChange={(e) => setDestination(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3.5 rounded-full text-gray-900 placeholder:text-gray-400 focus:ring-4 focus:ring-orange-300/50 border-none shadow-lg"
+                            className="w-full pl-11 pr-4 py-3.5 rounded-full bg-white text-gray-900 placeholder:text-gray-400 focus:ring-4 focus:ring-orange-300/50 border-none shadow-lg"
                             placeholder="예: 제주도, 오사카..."
                         />
                     </div>
