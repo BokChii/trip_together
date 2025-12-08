@@ -9,6 +9,7 @@ export interface DateVote {
 export interface User {
   id: string;
   name: string;
+  trip_id: string; // DB 연동을 위해 추가
 }
 
 export interface CalendarDay {
