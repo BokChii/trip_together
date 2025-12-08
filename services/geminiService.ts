@@ -26,7 +26,7 @@ export const generateItinerary = async (request: ItineraryRequest): Promise<stri
 
     return response.text || "죄송합니다. 지금은 여행 일정을 생성할 수 없습니다.";
   } catch (error) {
-    console.error("Error generating itinerary:", error);
+    // console.error("Error generating itinerary:", error);
     return "AI 여행 플래너 연결 중 오류가 발생했습니다.";
   }
 };

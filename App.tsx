@@ -121,12 +121,12 @@ const App: React.FC = () => {
   useEffect(() => {
     // 이미 초기화되었으면 스킵
     if (hasInitialized.current) {
-      console.log('⏭️ initTrip: Already initialized, skipping...');
+      // console.log('⏭️ initTrip: Already initialized, skipping...');
       return;
     }
 
     const initTrip = async () => {
-      console.log('🚀 initTrip: Starting trip initialization...');
+      // console.log('🚀 initTrip: Starting trip initialization...');
       hasInitialized.current = true;
       setIsLoadingTrip(true);
       
@@ -134,14 +134,14 @@ const App: React.FC = () => {
         // URL에서 share_code 확인
         const params = new URLSearchParams(window.location.search);
         const code = params.get('trip');
-        console.log('🔗 initTrip: URL trip code', code || 'none');
+        // console.log('🔗 initTrip: URL trip code', code || 'none');
 
         if (code) {
           // 기존 Trip 로드
-          console.log('📥 initTrip: Loading existing trip...', { code });
+          // console.log('📥 initTrip: Loading existing trip...', { code });
           const trip = await getTripByShareCode(code);
           if (trip) {
-            console.log('✅ initTrip: Trip loaded', { tripId: trip.id, shareCode: trip.share_code, destination: trip.destination });
+            // console.log('✅ initTrip: Trip loaded', { tripId: trip.id, shareCode: trip.share_code, destination: trip.destination });
             
             setCurrentTripId(trip.id);
             setShareCode(trip.share_code);
@@ -150,10 +150,10 @@ const App: React.FC = () => {
             setTripEndDate(trip.end_date || null);
 
             // Load users and votes
-            console.log('📊 initTrip: Loading users and votes...');
+            // console.log('📊 initTrip: Loading users and votes...');
             const tripUsers = await getTripUsers(trip.id);
             const tripVotes = await getDateVotes(trip.id);
-            console.log('✅ initTrip: Data loaded', { usersCount: tripUsers.length, votesCount: tripVotes.length });
+            // console.log('✅ initTrip: Data loaded', { usersCount: tripUsers.length, votesCount: tripVotes.length });
 
             setUsers(tripUsers);
             setVotes(tripVotes);
@@ -163,29 +163,29 @@ const App: React.FC = () => {
             if (savedUserStr) {
               try {
                 const localUser = JSON.parse(savedUserStr);
-                console.log('👤 initTrip: Found saved user, adding to trip...', { userId: localUser.id, userName: localUser.name });
+                // console.log('👤 initTrip: Found saved user, adding to trip...', { userId: localUser.id, userName: localUser.name });
                 await addTripUser(trip.id, localUser);
-                console.log('✅ initTrip: Saved user added to trip');
+                // console.log('✅ initTrip: Saved user added to trip');
               } catch (error) {
-                console.error("❌ initTrip: Failed to add user to trip", error);
+                // console.error("❌ initTrip: Failed to add user to trip", error);
               }
             }
           } else {
-            console.warn('⚠️ initTrip: Trip not found');
+            // console.warn('⚠️ initTrip: Trip not found');
             alert("존재하지 않는 여행 일정입니다.");
           }
         } else {
           // URL에 trip 코드가 없으면 Trip 생성하지 않음
           // 사용자가 로그인할 때 생성됨
-          console.log('📝 initTrip: No trip code in URL, waiting for user login...');
+          // console.log('📝 initTrip: No trip code in URL, waiting for user login...');
         }
       } catch (error) {
-        console.error("❌ initTrip: Failed to initialize trip", error);
+        // console.error("❌ initTrip: Failed to initialize trip", error);
         alert("일정을 불러오는데 실패했습니다.");
         hasInitialized.current = false; // 에러 시 재시도 가능하도록
       } finally {
         setIsLoadingTrip(false);
-        console.log('✅ initTrip: Initialization complete');
+        // console.log('✅ initTrip: Initialization complete');
       }
     };
 
@@ -195,15 +195,15 @@ const App: React.FC = () => {
   // Real-time subscriptions
   useEffect(() => {
     if (!currentTripId) {
-      console.log('📡 Subscriptions: No tripId, skipping subscriptions');
+      // console.log('📡 Subscriptions: No tripId, skipping subscriptions');
       return;
     }
 
-    console.log('📡 Subscriptions: Setting up real-time subscriptions', { tripId: currentTripId });
+    // console.log('📡 Subscriptions: Setting up real-time subscriptions', { tripId: currentTripId });
 
     // Subscribe to trip changes
     const tripSubscription = subscribeToTrip(currentTripId, (trip) => {
-      console.log('📡 Subscription: Trip updated', { destination: trip.destination });
+      // console.log('📡 Subscription: Trip updated', { destination: trip.destination });
       setDestination(trip.destination);
       setTripStartDate(trip.start_date || null);
       setTripEndDate(trip.end_date || null);
@@ -211,20 +211,20 @@ const App: React.FC = () => {
 
     // Subscribe to user changes
     const usersSubscription = subscribeToTripUsers(currentTripId, (updatedUsers) => {
-      console.log('📡 Subscription: Users updated', { count: updatedUsers.length, users: updatedUsers.map(u => u.name) });
+      // console.log('📡 Subscription: Users updated', { count: updatedUsers.length, users: updatedUsers.map(u => u.name) });
       setUsers(updatedUsers);
     });
 
     // Subscribe to vote changes
     const votesSubscription = subscribeToDateVotes(currentTripId, (updatedVotes) => {
-      console.log('📡 Subscription: Votes updated', { count: updatedVotes.length });
+      // console.log('📡 Subscription: Votes updated', { count: updatedVotes.length });
       setVotes(updatedVotes);
     });
 
-    console.log('✅ Subscriptions: All subscriptions active');
+    // console.log('✅ Subscriptions: All subscriptions active');
 
     return () => {
-      console.log('🔌 Subscriptions: Cleaning up subscriptions');
+      // console.log('🔌 Subscriptions: Cleaning up subscriptions');
       tripSubscription.unsubscribe();
       usersSubscription.unsubscribe();
       votesSubscription.unsubscribe();
@@ -246,13 +246,13 @@ const App: React.FC = () => {
   };
 
   const confirmUser = async (user: User) => {
-    console.log('👤 confirmUser: Starting', { userId: user.id, userName: user.name });
+    // console.log('👤 confirmUser: Starting', { userId: user.id, userName: user.name });
     setCurrentUser(user);
     localStorage.setItem('tripsync_user', JSON.stringify(user));
 
     // Trip이 없으면 생성 (사용자가 로그인할 때 생성)
     if (!currentTripId) {
-      console.log('📝 confirmUser: No trip exists, creating new trip...');
+      // console.log('📝 confirmUser: No trip exists, creating new trip...');
       setIsLoadingTrip(true);
       try {
         const newTrip = await createTrip(
@@ -260,23 +260,23 @@ const App: React.FC = () => {
           startDateInput || null,
           endDateInput || null
         );
-        console.log('✅ confirmUser: Trip created', { tripId: newTrip.id, shareCode: newTrip.share_code });
+        // console.log('✅ confirmUser: Trip created', { tripId: newTrip.id, shareCode: newTrip.share_code });
         setCurrentTripId(newTrip.id);
         setShareCode(newTrip.share_code);
         setTripStartDate(newTrip.start_date || null);
         setTripEndDate(newTrip.end_date || null);
         
         // 사용자 추가
-        console.log('👤 confirmUser: Adding user to new trip...');
+        // console.log('👤 confirmUser: Adding user to new trip...');
         await addTripUser(newTrip.id, user);
-        console.log('✅ confirmUser: User added to trip successfully');
+        // console.log('✅ confirmUser: User added to trip successfully');
         
         // 초기 데이터 로드
         const tripUsers = await getTripUsers(newTrip.id);
         const tripVotes = await getDateVotes(newTrip.id);
         setUsers(tripUsers);
         setVotes(tripVotes);
-        console.log('✅ confirmUser: Initial data loaded', { usersCount: tripUsers.length, votesCount: tripVotes.length });
+        // console.log('✅ confirmUser: Initial data loaded', { usersCount: tripUsers.length, votesCount: tripVotes.length });
         
         // 첫 접속 시 튜토리얼 표시 (localStorage에 저장된 값 확인)
         const hasSeenTutorial = localStorage.getItem('tripsync_seen_tutorial');
@@ -284,7 +284,7 @@ const App: React.FC = () => {
           setTimeout(() => setShowTutorial(true), 500); // 약간의 딜레이 후 표시
         }
       } catch (error) {
-        console.error("❌ confirmUser: Failed to create trip and add user", error);
+        // console.error("❌ confirmUser: Failed to create trip and add user", error);
         alert("일정 생성에 실패했습니다. 다시 시도해주세요.");
         setCurrentUser(null); // 실패 시 로그인 상태 리셋
       } finally {
@@ -292,13 +292,13 @@ const App: React.FC = () => {
       }
     } else {
       // Trip이 있으면 사용자 추가
-      console.log('👤 confirmUser: Trip exists, adding user...', { tripId: currentTripId });
+      // console.log('👤 confirmUser: Trip exists, adding user...', { tripId: currentTripId });
       try {
         await addTripUser(currentTripId, user);
-        console.log('✅ confirmUser: User added to existing trip successfully');
+        // console.log('✅ confirmUser: User added to existing trip successfully');
         // Users will be updated via subscription
       } catch (error) {
-        console.error("❌ confirmUser: Failed to add user", error);
+        // console.error("❌ confirmUser: Failed to add user", error);
         alert("사용자 추가에 실패했습니다.");
       }
     }
@@ -311,12 +311,12 @@ const App: React.FC = () => {
    */
   const handleVote = async (dateIsoOrList: string | string[], shouldRemove?: boolean) => {
     if (!currentUser) {
-      console.warn("⚠️ handleVote: currentUser is null");
+      // console.warn("⚠️ handleVote: currentUser is null");
       alert("먼저 로그인해주세요.");
       return;
     }
     if (!currentTripId) {
-      console.warn("⚠️ handleVote: currentTripId is null");
+      // console.warn("⚠️ handleVote: currentTripId is null");
       alert("일정을 불러오는 중입니다. 잠시만 기다려주세요.");
       return;
     }
@@ -376,7 +376,7 @@ const App: React.FC = () => {
       }
       // 구독은 다른 사용자의 변경사항을 받기 위해 유지
     } catch (error) {
-      console.error("❌ handleVote: Failed to vote", error);
+      // console.error("❌ handleVote: Failed to vote", error);
       // 에러 시 이전 상태로 복구
       setVotes(previousVotes);
       
@@ -385,7 +385,7 @@ const App: React.FC = () => {
         const updatedVotes = await getDateVotes(currentTripId);
         setVotes(updatedVotes);
       } catch (reloadError) {
-        console.error("❌ handleVote: Failed to reload votes", reloadError);
+        // console.error("❌ handleVote: Failed to reload votes", reloadError);
       }
       alert("투표 저장에 실패했습니다.");
     }
@@ -409,10 +409,10 @@ const App: React.FC = () => {
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
       } catch (clipErr) {
-        console.warn("Clipboard failed", clipErr);
+        // console.warn("Clipboard failed", clipErr);
       }
     } catch (e) {
-      console.error("Failed to generate URL", e);
+      // console.error("Failed to generate URL", e);
       alert("링크 생성에 실패했습니다.");
     }
   };
@@ -425,7 +425,7 @@ const App: React.FC = () => {
         await updateTripDestination(currentTripId, newDestination);
         // Destination will be updated via subscription
       } catch (error) {
-        console.error("Failed to update destination", error);
+        // console.error("Failed to update destination", error);
       }
     }
   };
@@ -648,12 +648,25 @@ const App: React.FC = () => {
             <p className="text-xs text-gray-400">
               © 2025 언제갈래? All rights reserved.
             </p>
-            <a 
-              href="mailto:kdshin@freshmilk.kr" 
-              className="text-xs text-gray-400 hover:text-orange-500 transition-colors"
-            >
-              kdshin@freshmilk.kr
-            </a>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-400">
+              <span>기획: 장동원, 김동신</span>
+              <span className="hidden sm:inline">•</span>
+              <a 
+                href="mailto:kdshin@freshmilk.kr" 
+                className="hover:text-orange-500 transition-colors"
+              >
+                kdshin@freshmilk.kr
+              </a>
+              <span className="hidden sm:inline">•</span>
+              <a 
+                href="https://forms.gle/MiUa2TrigEMbtbAN8" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-orange-500 hover:text-orange-600 transition-colors underline"
+              >
+                💬 피드백 보내기
+              </a>
+            </div>
           </div>
         </footer>
         
@@ -1059,12 +1072,25 @@ const App: React.FC = () => {
             <p className="text-xs text-gray-400">
               © 2025 언제갈래? All rights reserved.
             </p>
-            <a 
-              href="mailto:kdshin@freshmilk.kr" 
-              className="text-xs text-gray-400 hover:text-orange-500 transition-colors"
-            >
-              kdshin@freshmilk.kr
-            </a>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-400">
+              <span>기획: 장동원, 김동신</span>
+              <span className="hidden sm:inline">•</span>
+              <a 
+                href="mailto:kdshin@freshmilk.kr" 
+                className="hover:text-orange-500 transition-colors"
+              >
+                kdshin@freshmilk.kr
+              </a>
+              <span className="hidden sm:inline">•</span>
+              <a 
+                href="https://forms.gle/MiUa2TrigEMbtbAN8" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-orange-500 hover:text-orange-600 transition-colors underline"
+              >
+                💬 피드백 보내기
+              </a>
+            </div>
           </div>
         </div>
       </footer>

@@ -26,7 +26,7 @@ export const createTrip = async (
   startDate?: string | null,
   endDate?: string | null
 ): Promise<Trip> => {
-  console.log('💾 createTrip: Creating new trip', { destination, startDate, endDate });
+  // console.log('💾 createTrip: Creating new trip', { destination, startDate, endDate });
   let shareCode = generateShareCode();
   let attempts = 0;
   const maxAttempts = 10;
@@ -47,15 +47,15 @@ export const createTrip = async (
       if (error) {
         // share_code 중복인 경우 재시도
         if (error.code === '23505') { // unique_violation
-          console.log('⚠️ createTrip: Share code conflict, retrying...', { shareCode, attempt: attempts + 1 });
+          // console.log('⚠️ createTrip: Share code conflict, retrying...', { shareCode, attempt: attempts + 1 });
           shareCode = generateShareCode();
           attempts++;
           continue;
         }
-        console.error('❌ createTrip: DB error', error);
+        // console.error('❌ createTrip: DB error', error);
         throw error;
       }
-      console.log('✅ createTrip: Trip created in DB', { tripId: data.id, shareCode: data.share_code });
+      // console.log('✅ createTrip: Trip created in DB', { tripId: data.id, shareCode: data.share_code });
       return data;
     } catch (error: any) {
       if (error.code === '23505' && attempts < maxAttempts - 1) {
@@ -63,12 +63,12 @@ export const createTrip = async (
         attempts++;
         continue;
       }
-      console.error('❌ createTrip: Failed', error);
+      // console.error('❌ createTrip: Failed', error);
       throw error;
     }
   }
   
-  console.error('❌ createTrip: Failed to generate unique share code after', maxAttempts, 'attempts');
+  // console.error('❌ createTrip: Failed to generate unique share code after', maxAttempts, 'attempts');
   throw new Error('Failed to generate unique share code');
 };
 
@@ -89,7 +89,7 @@ export const getTripByShareCode = async (shareCode: string): Promise<Trip | null
 
 // Trip의 모든 사용자 조회
 export const getTripUsers = async (tripId: string): Promise<User[]> => {
-  console.log('📥 getTripUsers: Fetching from DB', { tripId });
+  // console.log('📥 getTripUsers: Fetching from DB', { tripId });
   
   const { data, error } = await supabase
     .from('trip_users')
@@ -98,18 +98,18 @@ export const getTripUsers = async (tripId: string): Promise<User[]> => {
     .order('created_at', { ascending: true });
 
   if (error) {
-    console.error('❌ getTripUsers: DB error', error);
+    // console.error('❌ getTripUsers: DB error', error);
     throw error;
   }
   
   const users = data.map(u => ({ id: u.user_id, name: u.name }));
-  console.log('✅ getTripUsers: Fetched from DB', { count: users.length, users: users.map(u => u.name) });
+  // console.log('✅ getTripUsers: Fetched from DB', { count: users.length, users: users.map(u => u.name) });
   return users;
 };
 
 // 사용자 추가
 export const addTripUser = async (tripId: string, user: User): Promise<void> => {
-  console.log('💾 addTripUser: Saving to DB', { tripId, userId: user.id, userName: user.name });
+  // console.log('💾 addTripUser: Saving to DB', { tripId, userId: user.id, userName: user.name });
   
   const { data, error } = await supabase
     .from('trip_users')
@@ -123,11 +123,11 @@ export const addTripUser = async (tripId: string, user: User): Promise<void> => 
     .select();
 
   if (error) {
-    console.error('❌ addTripUser: DB error', error);
+    // console.error('❌ addTripUser: DB error', error);
     throw error;
   }
   
-  console.log('✅ addTripUser: Saved to DB', { data });
+  // console.log('✅ addTripUser: Saved to DB', { data });
 };
 
 // 투표 조회
@@ -164,7 +164,7 @@ export const upsertDateVote = async (
     });
 
   if (error) {
-    console.error('❌ upsertDateVote: DB error', error);
+    // console.error('❌ upsertDateVote: DB error', error);
     throw error;
   }
 };
@@ -191,7 +191,7 @@ export const upsertDateVotesBatch = async (
     );
 
   if (error) {
-    console.error('❌ upsertDateVotesBatch: DB error', error);
+    // console.error('❌ upsertDateVotesBatch: DB error', error);
     throw error;
   }
 };
@@ -210,7 +210,7 @@ export const deleteDateVotes = async (
     .in('date', dates);
 
   if (error) {
-    console.error('❌ deleteDateVotes: DB error', error);
+    // console.error('❌ deleteDateVotes: DB error', error);
     throw error;
   }
 };
@@ -259,12 +259,12 @@ export const subscribeToTripUsers = (
       table: 'trip_users',
       filter: `trip_id=eq.${tripId}`
     }, async (payload) => {
-      console.log('📡 subscribeToTripUsers: Change detected', { event: payload.eventType });
+      // console.log('📡 subscribeToTripUsers: Change detected', { event: payload.eventType });
       try {
         const users = await getTripUsers(tripId);
         callback(users);
       } catch (error) {
-        console.error('❌ subscribeToTripUsers: Error fetching trip users:', error);
+        // console.error('❌ subscribeToTripUsers: Error fetching trip users:', error);
       }
     })
     .subscribe();
@@ -285,12 +285,12 @@ export const subscribeToDateVotes = (
       table: 'date_votes',
       filter: `trip_id=eq.${tripId}`
     }, async (payload) => {
-      console.log('📡 subscribeToDateVotes: Change detected', { event: payload.eventType });
+      // console.log('📡 subscribeToDateVotes: Change detected', { event: payload.eventType });
       try {
         const votes = await getDateVotes(tripId);
         callback(votes);
       } catch (error) {
-        console.error('❌ subscribeToDateVotes: Error fetching date votes:', error);
+        // console.error('❌ subscribeToDateVotes: Error fetching date votes:', error);
       }
     })
     .subscribe();
