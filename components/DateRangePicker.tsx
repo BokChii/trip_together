@@ -134,6 +134,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       {/* Header */}
       <div className="p-4 flex items-center justify-between border-b border-orange-100 bg-orange-50/50">
         <button
+          type="button"
           onClick={() => changeMonth(-1)}
           className="p-2 hover:bg-orange-100 rounded-lg transition-colors"
         >
@@ -146,6 +147,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           </span>
         </div>
         <button
+          type="button"
           onClick={() => changeMonth(1)}
           className="p-2 hover:bg-orange-100 rounded-lg transition-colors"
         >
