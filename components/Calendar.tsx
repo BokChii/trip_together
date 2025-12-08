@@ -269,12 +269,12 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // 모바일 터치 종료 처리
   const handleTouchEnd = () => {
-    if (touchStartPos && !hasMoved && !isDragging && !isTouchDragging) {
-      // 짧은 탭: 단일 날짜 선택/해제
-      const { myVote } = getDayStats(touchStartPos.date);
-      const shouldRemove = myVote === voteMode;
-      onVote(touchStartPos.date, shouldRemove);
+    // 드래그가 시작된 경우에만 드래그 종료 처리
+    if (isTouchDragging && touchStartPos && dragStart && dragEnd && dragMode) {
+      const range = getRange(dragStart, dragEnd);
+      onVote(range, dragMode === 'remove');
     }
+    // 단일 탭은 onClick에서 처리하므로 여기서는 초기화만
     
     setTouchStartPos(null);
     setHasMoved(false);
@@ -456,11 +456,23 @@ export const Calendar: React.FC<CalendarProps> = ({
               key={day.isoString + idx}
               data-date={day.isoString}
               onClick={(e) => {
-                // PC에서 단일 클릭 처리 (드래그가 아닌 경우)
-                if (!isDisabled && !isDragging && !touchStartPos) {
-                  const { myVote } = getDayStats(day.isoString);
-                  const shouldRemove = myVote === voteMode;
-                  onVote(day.isoString, shouldRemove);
+                // PC/모바일 단일 클릭/탭 처리 (드래그가 아닌 경우)
+                // 터치 이벤트의 경우: touchStartPos가 설정되어 있지만 hasMoved가 false면 단일 탭
+                // 마우스 이벤트의 경우: isDragging이 false면 단일 클릭
+                if (!isDisabled) {
+                  const isTouchTap = touchStartPos && touchStartPos.date === day.isoString && !hasMoved && !isTouchDragging;
+                  const isMouseClick = !isDragging && !touchStartPos;
+                  
+                  if (isTouchTap || isMouseClick) {
+                    const { myVote } = getDayStats(day.isoString);
+                    const shouldRemove = myVote === voteMode;
+                    onVote(day.isoString, shouldRemove);
+                    // 터치 탭인 경우 touchStartPos 초기화
+                    if (isTouchTap) {
+                      setTouchStartPos(null);
+                      setHasMoved(false);
+                    }
+                  }
                 }
               }}
               onPointerDown={(e) => {

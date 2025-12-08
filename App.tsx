@@ -466,8 +466,9 @@ const App: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fff7ed] p-4 font-sans">
-        <div className="bg-white p-10 sm:p-12 rounded-[2rem] shadow-xl shadow-orange-100 max-w-xl w-full text-center border border-orange-50">
+      <div className="min-h-screen flex flex-col bg-[#fff7ed] p-4 font-sans">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="bg-white p-10 sm:p-12 rounded-[2rem] shadow-xl shadow-orange-100 max-w-xl w-full text-center border border-orange-50">
           <div className="mb-8 flex justify-center">
             <div className="bg-orange-100 p-6 rounded-full animate-bounce">
               <Plane className="w-12 h-12 text-orange-500" strokeWidth={2.5} />
@@ -581,16 +582,12 @@ const App: React.FC = () => {
                   </div>
               </div>
           )}
+          </div>
         </div>
         
         {/* 푸터 */}
-        <footer className="mt-8 pt-6 border-t border-orange-100">
+        <footer className="mt-auto pt-6 pb-4 border-t border-orange-100">
           <div className="text-center space-y-2">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-500">
-              <span>기획: [기획자 이름]</span>
-              <span className="hidden sm:inline text-gray-300">•</span>
-              <span>개발: [개발자 이름]</span>
-            </div>
             <p className="text-xs text-gray-400">
               © 2025 언제갈래? All rights reserved.
             </p>
@@ -1002,11 +999,6 @@ const App: React.FC = () => {
       <footer className="bg-white/80 backdrop-blur-md border-t border-orange-100 py-4 sm:py-6 mt-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-2">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-500">
-              <span>기획: [기획자 이름]</span>
-              <span className="hidden sm:inline text-gray-300">•</span>
-              <span>개발: [개발자 이름]</span>
-            </div>
             <p className="text-xs text-gray-400">
               © 2025 언제갈래? All rights reserved.
             </p>
