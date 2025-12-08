@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { Calendar } from './components/Calendar';
+import { DateRangePicker } from './components/DateRangePicker';
 import { ModeToggle } from './components/ModeToggle';
 import { Button } from './components/Button';
 import { DateVote, User, VoteType } from './types';
@@ -44,6 +45,50 @@ const App: React.FC = () => {
   const [startDateInput, setStartDateInput] = useState('');
   const [endDateInput, setEndDateInput] = useState('');
   
+  // 날짜 범위 선택 State (DateRangePicker용)
+  const [dateRangeStart, setDateRangeStart] = useState<string | null>(null);
+  const [dateRangeEnd, setDateRangeEnd] = useState<string | null>(null);
+
+  // 날짜 범위 선택 핸들러
+  const handleDateRangeClick = (isoDate: string) => {
+    if (!dateRangeStart) {
+      // 첫 번째 클릭: 시작일 설정
+      setDateRangeStart(isoDate);
+      setDateRangeEnd(null);
+    } else if (!dateRangeEnd) {
+      // 두 번째 클릭: 종료일 설정
+      const startDate = new Date(dateRangeStart);
+      const clickedDate = new Date(isoDate);
+      
+      if (clickedDate < startDate) {
+        // 클릭한 날짜가 시작일보다 이전이면 리셋 후 새로운 시작일로
+        setDateRangeStart(isoDate);
+        setDateRangeEnd(null);
+      } else {
+        // 정상적인 종료일 설정
+        setDateRangeEnd(isoDate);
+      }
+    } else {
+      // 둘 다 있으면 리셋 후 새로운 시작일로
+      setDateRangeStart(isoDate);
+      setDateRangeEnd(null);
+    }
+  };
+
+  // 날짜 범위가 변경될 때 startDateInput, endDateInput 업데이트
+  useEffect(() => {
+    if (dateRangeStart) {
+      setStartDateInput(dateRangeStart);
+    } else {
+      setStartDateInput('');
+    }
+    if (dateRangeEnd) {
+      setEndDateInput(dateRangeEnd);
+    } else {
+      setEndDateInput('');
+    }
+  }, [dateRangeStart, dateRangeEnd]);
+
   // Share State
   const [isCopied, setIsCopied] = useState(false);
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
@@ -428,6 +473,8 @@ const App: React.FC = () => {
     setTripEndDate(null);
     setStartDateInput('');
     setEndDateInput('');
+    setDateRangeStart(null);
+    setDateRangeEnd(null);
     setGeneratedUrl(null);
     setIsCopied(false);
     setItinerary(null);
@@ -518,36 +565,28 @@ const App: React.FC = () => {
                     <CalendarIcon className="w-5 h-5 text-orange-500" />
                     <p className="text-base font-medium text-gray-700">여행 기간 설정 <span className="text-sm text-gray-400 font-normal">(선택)</span></p>
                   </div>
-                  <div className="flex gap-2 sm:gap-3">
-                    <div className="flex-1 relative min-w-0">
-                      <label className="block text-sm text-gray-600 mb-2 pl-1 font-medium">시작일</label>
-                      <div className="relative">
-                        <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 pointer-events-none" />
-                        <input
-                          type="date"
-                          className="w-full pl-10 pr-3 py-3 rounded-xl bg-white border-2 border-orange-100 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition-all text-sm text-gray-900 shadow-sm hover:border-orange-200"
-                          value={startDateInput}
-                          onChange={(e) => setStartDateInput(e.target.value)}
-                        />
+                  
+                  {/* 선택된 날짜 범위 표시 */}
+                  {(dateRangeStart || dateRangeEnd) && (
+                    <div className="mb-4 p-3 bg-white rounded-xl border border-orange-200">
+                      <div className="flex items-center justify-center gap-2 text-sm">
+                        <span className="font-semibold text-orange-600">
+                          {dateRangeStart ? new Date(dateRangeStart).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '시작일'}
+                        </span>
+                        <span className="text-orange-400">~</span>
+                        <span className="font-semibold text-orange-600">
+                          {dateRangeEnd ? new Date(dateRangeEnd).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '종료일'}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-end pb-8">
-                      <span className="text-orange-400 font-bold text-lg">~</span>
-                    </div>
-                    <div className="flex-1 relative min-w-0">
-                      <label className="block text-sm text-gray-600 mb-2 pl-1 font-medium">종료일</label>
-                      <div className="relative">
-                        <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 pointer-events-none" />
-                        <input
-                          type="date"
-                          className="w-full pl-10 pr-3 py-3 rounded-xl bg-white border-2 border-orange-100 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition-all text-sm text-gray-900 shadow-sm hover:border-orange-200"
-                          value={endDateInput}
-                          onChange={(e) => setEndDateInput(e.target.value)}
-                          min={startDateInput || undefined}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  )}
+                  
+                  {/* 날짜 범위 선택 달력 */}
+                  <DateRangePicker
+                    startDate={dateRangeStart}
+                    endDate={dateRangeEnd}
+                    onDateClick={handleDateRangeClick}
+                  />
                 </div>
               </div>
             )}
