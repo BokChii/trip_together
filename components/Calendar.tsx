@@ -37,7 +37,19 @@ export const Calendar: React.FC<CalendarProps> = ({
   // Touch/Mobile drag detection
   const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number; date: string } | null>(null);
   const [hasMoved, setHasMoved] = useState(false);
+  const [isTouchDragging, setIsTouchDragging] = useState(false);
   const DRAG_THRESHOLD = 10; // 10px 이상 움직여야 드래그로 인식
+  
+  // 터치 위치에서 날짜 계산
+  const getDateFromTouch = (e: React.TouchEvent): string | null => {
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (element) {
+      const cell = element.closest('[data-date]');
+      return cell?.getAttribute('data-date') || null;
+    }
+    return null;
+  };
 
   const daysInMonth = useMemo(() => {
     const year = currentDate.getFullYear();
@@ -127,10 +139,18 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const getDayStats = (isoDate: string) => {
-    // selectedUserId가 있으면 해당 유저의 투표만 필터링, 없으면 전체 참여자
+    // selectedUserId가 'all'이면 모든 참여자가 가능한 날짜만 필터링
     let dateVotes = votes.filter(v => v.date === isoDate);
     
-    if (selectedUserId) {
+    if (selectedUserId === 'all') {
+      // 모든 참여자가 가능한 날짜만 필터링
+      const availableVotes = dateVotes.filter(v => v.type === 'available');
+      const allAvailable = availableVotes.length === users.length && users.length > 0;
+      if (!allAvailable) {
+        return { availableCount: 0, unavailableCount: 0, myVote: undefined, dateVotes: [] };
+      }
+      // 모두 가능한 경우 전체 투표 반환
+    } else if (selectedUserId) {
       dateVotes = dateVotes.filter(v => v.userId === selectedUserId);
     }
     
@@ -185,43 +205,71 @@ export const Calendar: React.FC<CalendarProps> = ({
       }
   };
 
-  // 모바일 터치 이동 처리
-  const handleTouchMove = (e: React.TouchEvent, isoDate: string) => {
-    if (!touchStartPos) return;
-    
-    const touch = e.touches[0];
-    const deltaX = Math.abs(touch.clientX - touchStartPos.x);
-    const deltaY = Math.abs(touch.clientY - touchStartPos.y);
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
-    // 수직 스크롤이 주 목적이면 드래그 취소 (스크롤 허용)
-    if (deltaY > deltaX && deltaY > DRAG_THRESHOLD) {
-      setTouchStartPos(null);
-      setHasMoved(false);
-      return;
-    }
-    
-    // 드래그 시작 (임계값 이상 움직임)
-    if (distance > DRAG_THRESHOLD && !isDragging) {
-      setHasMoved(true);
-      const { myVote } = getDayStats(touchStartPos.date);
-      const intent = (myVote === voteMode) ? 'remove' : 'add';
+  // 모바일 터치 이동 처리 (전역 이벤트로 변경)
+  useEffect(() => {
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      if (!touchStartPos) return;
       
-      setIsDragging(true);
-      setDragStart(touchStartPos.date);
-      setDragEnd(touchStartPos.date);
-      setDragMode(intent);
-    }
+      const touch = e.touches[0];
+      if (!touch) return;
+      
+      const deltaX = Math.abs(touch.clientX - touchStartPos.x);
+      const deltaY = Math.abs(touch.clientY - touchStartPos.y);
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      
+      // 수직 스크롤이 주 목적이면 드래그 취소 (스크롤 허용)
+      if (deltaY > deltaX && deltaY > DRAG_THRESHOLD && !isTouchDragging) {
+        setTouchStartPos(null);
+        setHasMoved(false);
+        return;
+      }
+      
+      // 드래그 시작 (임계값 이상 움직임)
+      if (distance > DRAG_THRESHOLD && !isDragging && !isTouchDragging) {
+        setHasMoved(true);
+        setIsTouchDragging(true);
+        const { myVote } = getDayStats(touchStartPos.date);
+        const intent = (myVote === voteMode) ? 'remove' : 'add';
+        
+        setIsDragging(true);
+        setDragStart(touchStartPos.date);
+        setDragEnd(touchStartPos.date);
+        setDragMode(intent);
+        e.preventDefault(); // 스크롤 방지
+      }
+      
+      // 드래그 중: 터치 위치에서 날짜 찾기
+      if (isDragging || isTouchDragging) {
+        e.preventDefault(); // 스크롤 방지
+        const date = getDateFromTouch(e as unknown as React.TouchEvent);
+        if (date) {
+          const dateObj = new Date(date);
+          const start = startDate ? new Date(startDate) : null;
+          const end = endDate ? new Date(endDate) : null;
+          let isInRange = true;
+          if (start && end) {
+            isInRange = dateObj >= start && dateObj <= end;
+          } else if (start) {
+            isInRange = dateObj >= start;
+          } else if (end) {
+            isInRange = dateObj <= end;
+          }
+          if (isInRange) {
+            setDragEnd(date);
+          }
+        }
+      }
+    };
     
-    // 드래그 중이면 계속 업데이트
-    if (isDragging) {
-      setDragEnd(isoDate);
+    if (touchStartPos) {
+      window.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
+      return () => window.removeEventListener('touchmove', handleGlobalTouchMove);
     }
-  };
+  }, [touchStartPos, isDragging, isTouchDragging, voteMode, startDate, endDate]);
 
   // 모바일 터치 종료 처리
   const handleTouchEnd = () => {
-    if (touchStartPos && !hasMoved && !isDragging) {
+    if (touchStartPos && !hasMoved && !isDragging && !isTouchDragging) {
       // 짧은 탭: 단일 날짜 선택/해제
       const { myVote } = getDayStats(touchStartPos.date);
       const shouldRemove = myVote === voteMode;
@@ -230,6 +278,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     
     setTouchStartPos(null);
     setHasMoved(false);
+    setIsTouchDragging(false);
   };
 
   const handlePointerUp = () => {
@@ -279,8 +328,8 @@ export const Calendar: React.FC<CalendarProps> = ({
     }
 
     const { availableCount, unavailableCount, myVote } = getDayStats(isoDate);
-    // selectedUserId가 있으면 해당 유저만, 없으면 전체 참여자 수
-    const totalUsers = selectedUserId ? 1 : users.length;
+    // selectedUserId가 'all'이면 전체 참여자, 특정 유저면 1, 없으면 전체 참여자 수
+    const totalUsers = selectedUserId === 'all' ? users.length : (selectedUserId ? 1 : users.length);
     const isPerfectMatch = totalUsers > 0 && availableCount === totalUsers;
     
     // 다른 달 날짜인 경우 투명도 적용 (시각적 구분)
@@ -405,17 +454,13 @@ export const Calendar: React.FC<CalendarProps> = ({
           return (
             <div
               key={day.isoString + idx}
+              data-date={day.isoString}
               onPointerDown={(e) => !isDisabled && handlePointerDown(day.isoString, e.clientX, e.clientY)}
               onPointerEnter={() => !isDisabled && handlePointerEnter(day.isoString)}
               onTouchStart={(e) => {
                 if (!isDisabled && e.touches.length === 1) {
                   const touch = e.touches[0];
                   handlePointerDown(day.isoString, touch.clientX, touch.clientY);
-                }
-              }}
-              onTouchMove={(e) => {
-                if (!isDisabled && e.touches.length === 1) {
-                  handleTouchMove(e, day.isoString);
                 }
               }}
               onTouchEnd={handleTouchEnd}

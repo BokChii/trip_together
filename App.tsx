@@ -4,7 +4,7 @@ import { Calendar } from './components/Calendar';
 import { ModeToggle } from './components/ModeToggle';
 import { Button } from './components/Button';
 import { DateVote, User, VoteType } from './types';
-import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon } from 'lucide-react';
+import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronRight, ChevronLeft } from 'lucide-react';
 import { generateItinerary } from './services/geminiService';
 import {
   createTrip,
@@ -59,6 +59,12 @@ const App: React.FC = () => {
 
   // Selected User for Highlighting
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  
+  // User Guide State
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   // 중복 실행 방지를 위한 ref
   const hasInitialized = useRef(false);
@@ -223,6 +229,12 @@ const App: React.FC = () => {
         setUsers(tripUsers);
         setVotes(tripVotes);
         console.log('✅ confirmUser: Initial data loaded', { usersCount: tripUsers.length, votesCount: tripVotes.length });
+        
+        // 첫 접속 시 튜토리얼 표시 (localStorage에 저장된 값 확인)
+        const hasSeenTutorial = localStorage.getItem('tripsync_seen_tutorial');
+        if (!hasSeenTutorial) {
+          setTimeout(() => setShowTutorial(true), 500); // 약간의 딜레이 후 표시
+        }
       } catch (error) {
         console.error("❌ confirmUser: Failed to create trip and add user", error);
         alert("일정 생성에 실패했습니다. 다시 시도해주세요.");
@@ -541,6 +553,15 @@ const App: React.FC = () => {
             
             <Button type="submit" className="w-full text-lg sm:text-xl py-5 sm:py-6 min-h-[56px] shadow-lg shadow-orange-200" size="lg">시작하기</Button>
           </form>
+          
+          {/* 사용법 보기 버튼 */}
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="w-full mt-4 text-sm text-gray-500 hover:text-orange-600 transition-colors flex items-center justify-center gap-2"
+          >
+            <BookOpen className="w-4 h-4" />
+            사용법 보기
+          </button>
 
           {/* Existing Users Selection for Re-login */}
           {users.length > 0 && (
@@ -601,6 +622,93 @@ const App: React.FC = () => {
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        {/* 사용법 가이드 (접을 수 있는 형태) */}
+        <div className="bg-white rounded-[1.5rem] shadow-sm border border-orange-50 overflow-hidden">
+          <button
+            onClick={() => setShowGuide(!showGuide)}
+            className="w-full flex items-center justify-between p-4 hover:bg-orange-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-100 p-2 rounded-full">
+                <BookOpen className="w-5 h-5 text-orange-600" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-sm font-bold text-gray-800">사용법 가이드</h3>
+                <p className="text-xs text-gray-500">언제갈래? 서비스 이용 방법</p>
+              </div>
+            </div>
+            {showGuide ? (
+              <ChevronLeft className="w-5 h-5 text-gray-400 rotate-90" />
+            ) : (
+              <ChevronRight className="w-5 h-5 text-gray-400 rotate-90" />
+            )}
+          </button>
+          
+          {showGuide && (
+            <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2">
+              <div className="pt-2 pb-3 border-t border-orange-100">
+                <p className="text-xs text-gray-600 mb-4 leading-relaxed">
+                  <strong className="text-orange-600">언제갈래?</strong>는 친구들과 함께 여행 일정을 조율하는 서비스입니다. 
+                  각자 가능한 날짜를 선택하면 모두가 가능한 날짜를 한눈에 확인할 수 있어요! ✈️
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                    <CalendarHeart className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-1">📅 날짜 선택</h4>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      • 단일 클릭/탭: 날짜 선택 또는 해제<br/>
+                      • 드래그: 여러 날짜를 한 번에 선택 (모바일에서도 가능!)
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                    <Check className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-1">✅ 투표 모드</h4>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      • <strong>"가능해요"</strong>: 선택한 날짜에 가능 표시<br/>
+                      • <strong>"안돼요"</strong>: 선택한 날짜에 불가능 표시
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                    <UserIcon className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-1">👥 참여자 확인</h4>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      • 참여자 이름 클릭: 해당 참여자만 보기<br/>
+                      • <strong>"모두 가능"</strong> 클릭: 모든 참여자가 가능한 날짜만 보기
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                    <Share2 className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-1">🔗 공유하기</h4>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      • <strong>"초대하기"</strong> 버튼으로 링크 복사 후 친구들에게 공유하세요!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         
         {/* Controls */}
         <div className="flex flex-col gap-5 bg-white p-5 sm:p-6 rounded-[2rem] shadow-sm border border-orange-50">
@@ -665,6 +773,19 @@ const App: React.FC = () => {
             </div>
             <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
               <div className="flex gap-2 min-w-max sm:flex-wrap sm:min-w-0">
+                {/* "모두 가능" 버튼 추가 */}
+                <button
+                  onClick={() => setSelectedUserId(selectedUserId === 'all' ? null : 'all')}
+                  className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                    selectedUserId === 'all'
+                      ? 'bg-gradient-to-r from-orange-400 to-red-400 text-white shadow-md scale-105'
+                      : 'bg-gradient-to-r from-orange-50 to-rose-50 text-orange-700 hover:from-orange-100 hover:to-rose-100 hover:scale-105 border-2 border-orange-200'
+                  }`}
+                >
+                  <Crown className="w-4 h-4" />
+                  <span>모두 가능</span>
+                </button>
+                
                 {users.map(user => {
                   const isSelected = selectedUserId === user.id;
                   const userVotes = votes.filter(v => v.userId === user.id);
@@ -701,7 +822,12 @@ const App: React.FC = () => {
                 })}
               </div>
             </div>
-            {selectedUserId && (
+            {selectedUserId === 'all' && (
+              <p className="text-xs text-orange-600 mt-3 font-medium">
+                👆 모든 참여자가 가능한 날짜만 표시됩니다
+              </p>
+            )}
+            {selectedUserId && selectedUserId !== 'all' && (
               <p className="text-xs text-orange-600 mt-3 font-medium">
                 👆 {users.find(u => u.id === selectedUserId)?.name}님이 선택한 날짜만 표시됩니다
               </p>
@@ -781,6 +907,200 @@ const App: React.FC = () => {
            </div>
         </div>
       </main>
+
+      {/* 튜토리얼 모달 */}
+      {showTutorial && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
+          onClick={() => {
+            if (dontShowAgain) {
+              localStorage.setItem('tripsync_seen_tutorial', 'true');
+            }
+            setShowTutorial(false);
+            setTutorialStep(0);
+          }}
+        >
+          <div 
+            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 튜토리얼 단계별 내용 */}
+            {tutorialStep === 0 && (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-orange-100 p-2 rounded-full">
+                    <Plane className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-800">언제갈래? 시작하기</h3>
+                </div>
+                <div className="mb-6">
+                  <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">
+                    <strong className="text-orange-600">언제갈래?</strong>는 친구들과 함께 여행 일정을 조율하는 서비스입니다. 
+                    각자 가능한 날짜를 선택하면 모두가 가능한 날짜를 한눈에 확인할 수 있어요! ✈️
+                  </p>
+                  <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                    <p className="text-xs text-orange-800 leading-relaxed">
+                      💡 <strong>핵심 기능:</strong> 캘린더에서 드래그로 여러 날짜를 한 번에 선택하고, 
+                      "가능해요" 또는 "안돼요"로 투표하세요. 모든 참여자가 가능한 날짜는 👑 표시로 보여집니다!
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mb-4">
+                  <input
+                    type="checkbox"
+                    id="dontShowAgain"
+                    checked={dontShowAgain}
+                    onChange={(e) => setDontShowAgain(e.target.checked)}
+                    className="w-4 h-4 text-orange-500 rounded"
+                  />
+                  <label htmlFor="dontShowAgain" className="text-xs text-gray-600 cursor-pointer">
+                    다시 보지 않기
+                  </label>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      if (dontShowAgain) {
+                        localStorage.setItem('tripsync_seen_tutorial', 'true');
+                      }
+                      setShowTutorial(false);
+                      setTutorialStep(0);
+                    }}
+                    className="flex-1 min-h-[48px]"
+                  >
+                    건너뛰기
+                  </Button>
+                  <Button
+                    onClick={() => setTutorialStep(1)}
+                    className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+                  >
+                    다음
+                  </Button>
+                </div>
+              </>
+            )}
+            
+            {tutorialStep === 1 && (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-orange-100 p-2 rounded-full">
+                    <CalendarHeart className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-800">날짜 선택하기</h3>
+                </div>
+                <div className="mb-6 space-y-3">
+                  <div className="flex gap-3">
+                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                      <Check className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-1">단일 선택</h4>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        날짜를 클릭하거나 탭하면 선택/해제됩니다.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                      <Share2 className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-1">드래그 선택</h4>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        날짜를 드래그하면 여러 날짜를 한 번에 선택할 수 있습니다. 모바일에서도 가능해요!
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                      <Crown className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-1">모두 가능한 날짜</h4>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        👑 표시가 있는 날짜는 모든 참여자가 가능한 날짜입니다!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setTutorialStep(0)}
+                    className="flex-1 min-h-[48px]"
+                  >
+                    이전
+                  </Button>
+                  <Button
+                    onClick={() => setTutorialStep(2)}
+                    className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+                  >
+                    다음
+                  </Button>
+                </div>
+              </>
+            )}
+            
+            {tutorialStep === 2 && (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-orange-100 p-2 rounded-full">
+                    <UserIcon className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-800">참여자 필터</h3>
+                </div>
+                <div className="mb-6 space-y-3">
+                  <div className="flex gap-3">
+                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                      <UserIcon className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-1">개별 참여자 보기</h4>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        참여자 이름을 클릭하면 해당 참여자가 선택한 날짜만 볼 수 있습니다.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                      <Crown className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-1">"모두 가능" 필터</h4>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        참여자 리스트 맨 앞의 <strong>"모두 가능"</strong> 버튼을 클릭하면 
+                        모든 참여자가 가능한 날짜만 표시됩니다.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setTutorialStep(1)}
+                    className="flex-1 min-h-[48px]"
+                  >
+                    이전
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (dontShowAgain) {
+                        localStorage.setItem('tripsync_seen_tutorial', 'true');
+                      }
+                      setShowTutorial(false);
+                      setTutorialStep(0);
+                    }}
+                    className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+                  >
+                    완료
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 새로운 일정 만들기 모달 */}
       {showNewTripModal && (
