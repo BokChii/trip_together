@@ -254,15 +254,6 @@ export const Calendar: React.FC<CalendarProps> = ({
           }
       }
 
-      // Selected User Highlight (강조 표시)
-      if (isSelectedUserDate && selectedUserId) {
-        if (selectedUserVote?.vote_type === 'available') {
-          classes += "ring-4 ring-inset ring-orange-500 ring-offset-2 ring-offset-white rounded-lg z-[6] shadow-lg ";
-        } else if (selectedUserVote?.vote_type === 'unavailable') {
-          classes += "ring-4 ring-inset ring-gray-500 ring-offset-2 ring-offset-white rounded-lg z-[6] shadow-lg ";
-        }
-      }
-
       // My Vote Highlight (Border)
       if (myVote === 'available') {
         classes += "ring-2 ring-inset ring-orange-400 rounded-lg z-[2] ";
@@ -285,6 +276,15 @@ export const Calendar: React.FC<CalendarProps> = ({
       } else {
         classes += (isCurrentMonth ? "bg-white hover:bg-orange-50" : "bg-gray-50/50") + " text-gray-700 rounded-lg " + opacityClass + " ";
       }
+
+      // Selected User Highlight (강조 표시) - Heatmap Logic 이후에 적용하여 덮어쓰기 방지
+      if (isSelectedUserDate && selectedUserId && selectedUserVote) {
+        if (selectedUserVote.vote_type === 'available') {
+          classes += " ring-4 ring-orange-500 ring-offset-2 ring-offset-white shadow-lg z-[6] ";
+        } else if (selectedUserVote.vote_type === 'unavailable') {
+          classes += " ring-4 ring-gray-500 ring-offset-2 ring-offset-white shadow-lg z-[6] ";
+        }
+      }
     }
     
     return classes;
@@ -293,7 +293,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-orange-100/50 overflow-hidden select-none">
+    <div className="w-full max-w-5xl mx-auto bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-orange-100/50 overflow-hidden select-none">
       {/* Header */}
       <div className="p-6 flex items-center justify-between border-b border-orange-100">
         <div className="flex items-center gap-4">
