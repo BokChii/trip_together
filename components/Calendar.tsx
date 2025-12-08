@@ -365,21 +365,22 @@ export const Calendar: React.FC<CalendarProps> = ({
 
     let classes = "cursor-pointer transition-all duration-200 relative select-none ";
     
+    // 드래그 중 시각적 피드백을 먼저 체크 (다른 달 날짜에도 적용되도록 else 블록 밖으로 이동)
+    if (isInDragRange) {
+        if (dragMode === 'remove') {
+            // "Eraser" visual feedback
+            return classes + "bg-gray-50 opacity-60 ring-1 ring-inset ring-gray-300 rounded-lg scale-[0.95] grayscale z-10 " + opacityClass;
+        } else {
+            // "Adding" visual feedback
+            if (voteMode === 'available') return classes + "bg-orange-100 ring-2 ring-inset ring-orange-400 rounded-lg scale-[0.95] z-10 " + opacityClass;
+            if (voteMode === 'unavailable') return classes + "bg-gray-200 ring-2 ring-inset ring-gray-400 rounded-lg scale-[0.95] z-10 " + opacityClass;
+        }
+    }
+    
     // 다른 달 날짜는 기본적으로 회색 배경 (투표가 없을 때)
     if (!isCurrentMonth && availableCount === 0 && unavailableCount === 0) {
-      classes += "bg-gray-50/50 text-gray-400 " + opacityClass + " ";
+      classes += "bg-gray-50/50 text-gray-400 hover:bg-gray-100 " + opacityClass + " ";
     } else {
-      // Drag Preview Styles
-      if (isInDragRange) {
-          if (dragMode === 'remove') {
-              // "Eraser" visual feedback
-              return classes + "bg-gray-50 opacity-60 ring-1 ring-inset ring-gray-300 rounded-lg scale-[0.95] grayscale z-10 " + opacityClass;
-          } else {
-              // "Adding" visual feedback
-              if (voteMode === 'available') return classes + "bg-orange-100 ring-2 ring-inset ring-orange-400 rounded-lg scale-[0.95] z-10 " + opacityClass;
-              if (voteMode === 'unavailable') return classes + "bg-gray-200 ring-2 ring-inset ring-gray-400 rounded-lg scale-[0.95] z-10 " + opacityClass;
-          }
-      }
 
       // My Vote Highlight (Border)
       if (myVote === 'available') {
@@ -403,7 +404,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       } else if (availableCount === 0 && unavailableCount > 0) {
          classes += "bg-gray-100 text-gray-400 hover:bg-gray-200 rounded-lg " + opacityClass + " ";
       } else {
-        classes += (isCurrentMonth ? "bg-white hover:bg-orange-50" : "bg-gray-50/50") + " text-gray-700 rounded-lg " + opacityClass + " ";
+        classes += (isCurrentMonth ? "bg-white hover:bg-orange-50" : "bg-gray-50/50 hover:bg-gray-100") + " text-gray-700 rounded-lg " + opacityClass + " ";
       }
     }
     
