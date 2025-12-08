@@ -5,7 +5,7 @@ import { DateRangePicker } from './components/DateRangePicker';
 import { ModeToggle } from './components/ModeToggle';
 import { Button } from './components/Button';
 import { DateVote, User, VoteType } from './types';
-import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronRight, ChevronLeft } from 'lucide-react';
+import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
 import { generateItinerary } from './services/geminiService';
 import {
   createTrip,
@@ -48,6 +48,9 @@ const App: React.FC = () => {
   // 날짜 범위 선택 State (DateRangePicker용)
   const [dateRangeStart, setDateRangeStart] = useState<string | null>(null);
   const [dateRangeEnd, setDateRangeEnd] = useState<string | null>(null);
+  
+  // 날짜 범위 선택 캘린더 토글 State
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
 
   // 날짜 범위 선택 핸들러
   const handleDateRangeClick = (isoDate: string) => {
@@ -561,10 +564,21 @@ const App: React.FC = () => {
             {!currentTripId && users.length === 0 && (
               <div className="pt-2 pb-1">
                 <div className="bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-100 rounded-2xl p-5 sm:p-6 shadow-sm">
-                  <div className="flex items-center gap-2 mb-4">
-                    <CalendarIcon className="w-5 h-5 text-orange-500" />
-                    <p className="text-base font-medium text-gray-700">여행 기간 설정 <span className="text-sm text-gray-400 font-normal">(선택)</span></p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowDateRangePicker(!showDateRangePicker)}
+                    className="w-full flex items-center justify-between gap-2 mb-4 hover:opacity-80 transition-opacity"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CalendarIcon className="w-5 h-5 text-orange-500" />
+                      <p className="text-base font-medium text-gray-700">여행 기간 설정 <span className="text-sm text-gray-400 font-normal">(선택)</span></p>
+                    </div>
+                    <ChevronDown 
+                      className={`w-5 h-5 text-orange-500 transition-transform duration-200 ${
+                        showDateRangePicker ? 'rotate-180' : ''
+                      }`} 
+                    />
+                  </button>
                   
                   {/* 선택된 날짜 범위 표시 */}
                   {(dateRangeStart || dateRangeEnd) && (
@@ -581,12 +595,16 @@ const App: React.FC = () => {
                     </div>
                   )}
                   
-                  {/* 날짜 범위 선택 달력 */}
-                  <DateRangePicker
-                    startDate={dateRangeStart}
-                    endDate={dateRangeEnd}
-                    onDateClick={handleDateRangeClick}
-                  />
+                  {/* 날짜 범위 선택 달력 (토글) */}
+                  {showDateRangePicker && (
+                    <div className="mt-4">
+                      <DateRangePicker
+                        startDate={dateRangeStart}
+                        endDate={dateRangeEnd}
+                        onDateClick={handleDateRangeClick}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
