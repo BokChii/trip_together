@@ -191,16 +191,23 @@ export const Calendar: React.FC<CalendarProps> = ({
         setTouchStartPos({ x: clientX, y: clientY, date: isoDate });
         setHasMoved(false);
       } else {
-        // clientX/clientY가 없는 경우 = 마우스 이벤트 (드래그 시작)
-        setIsDragging(true);
+        // clientX/clientY가 없는 경우 = 마우스 이벤트
+        // 드래그 시작을 위한 초기 설정만 (isDragging은 onPointerEnter에서 설정)
+        // 이렇게 하면 단일 클릭과 드래그를 구분할 수 있음
         setDragStart(isoDate);
         setDragEnd(isoDate);
         setDragMode(intent);
+        // isDragging은 실제로 포인터가 이동했을 때만 설정
       }
   };
 
   const handlePointerEnter = (isoDate: string) => {
-      if (isDragging) {
+      if (dragStart && !isDragging) {
+          // 첫 번째 pointerEnter에서 드래그 시작 (실제로 움직였을 때)
+          setIsDragging(true);
+          setDragEnd(isoDate);
+      } else if (isDragging) {
+          // 이미 드래그 중이면 dragEnd만 업데이트
           setDragEnd(isoDate);
       }
   };
@@ -273,8 +280,12 @@ export const Calendar: React.FC<CalendarProps> = ({
     if (isTouchDragging && touchStartPos && dragStart && dragEnd && dragMode) {
       const range = getRange(dragStart, dragEnd);
       onVote(range, dragMode === 'remove');
+    } else if (touchStartPos && !hasMoved && !isTouchDragging) {
+      // 단일 탭인 경우: 직접 처리
+      const { myVote } = getDayStats(touchStartPos.date);
+      const shouldRemove = myVote === voteMode;
+      onVote(touchStartPos.date, shouldRemove);
     }
-    // 단일 탭은 onClick에서 처리하므로 여기서는 초기화만
     
     setTouchStartPos(null);
     setHasMoved(false);
@@ -283,9 +294,16 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const handlePointerUp = () => {
       if (isDragging && dragStart && dragEnd && dragMode) {
+          // 드래그가 시작된 경우: 드래그 종료 처리
           const range = getRange(dragStart, dragEnd);
           onVote(range, dragMode === 'remove');
+      } else if (dragStart && !isDragging) {
+          // 단일 클릭인 경우: dragStart만 있고 드래그가 시작되지 않았음
+          const { myVote } = getDayStats(dragStart);
+          const shouldRemove = myVote === voteMode;
+          onVote(dragStart, shouldRemove);
       }
+      
       setIsDragging(false);
       setDragStart(null);
       setDragEnd(null);
@@ -455,38 +473,19 @@ export const Calendar: React.FC<CalendarProps> = ({
             <div
               key={day.isoString + idx}
               data-date={day.isoString}
-              onClick={(e) => {
-                // PC/모바일 단일 클릭/탭 처리 (드래그가 아닌 경우)
-                // 터치 이벤트의 경우: touchStartPos가 설정되어 있지만 hasMoved가 false면 단일 탭
-                // 마우스 이벤트의 경우: isDragging이 false면 단일 클릭
-                if (!isDisabled) {
-                  const isTouchTap = touchStartPos && touchStartPos.date === day.isoString && !hasMoved && !isTouchDragging;
-                  const isMouseClick = !isDragging && !touchStartPos;
-                  
-                  if (isTouchTap || isMouseClick) {
-                    const { myVote } = getDayStats(day.isoString);
-                    const shouldRemove = myVote === voteMode;
-                    onVote(day.isoString, shouldRemove);
-                    // 터치 탭인 경우 touchStartPos 초기화
-                    if (isTouchTap) {
-                      setTouchStartPos(null);
-                      setHasMoved(false);
-                    }
-                  }
-                }
-              }}
               onPointerDown={(e) => {
                 if (!isDisabled) {
                   // 마우스 이벤트인 경우 (터치가 아닌 경우)
                   if (e.pointerType === 'mouse') {
                     handlePointerDown(day.isoString);
                   } else {
-                    // 터치 이벤트인 경우
-                    handlePointerDown(day.isoString, e.clientX, e.clientY);
+                    // 터치 이벤트인 경우 (onTouchStart에서 처리하므로 여기서는 스킵)
+                    // 중복 방지를 위해 onTouchStart에서만 처리
                   }
                 }
               }}
               onPointerEnter={() => !isDisabled && handlePointerEnter(day.isoString)}
+              onPointerUp={handlePointerUp}
               onTouchStart={(e) => {
                 if (!isDisabled && e.touches.length === 1) {
                   const touch = e.touches[0];
