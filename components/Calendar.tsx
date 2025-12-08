@@ -186,12 +186,12 @@ export const Calendar: React.FC<CalendarProps> = ({
       // Otherwise (no vote, or different vote type), my intent is to add/overwrite.
       const intent = (myVote === voteMode) ? 'remove' : 'add';
 
-      // 모바일 터치인 경우 위치 저장
+      // clientX/clientY가 제공된 경우 = 터치 이벤트
       if (clientX !== undefined && clientY !== undefined) {
         setTouchStartPos({ x: clientX, y: clientY, date: isoDate });
         setHasMoved(false);
       } else {
-        // 데스크톱 마우스인 경우 즉시 드래그 시작
+        // clientX/clientY가 없는 경우 = 마우스 이벤트 (드래그 시작)
         setIsDragging(true);
         setDragStart(isoDate);
         setDragEnd(isoDate);
@@ -455,7 +455,25 @@ export const Calendar: React.FC<CalendarProps> = ({
             <div
               key={day.isoString + idx}
               data-date={day.isoString}
-              onPointerDown={(e) => !isDisabled && handlePointerDown(day.isoString, e.clientX, e.clientY)}
+              onClick={(e) => {
+                // PC에서 단일 클릭 처리 (드래그가 아닌 경우)
+                if (!isDisabled && !isDragging && !touchStartPos) {
+                  const { myVote } = getDayStats(day.isoString);
+                  const shouldRemove = myVote === voteMode;
+                  onVote(day.isoString, shouldRemove);
+                }
+              }}
+              onPointerDown={(e) => {
+                if (!isDisabled) {
+                  // 마우스 이벤트인 경우 (터치가 아닌 경우)
+                  if (e.pointerType === 'mouse') {
+                    handlePointerDown(day.isoString);
+                  } else {
+                    // 터치 이벤트인 경우
+                    handlePointerDown(day.isoString, e.clientX, e.clientY);
+                  }
+                }
+              }}
               onPointerEnter={() => !isDisabled && handlePointerEnter(day.isoString)}
               onTouchStart={(e) => {
                 if (!isDisabled && e.touches.length === 1) {

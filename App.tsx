@@ -582,6 +582,96 @@ const App: React.FC = () => {
               </div>
           )}
         </div>
+        
+        {/* 푸터 */}
+        <footer className="mt-8 pt-6 border-t border-orange-100">
+          <div className="text-center space-y-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-500">
+              <span>기획: [기획자 이름]</span>
+              <span className="hidden sm:inline text-gray-300">•</span>
+              <span>개발: [개발자 이름]</span>
+            </div>
+            <p className="text-xs text-gray-400">
+              © 2025 언제갈래? All rights reserved.
+            </p>
+            <a 
+              href="mailto:kdshin@freshmilk.kr" 
+              className="text-xs text-gray-400 hover:text-orange-500 transition-colors"
+            >
+              kdshin@freshmilk.kr
+            </a>
+          </div>
+        </footer>
+        
+        {/* 로그인 화면용 튜토리얼 모달 */}
+        {showTutorial && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
+            onClick={() => {
+              if (dontShowAgain) {
+                localStorage.setItem('tripsync_seen_tutorial', 'true');
+              }
+              setShowTutorial(false);
+              setTutorialStep(0);
+            }}
+          >
+            <div 
+              className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 튜토리얼 단계별 내용 - 로그인 화면용 간단 버전 */}
+              {tutorialStep === 0 && (
+                <>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-orange-100 p-2 rounded-full">
+                      <Plane className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-800">언제갈래? 시작하기</h3>
+                  </div>
+                  <div className="mb-6">
+                    <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">
+                      <strong className="text-orange-600">언제갈래?</strong>는 친구들과 함께 여행 일정을 조율하는 서비스입니다. 
+                      각자 가능한 날짜를 선택하면 모두가 가능한 날짜를 한눈에 확인할 수 있어요! ✈️
+                    </p>
+                    <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                      <p className="text-xs text-orange-800 leading-relaxed">
+                        💡 <strong>핵심 기능:</strong> 캘린더에서 드래그로 여러 날짜를 한 번에 선택하고, 
+                        "가능해요" 또는 "안돼요"로 투표하세요. 모든 참여자가 가능한 날짜는 👑 표시로 보여집니다!
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <input
+                      type="checkbox"
+                      id="dontShowAgainLogin"
+                      checked={dontShowAgain}
+                      onChange={(e) => setDontShowAgain(e.target.checked)}
+                      className="w-4 h-4 text-orange-500 rounded"
+                    />
+                    <label htmlFor="dontShowAgainLogin" className="text-xs text-gray-600 cursor-pointer">
+                      다시 보지 않기
+                    </label>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        if (dontShowAgain) {
+                          localStorage.setItem('tripsync_seen_tutorial', 'true');
+                        }
+                        setShowTutorial(false);
+                        setTutorialStep(0);
+                      }}
+                      className="flex-1 min-h-[48px]"
+                    >
+                      닫기
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -908,6 +998,28 @@ const App: React.FC = () => {
         </div>
       </main>
 
+      {/* 푸터 */}
+      <footer className="bg-white/80 backdrop-blur-md border-t border-orange-100 py-4 sm:py-6 mt-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center space-y-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-500">
+              <span>기획: [기획자 이름]</span>
+              <span className="hidden sm:inline text-gray-300">•</span>
+              <span>개발: [개발자 이름]</span>
+            </div>
+            <p className="text-xs text-gray-400">
+              © 2025 언제갈래? All rights reserved.
+            </p>
+            <a 
+              href="mailto:kdshin@freshmilk.kr" 
+              className="text-xs text-gray-400 hover:text-orange-500 transition-colors"
+            >
+              kdshin@freshmilk.kr
+            </a>
+          </div>
+        </div>
+      </footer>
+
       {/* 튜토리얼 모달 */}
       {showTutorial && (
         <div 
@@ -956,6 +1068,13 @@ const App: React.FC = () => {
                   <label htmlFor="dontShowAgain" className="text-xs text-gray-600 cursor-pointer">
                     다시 보지 않기
                   </label>
+                </div>
+                {/* 페이지 넘버링 */}
+                <div className="flex justify-center gap-1.5 mb-4">
+                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
                 </div>
                 <div className="flex gap-3">
                   <Button
@@ -1024,6 +1143,13 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                {/* 페이지 넘버링 */}
+                <div className="flex justify-center gap-1.5 mb-4">
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                </div>
                 <div className="flex gap-3">
                   <Button
                     variant="ghost"
@@ -1075,10 +1201,76 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                {/* 페이지 넘버링 */}
+                <div className="flex justify-center gap-1.5 mb-4">
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                </div>
                 <div className="flex gap-3">
                   <Button
                     variant="ghost"
                     onClick={() => setTutorialStep(1)}
+                    className="flex-1 min-h-[48px]"
+                  >
+                    이전
+                  </Button>
+                  <Button
+                    onClick={() => setTutorialStep(3)}
+                    className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+                  >
+                    다음
+                  </Button>
+                </div>
+              </>
+            )}
+            
+            {/* 새로 추가: step 3 - 링크 공유 */}
+            {tutorialStep === 3 && (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-orange-100 p-2 rounded-full">
+                    <Share2 className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-800">친구 초대하기</h3>
+                </div>
+                <div className="mb-6 space-y-3">
+                  <div className="flex gap-3">
+                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                      <Share2 className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-1">초대하기 버튼</h4>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        캘린더 화면 상단의 <strong>"초대하기"</strong> 버튼을 클릭하면 공유 링크가 생성됩니다.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                      <Copy className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-1">링크 복사</h4>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        생성된 링크를 복사하여 친구들에게 공유하세요. 친구들이 링크로 접속하면 
+                        같은 일정에 참여할 수 있습니다!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                {/* 페이지 넘버링 */}
+                <div className="flex justify-center gap-1.5 mb-4">
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setTutorialStep(2)}
                     className="flex-1 min-h-[48px]"
                   >
                     이전
