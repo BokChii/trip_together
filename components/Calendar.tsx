@@ -33,6 +33,11 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [dragEnd, setDragEnd] = useState<string | null>(null);
   // 'add' = selecting, 'remove' = deselecting
   const [dragMode, setDragMode] = useState<'add' | 'remove' | null>(null);
+  
+  // Touch/Mobile drag detection
+  const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number; date: string } | null>(null);
+  const [hasMoved, setHasMoved] = useState(false);
+  const DRAG_THRESHOLD = 10; // 10px 이상 움직여야 드래그로 인식
 
   const daysInMonth = useMemo(() => {
     const year = currentDate.getFullYear();
@@ -153,7 +158,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       return range;
   };
 
-  const handlePointerDown = (isoDate: string) => {
+  const handlePointerDown = (isoDate: string, clientX?: number, clientY?: number) => {
       // Determine intent based on the starting cell's current state
       const { myVote } = getDayStats(isoDate);
       
@@ -161,16 +166,70 @@ export const Calendar: React.FC<CalendarProps> = ({
       // Otherwise (no vote, or different vote type), my intent is to add/overwrite.
       const intent = (myVote === voteMode) ? 'remove' : 'add';
 
-      setIsDragging(true);
-      setDragStart(isoDate);
-      setDragEnd(isoDate);
-      setDragMode(intent);
+      // 모바일 터치인 경우 위치 저장
+      if (clientX !== undefined && clientY !== undefined) {
+        setTouchStartPos({ x: clientX, y: clientY, date: isoDate });
+        setHasMoved(false);
+      } else {
+        // 데스크톱 마우스인 경우 즉시 드래그 시작
+        setIsDragging(true);
+        setDragStart(isoDate);
+        setDragEnd(isoDate);
+        setDragMode(intent);
+      }
   };
 
   const handlePointerEnter = (isoDate: string) => {
       if (isDragging) {
           setDragEnd(isoDate);
       }
+  };
+
+  // 모바일 터치 이동 처리
+  const handleTouchMove = (e: React.TouchEvent, isoDate: string) => {
+    if (!touchStartPos) return;
+    
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartPos.x);
+    const deltaY = Math.abs(touch.clientY - touchStartPos.y);
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // 수직 스크롤이 주 목적이면 드래그 취소 (스크롤 허용)
+    if (deltaY > deltaX && deltaY > DRAG_THRESHOLD) {
+      setTouchStartPos(null);
+      setHasMoved(false);
+      return;
+    }
+    
+    // 드래그 시작 (임계값 이상 움직임)
+    if (distance > DRAG_THRESHOLD && !isDragging) {
+      setHasMoved(true);
+      const { myVote } = getDayStats(touchStartPos.date);
+      const intent = (myVote === voteMode) ? 'remove' : 'add';
+      
+      setIsDragging(true);
+      setDragStart(touchStartPos.date);
+      setDragEnd(touchStartPos.date);
+      setDragMode(intent);
+    }
+    
+    // 드래그 중이면 계속 업데이트
+    if (isDragging) {
+      setDragEnd(isoDate);
+    }
+  };
+
+  // 모바일 터치 종료 처리
+  const handleTouchEnd = () => {
+    if (touchStartPos && !hasMoved && !isDragging) {
+      // 짧은 탭: 단일 날짜 선택/해제
+      const { myVote } = getDayStats(touchStartPos.date);
+      const shouldRemove = myVote === voteMode;
+      onVote(touchStartPos.date, shouldRemove);
+    }
+    
+    setTouchStartPos(null);
+    setHasMoved(false);
   };
 
   const handlePointerUp = () => {
@@ -289,36 +348,36 @@ export const Calendar: React.FC<CalendarProps> = ({
   return (
     <div className="w-full max-w-5xl mx-auto bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-orange-100/50 overflow-hidden select-none">
       {/* Header */}
-      <div className="p-6 flex items-center justify-between border-b border-orange-100">
-        <div className="flex items-center gap-4">
+      <div className="p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 border-b border-orange-100">
+        <div className="flex items-center gap-2 sm:gap-4">
           <button 
             onClick={() => changeMonth(-1)} 
             disabled={!canGoToPreviousMonth()}
-            className={`p-2 rounded-full transition-colors ${
+            className={`min-w-[44px] min-h-[44px] p-2 rounded-full transition-colors flex items-center justify-center ${
               canGoToPreviousMonth()
-                ? 'hover:bg-orange-50 text-orange-400 cursor-pointer'
+                ? 'hover:bg-orange-50 text-orange-400 cursor-pointer active:bg-orange-100'
                 : 'text-gray-300 cursor-not-allowed opacity-50'
             }`}
           >
-            <ChevronLeft className="w-6 h-6" strokeWidth={3} />
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
           </button>
-          <h2 className="text-2xl font-bold text-gray-800 tracking-wide">
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-800 tracking-wide text-center flex-1">
             {currentDate.toLocaleString('ko-KR', { month: 'long', year: 'numeric' })}
           </h2>
           <button 
             onClick={() => changeMonth(1)} 
             disabled={!canGoToNextMonth()}
-            className={`p-2 rounded-full transition-colors ${
+            className={`min-w-[44px] min-h-[44px] p-2 rounded-full transition-colors flex items-center justify-center ${
               canGoToNextMonth()
-                ? 'hover:bg-orange-50 text-orange-400 cursor-pointer'
+                ? 'hover:bg-orange-50 text-orange-400 cursor-pointer active:bg-orange-100'
                 : 'text-gray-300 cursor-not-allowed opacity-50'
             }`}
           >
-            <ChevronRight className="w-6 h-6" strokeWidth={3} />
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
           </button>
         </div>
         
-        <div className="flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-full text-sm text-orange-600 font-medium">
+        <div className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] bg-orange-50 rounded-full text-xs sm:text-sm text-orange-600 font-medium">
           <UserIcon className="w-4 h-4" />
           <span>{users.length}명 참여중</span>
         </div>
@@ -327,14 +386,14 @@ export const Calendar: React.FC<CalendarProps> = ({
       {/* Grid Header */}
       <div className="grid grid-cols-7 border-b border-orange-50 bg-white">
         {weekDays.map((day, i) => (
-          <div key={day} className={`py-4 text-center text-sm font-bold ${i === 0 ? 'text-rose-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
+          <div key={day} className={`py-3 sm:py-4 text-center text-xs sm:text-sm font-bold ${i === 0 ? 'text-rose-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
             {day}
           </div>
         ))}
       </div>
 
       {/* Grid Body */}
-      <div className="grid grid-cols-7 auto-rows-fr p-2 gap-1 sm:gap-2 bg-orange-50/30" style={{ touchAction: 'none' }}>
+      <div className="grid grid-cols-7 auto-rows-fr p-2 gap-1 sm:gap-2 bg-orange-50/30" style={{ touchAction: 'pan-y' }}>
         {daysInMonth.map((day, idx) => {
           const { availableCount, dateVotes } = getDayStats(day.isoString);
           const totalUsers = users.length;
@@ -346,10 +405,22 @@ export const Calendar: React.FC<CalendarProps> = ({
           return (
             <div
               key={day.isoString + idx}
-              onPointerDown={() => !isDisabled && handlePointerDown(day.isoString)}
+              onPointerDown={(e) => !isDisabled && handlePointerDown(day.isoString, e.clientX, e.clientY)}
               onPointerEnter={() => !isDisabled && handlePointerEnter(day.isoString)}
+              onTouchStart={(e) => {
+                if (!isDisabled && e.touches.length === 1) {
+                  const touch = e.touches[0];
+                  handlePointerDown(day.isoString, touch.clientX, touch.clientY);
+                }
+              }}
+              onTouchMove={(e) => {
+                if (!isDisabled && e.touches.length === 1) {
+                  handleTouchMove(e, day.isoString);
+                }
+              }}
+              onTouchEnd={handleTouchEnd}
               className={`
-                min-h-[100px] sm:min-h-[120px] p-2 flex flex-col items-start justify-start shadow-sm
+                min-h-[70px] sm:min-h-[100px] md:min-h-[120px] p-2 flex flex-col items-start justify-start shadow-sm
                 ${getCellStyles(day.isoString, day.isCurrentMonth)}
               `}
             >

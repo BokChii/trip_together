@@ -491,7 +491,7 @@ const App: React.FC = () => {
             <input
               type="text"
               placeholder="닉네임이 뭐에요?"
-              className="w-full px-8 py-5 rounded-full bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition-all text-center text-xl font-medium placeholder:text-gray-400 text-gray-900"
+              className="w-full px-6 sm:px-8 py-4 sm:py-5 min-h-[56px] rounded-full bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition-all text-center text-lg sm:text-xl font-medium placeholder:text-gray-400 text-gray-900"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               required
@@ -539,7 +539,7 @@ const App: React.FC = () => {
               </div>
             )}
             
-            <Button type="submit" className="w-full text-xl py-6 shadow-lg shadow-orange-200" size="lg">시작하기</Button>
+            <Button type="submit" className="w-full text-lg sm:text-xl py-5 sm:py-6 min-h-[56px] shadow-lg shadow-orange-200" size="lg">시작하기</Button>
           </form>
 
           {/* Existing Users Selection for Re-login */}
@@ -551,7 +551,7 @@ const App: React.FC = () => {
                           <button
                             key={u.id}
                             onClick={() => confirmUser(u)}
-                            className="flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-orange-50 text-gray-600 hover:text-orange-600 rounded-full text-sm border-2 border-gray-100 hover:border-orange-200 transition-all"
+                            className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] bg-white hover:bg-orange-50 text-gray-600 hover:text-orange-600 rounded-full text-sm border-2 border-gray-100 hover:border-orange-200 transition-all"
                           >
                               <span className="font-bold">{u.name}</span>
                               <ArrowRight className="w-3 h-3" />
@@ -569,18 +569,18 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#fff7ed] text-gray-900 pb-20 font-sans">
       {/* Navbar */}
       <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-orange-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-2">
-               <div className="bg-orange-500 p-1.5 rounded-lg">
-                   <Plane className="w-4 h-4 text-white" fill="currentColor" />
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-14 sm:h-16 items-center">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+               <div className="bg-orange-500 p-1 sm:p-1.5 rounded-lg">
+                   <Plane className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="currentColor" />
                </div>
-               <span className="font-hand font-bold text-2xl text-gray-800 tracking-tight pt-1">언제갈래</span>
+               <span className="font-hand font-bold text-xl sm:text-2xl text-gray-800 tracking-tight pt-1">언제갈래</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button 
                 onClick={handleNewTrip}
-                className="text-xs sm:text-sm font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                className="min-h-[44px] text-xs sm:text-sm font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-2.5 sm:px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">새로운 일정 만들기</span>
@@ -589,7 +589,12 @@ const App: React.FC = () => {
               <span className="hidden sm:inline-block text-sm text-gray-500 bg-orange-50 px-3 py-1 rounded-full">
                 반가워요, <strong className="text-orange-600">{currentUser.name}</strong>님! 👋
               </span>
-              <button onClick={handleExit} className="text-xs font-medium text-gray-400 hover:text-orange-500 transition-colors">나가기</button>
+              <button 
+                onClick={handleExit} 
+                className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-400 hover:text-orange-500 transition-colors"
+              >
+                나가기
+              </button>
             </div>
           </div>
         </div>
@@ -601,11 +606,11 @@ const App: React.FC = () => {
         <div className="flex flex-col gap-5 bg-white p-5 sm:p-6 rounded-[2rem] shadow-sm border border-orange-50">
            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
              <div className="flex flex-col gap-1">
-               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                   <CalendarHeart className="w-6 h-6 text-orange-500" />
+               <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+                   <CalendarHeart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />
                    언제가 좋으세요?
                </h2>
-               <p className="text-sm text-gray-500 pl-1">드래그해서 여러 날짜를 쓱- 선택해보세요.</p>
+               <p className="text-xs sm:text-sm text-gray-500 pl-1">드래그해서 여러 날짜를 쓱- 선택해보세요.</p>
              </div>
              
              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
@@ -658,41 +663,43 @@ const App: React.FC = () => {
               <h3 className="text-sm font-semibold text-gray-700">참여자</h3>
               <span className="text-xs text-gray-400">({users.length}명)</span>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {users.map(user => {
-                const isSelected = selectedUserId === user.id;
-                const userVotes = votes.filter(v => v.userId === user.id);
-                const availableCount = userVotes.filter(v => v.type === 'available').length;
-                const unavailableCount = userVotes.filter(v => v.type === 'unavailable').length;
-                
-                return (
-                  <button
-                    key={user.id}
-                    onClick={() => setSelectedUserId(isSelected ? null : user.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                      isSelected
-                        ? 'bg-orange-500 text-white shadow-md scale-105'
-                        : 'bg-orange-50 text-orange-700 hover:bg-orange-100 hover:scale-105'
-                    }`}
-                  >
-                    <span>{user.name}</span>
-                    {availableCount > 0 && (
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                        isSelected ? 'bg-white/30' : 'bg-orange-200'
-                      }`}>
-                        가능 {availableCount}
-                      </span>
-                    )}
-                    {unavailableCount > 0 && (
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                        isSelected ? 'bg-white/30' : 'bg-gray-200'
-                      }`}>
-                        불가 {unavailableCount}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+              <div className="flex gap-2 min-w-max sm:flex-wrap sm:min-w-0">
+                {users.map(user => {
+                  const isSelected = selectedUserId === user.id;
+                  const userVotes = votes.filter(v => v.userId === user.id);
+                  const availableCount = userVotes.filter(v => v.type === 'available').length;
+                  const unavailableCount = userVotes.filter(v => v.type === 'unavailable').length;
+                  
+                  return (
+                    <button
+                      key={user.id}
+                      onClick={() => setSelectedUserId(isSelected ? null : user.id)}
+                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                        isSelected
+                          ? 'bg-orange-500 text-white shadow-md scale-105'
+                          : 'bg-orange-50 text-orange-700 hover:bg-orange-100 hover:scale-105'
+                      }`}
+                    >
+                      <span>{user.name}</span>
+                      {availableCount > 0 && (
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                          isSelected ? 'bg-white/30' : 'bg-orange-200'
+                        }`}>
+                          가능 {availableCount}
+                        </span>
+                      )}
+                      {unavailableCount > 0 && (
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                          isSelected ? 'bg-white/30' : 'bg-gray-200'
+                        }`}>
+                          불가 {unavailableCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             {selectedUserId && (
               <p className="text-xs text-orange-600 mt-3 font-medium">
@@ -778,34 +785,34 @@ const App: React.FC = () => {
       {/* 새로운 일정 만들기 모달 */}
       {showNewTripModal && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
           onClick={() => setShowNewTripModal(false)}
         >
           <div 
-            className="bg-white rounded-2xl shadow-xl border border-orange-100 max-w-md w-full p-6 animate-in fade-in slide-in-from-bottom-2"
+            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-orange-100 p-2 rounded-full">
                 <PlusCircle className="w-5 h-5 text-orange-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-800">새로운 일정 만들기</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800">새로운 일정 만들기</h3>
             </div>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
               새로운 여행 일정을 만들면 현재 일정에서 나가게 됩니다.<br/>
               새로운 일정을 만들까요?
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant="ghost"
                 onClick={() => setShowNewTripModal(false)}
-                className="flex-1"
+                className="flex-1 min-h-[48px]"
               >
                 취소
               </Button>
               <Button
                 onClick={confirmNewTrip}
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
               >
                 만들기
               </Button>
@@ -817,33 +824,33 @@ const App: React.FC = () => {
       {/* 나가기 모달 */}
       {showExitModal && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
           onClick={() => setShowExitModal(false)}
         >
           <div 
-            className="bg-white rounded-2xl shadow-xl border border-orange-100 max-w-md w-full p-6 animate-in fade-in slide-in-from-bottom-2"
+            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-orange-100 p-2 rounded-full">
                 <X className="w-5 h-5 text-orange-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-800">나가기</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800">나가기</h3>
             </div>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
               정말 나가시겠어요?<br/>
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant="ghost"
                 onClick={() => setShowExitModal(false)}
-                className="flex-1"
+                className="flex-1 min-h-[48px]"
               >
                 취소
               </Button>
               <Button
                 onClick={confirmExit}
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
               >
                 나가기
               </Button>
