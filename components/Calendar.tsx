@@ -12,6 +12,7 @@ interface CalendarProps {
   onVote: (dateIso: string | string[], shouldRemove?: boolean) => void;
   startDate?: string | null;
   endDate?: string | null;
+  selectedUserId?: string | null;
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -24,6 +25,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   onVote,
   startDate,
   endDate,
+  selectedUserId,
 }) => {
   // Dragging State
   const [isDragging, setIsDragging] = useState(false);
@@ -215,6 +217,12 @@ export const Calendar: React.FC<CalendarProps> = ({
     const totalUsers = users.length;
     const isPerfectMatch = totalUsers > 0 && availableCount === totalUsers;
     
+    // 선택된 유저의 날짜 확인
+    const selectedUserVote = selectedUserId 
+      ? votes.find(v => v.date === isoDate && v.user_id === selectedUserId)
+      : null;
+    const isSelectedUserDate = selectedUserVote !== undefined && selectedUserVote !== null;
+    
     // 다른 달 날짜인 경우 투명도 적용 (시각적 구분)
     const opacityClass = isCurrentMonth ? "" : "opacity-70";
     
@@ -244,6 +252,15 @@ export const Calendar: React.FC<CalendarProps> = ({
               if (voteMode === 'available') return classes + "bg-orange-100 ring-2 ring-inset ring-orange-400 rounded-lg scale-[0.95] z-10 " + opacityClass;
               if (voteMode === 'unavailable') return classes + "bg-gray-200 ring-2 ring-inset ring-gray-400 rounded-lg scale-[0.95] z-10 " + opacityClass;
           }
+      }
+
+      // Selected User Highlight (강조 표시)
+      if (isSelectedUserDate && selectedUserId) {
+        if (selectedUserVote?.vote_type === 'available') {
+          classes += "ring-4 ring-inset ring-orange-500 ring-offset-2 ring-offset-white rounded-lg z-[6] shadow-lg ";
+        } else if (selectedUserVote?.vote_type === 'unavailable') {
+          classes += "ring-4 ring-inset ring-gray-500 ring-offset-2 ring-offset-white rounded-lg z-[6] shadow-lg ";
+        }
       }
 
       // My Vote Highlight (Border)

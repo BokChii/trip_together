@@ -4,7 +4,7 @@ import { Calendar } from './components/Calendar';
 import { ModeToggle } from './components/ModeToggle';
 import { Button } from './components/Button';
 import { DateVote, User, VoteType } from './types';
-import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle } from 'lucide-react';
+import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon } from 'lucide-react';
 import { generateItinerary } from './services/geminiService';
 import {
   createTrip,
@@ -56,6 +56,9 @@ const App: React.FC = () => {
   // Modal State
   const [showNewTripModal, setShowNewTripModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+
+  // Selected User for Highlighting
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // 중복 실행 방지를 위한 ref
   const hasInitialized = useRef(false);
@@ -647,6 +650,58 @@ const App: React.FC = () => {
            )}
         </div>
 
+        {/* Participants List */}
+        {users.length > 1 && (
+          <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm border border-orange-50">
+            <div className="flex items-center gap-2 mb-3">
+              <UserIcon className="w-5 h-5 text-orange-500" />
+              <h3 className="text-sm font-semibold text-gray-700">참여자</h3>
+              <span className="text-xs text-gray-400">({users.length}명)</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {users.map(user => {
+                const isSelected = selectedUserId === user.id;
+                const userVotes = votes.filter(v => v.user_id === user.id);
+                const availableCount = userVotes.filter(v => v.vote_type === 'available').length;
+                const unavailableCount = userVotes.filter(v => v.vote_type === 'unavailable').length;
+                
+                return (
+                  <button
+                    key={user.id}
+                    onClick={() => setSelectedUserId(isSelected ? null : user.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-orange-500 text-white shadow-md scale-105'
+                        : 'bg-orange-50 text-orange-700 hover:bg-orange-100 hover:scale-105'
+                    }`}
+                  >
+                    <span>{user.name}</span>
+                    {availableCount > 0 && (
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                        isSelected ? 'bg-white/30' : 'bg-orange-200'
+                      }`}>
+                        가능 {availableCount}
+                      </span>
+                    )}
+                    {unavailableCount > 0 && (
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                        isSelected ? 'bg-white/30' : 'bg-gray-200'
+                      }`}>
+                        불가 {unavailableCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedUserId && (
+              <p className="text-xs text-orange-600 mt-3 font-medium">
+                👆 {users.find(u => u.id === selectedUserId)?.name}님이 선택한 날짜가 강조됩니다
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Calendar */}
         <Calendar 
           currentDate={currentDate}
@@ -658,6 +713,7 @@ const App: React.FC = () => {
           onVote={handleVote}
           startDate={tripStartDate}
           endDate={tripEndDate}
+          selectedUserId={selectedUserId}
         />
 
         {/* AI Itinerary Section */}
