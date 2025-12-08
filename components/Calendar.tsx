@@ -10,6 +10,8 @@ interface CalendarProps {
   currentUserId: string;
   voteMode: VoteType;
   onVote: (dateIso: string | string[], shouldRemove?: boolean) => void;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -20,6 +22,8 @@ export const Calendar: React.FC<CalendarProps> = ({
   currentUserId,
   voteMode,
   onVote,
+  startDate,
+  endDate,
 }) => {
   // Dragging State
   const [isDragging, setIsDragging] = useState(false);
@@ -76,6 +80,43 @@ export const Calendar: React.FC<CalendarProps> = ({
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() + delta);
     setCurrentDate(newDate);
+  };
+
+  // 월이 기간 범위 내에 있는지 확인 (해당 월에 기간 내 날짜가 하나라도 있으면 true)
+  const isMonthInRange = (year: number, month: number): boolean => {
+    if (!startDate && !endDate) return true; // 기간 제한이 없으면 모두 허용
+    
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+    
+    // 해당 월의 첫날과 마지막날
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0);
+    
+    if (start && end) {
+      // 기간과 월이 겹치는지 확인
+      return monthStart <= end && monthEnd >= start;
+    } else if (start) {
+      return monthEnd >= start;
+    } else if (end) {
+      return monthStart <= end;
+    }
+    return true;
+  };
+
+  // 이전/다음 월 이동 가능 여부 확인
+  const canGoToPreviousMonth = (): boolean => {
+    if (!startDate && !endDate) return true;
+    const prevMonth = new Date(currentDate);
+    prevMonth.setMonth(prevMonth.getMonth() - 1);
+    return isMonthInRange(prevMonth.getFullYear(), prevMonth.getMonth());
+  };
+
+  const canGoToNextMonth = (): boolean => {
+    if (!startDate && !endDate) return true;
+    const nextMonth = new Date(currentDate);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    return isMonthInRange(nextMonth.getFullYear(), nextMonth.getMonth());
   };
 
   const getDayStats = (isoDate: string) => {
@@ -145,12 +186,37 @@ export const Calendar: React.FC<CalendarProps> = ({
     return () => window.removeEventListener('pointerup', handleGlobalUp);
   }, [isDragging, dragStart, dragEnd, dragMode]);
 
+  const isDateInRange = (isoDate: string): boolean => {
+    if (!startDate && !endDate) return true; // 기간 제한이 없으면 모두 허용
+    
+    const date = new Date(isoDate);
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+    
+    if (start && end) {
+      return date >= start && date <= end;
+    } else if (start) {
+      return date >= start;
+    } else if (end) {
+      return date <= end;
+    }
+    return true;
+  };
+
   const getCellStyles = (isoDate: string, isCurrentMonth: boolean) => {
-    if (!isCurrentMonth) return "bg-gray-50/50 text-gray-300 cursor-default";
+    // 기간 제한 체크
+    const isInRange = isDateInRange(isoDate);
+    if (!isInRange) {
+      // 기간 제한 밖이면 다른 달이든 현재 달이든 비활성화
+      return "bg-gray-50/50 text-gray-300 cursor-not-allowed opacity-50";
+    }
 
     const { availableCount, unavailableCount, myVote } = getDayStats(isoDate);
     const totalUsers = users.length;
     const isPerfectMatch = totalUsers > 0 && availableCount === totalUsers;
+    
+    // 다른 달 날짜인 경우 투명도 적용 (시각적 구분)
+    const opacityClass = isCurrentMonth ? "" : "opacity-70";
     
     let isInDragRange = false;
     if (isDragging && dragStart && dragEnd) {
@@ -164,39 +230,44 @@ export const Calendar: React.FC<CalendarProps> = ({
 
     let classes = "cursor-pointer transition-all duration-200 relative select-none ";
     
-    // Drag Preview Styles
-    if (isInDragRange) {
-        if (dragMode === 'remove') {
-            // "Eraser" visual feedback
-            return classes + "bg-gray-50 opacity-60 ring-1 ring-inset ring-gray-300 rounded-lg scale-[0.95] grayscale z-10 ";
-        } else {
-            // "Adding" visual feedback
-            if (voteMode === 'available') return classes + "bg-orange-100 ring-2 ring-inset ring-orange-400 rounded-lg scale-[0.95] z-10 ";
-            if (voteMode === 'unavailable') return classes + "bg-gray-200 ring-2 ring-inset ring-gray-400 rounded-lg scale-[0.95] z-10 ";
-        }
-    }
-
-    // My Vote Highlight (Border)
-    if (myVote === 'available') {
-      classes += "ring-2 ring-inset ring-orange-400 rounded-lg z-[2] ";
-    } else if (myVote === 'unavailable') {
-      classes += "ring-2 ring-inset ring-gray-300 rounded-lg z-[2] ";
-    }
-
-    // Heatmap Logic (Orange Theme)
-    if (isPerfectMatch) {
-      // 모두 가능: 진한 오렌지/레드오렌지
-      classes += "bg-gradient-to-br from-orange-400 to-red-400 text-white shadow-md scale-[1.03] z-[5] rounded-xl ";
-    } else if (totalUsers > 0 && availableCount > 0) {
-      const intensity = availableCount / totalUsers;
-      if (intensity >= 0.75) classes += "bg-orange-300 text-white hover:bg-orange-400 rounded-lg ";
-      else if (intensity >= 0.5) classes += "bg-orange-200 text-orange-900 hover:bg-orange-300 rounded-lg ";
-      else if (intensity >= 0.25) classes += "bg-orange-100 text-orange-800 hover:bg-orange-200 rounded-lg ";
-      else classes += "bg-orange-50 text-orange-800 hover:bg-orange-100 rounded-lg ";
-    } else if (availableCount === 0 && unavailableCount > 0) {
-       classes += "bg-gray-100 text-gray-400 hover:bg-gray-200 rounded-lg ";
+    // 다른 달 날짜는 기본적으로 회색 배경 (투표가 없을 때)
+    if (!isCurrentMonth && availableCount === 0 && unavailableCount === 0) {
+      classes += "bg-gray-50/50 text-gray-400 " + opacityClass + " ";
     } else {
-      classes += "bg-white hover:bg-orange-50 text-gray-700 rounded-lg ";
+      // Drag Preview Styles
+      if (isInDragRange) {
+          if (dragMode === 'remove') {
+              // "Eraser" visual feedback
+              return classes + "bg-gray-50 opacity-60 ring-1 ring-inset ring-gray-300 rounded-lg scale-[0.95] grayscale z-10 " + opacityClass;
+          } else {
+              // "Adding" visual feedback
+              if (voteMode === 'available') return classes + "bg-orange-100 ring-2 ring-inset ring-orange-400 rounded-lg scale-[0.95] z-10 " + opacityClass;
+              if (voteMode === 'unavailable') return classes + "bg-gray-200 ring-2 ring-inset ring-gray-400 rounded-lg scale-[0.95] z-10 " + opacityClass;
+          }
+      }
+
+      // My Vote Highlight (Border)
+      if (myVote === 'available') {
+        classes += "ring-2 ring-inset ring-orange-400 rounded-lg z-[2] ";
+      } else if (myVote === 'unavailable') {
+        classes += "ring-2 ring-inset ring-gray-300 rounded-lg z-[2] ";
+      }
+
+      // Heatmap Logic (Orange Theme)
+      if (isPerfectMatch) {
+        // 모두 가능: 진한 오렌지/레드오렌지
+        classes += "bg-gradient-to-br from-orange-400 to-red-400 text-white shadow-md scale-[1.03] z-[5] rounded-xl " + opacityClass + " ";
+      } else if (totalUsers > 0 && availableCount > 0) {
+        const intensity = availableCount / totalUsers;
+        if (intensity >= 0.75) classes += "bg-orange-300 text-white hover:bg-orange-400 rounded-lg " + opacityClass + " ";
+        else if (intensity >= 0.5) classes += "bg-orange-200 text-orange-900 hover:bg-orange-300 rounded-lg " + opacityClass + " ";
+        else if (intensity >= 0.25) classes += "bg-orange-100 text-orange-800 hover:bg-orange-200 rounded-lg " + opacityClass + " ";
+        else classes += "bg-orange-50 text-orange-800 hover:bg-orange-100 rounded-lg " + opacityClass + " ";
+      } else if (availableCount === 0 && unavailableCount > 0) {
+         classes += "bg-gray-100 text-gray-400 hover:bg-gray-200 rounded-lg " + opacityClass + " ";
+      } else {
+        classes += (isCurrentMonth ? "bg-white hover:bg-orange-50" : "bg-gray-50/50") + " text-gray-700 rounded-lg " + opacityClass + " ";
+      }
     }
     
     return classes;
@@ -209,13 +280,29 @@ export const Calendar: React.FC<CalendarProps> = ({
       {/* Header */}
       <div className="p-6 flex items-center justify-between border-b border-orange-100">
         <div className="flex items-center gap-4">
-          <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-orange-50 rounded-full text-orange-400 transition-colors">
+          <button 
+            onClick={() => changeMonth(-1)} 
+            disabled={!canGoToPreviousMonth()}
+            className={`p-2 rounded-full transition-colors ${
+              canGoToPreviousMonth()
+                ? 'hover:bg-orange-50 text-orange-400 cursor-pointer'
+                : 'text-gray-300 cursor-not-allowed opacity-50'
+            }`}
+          >
             <ChevronLeft className="w-6 h-6" strokeWidth={3} />
           </button>
           <h2 className="text-2xl font-bold text-gray-800 tracking-wide">
             {currentDate.toLocaleString('ko-KR', { month: 'long', year: 'numeric' })}
           </h2>
-          <button onClick={() => changeMonth(1)} className="p-2 hover:bg-orange-50 rounded-full text-orange-400 transition-colors">
+          <button 
+            onClick={() => changeMonth(1)} 
+            disabled={!canGoToNextMonth()}
+            className={`p-2 rounded-full transition-colors ${
+              canGoToNextMonth()
+                ? 'hover:bg-orange-50 text-orange-400 cursor-pointer'
+                : 'text-gray-300 cursor-not-allowed opacity-50'
+            }`}
+          >
             <ChevronRight className="w-6 h-6" strokeWidth={3} />
           </button>
         </div>
@@ -240,8 +327,10 @@ export const Calendar: React.FC<CalendarProps> = ({
         {daysInMonth.map((day, idx) => {
           const { availableCount, dateVotes } = getDayStats(day.isoString);
           const totalUsers = users.length;
-          const isPerfectMatch = day.isCurrentMonth && totalUsers > 0 && availableCount === totalUsers;
-          const isDisabled = !day.isCurrentMonth;
+          const isPerfectMatch = totalUsers > 0 && availableCount === totalUsers;
+          const isInRange = isDateInRange(day.isoString);
+          // 기간 제한만 체크, 다른 달 날짜도 클릭 가능
+          const isDisabled = !isInRange;
 
           return (
             <div
@@ -254,31 +343,34 @@ export const Calendar: React.FC<CalendarProps> = ({
               `}
             >
               <div className="w-full flex justify-between items-start mb-1 pointer-events-none">
-                <span className={`text-sm font-bold ${day.isToday ? 'bg-orange-400 text-white shadow-sm w-7 h-7 flex items-center justify-center rounded-full' : ''}`}>
+                <span className={`text-sm font-bold ${day.isToday ? 'bg-orange-400 text-white shadow-sm w-7 h-7 flex items-center justify-center rounded-full' : ''} ${!day.isCurrentMonth ? 'text-gray-400' : ''}`}>
                   {day.date.getDate()}
                 </span>
-                {isPerfectMatch && (
+                {isPerfectMatch && day.isCurrentMonth && (
                   <Crown className="w-5 h-5 text-yellow-300 fill-yellow-300 animate-bounce" />
                 )}
               </div>
 
-              {/* User Names List */}
-              {day.isCurrentMonth && (
-                <div className="w-full flex flex-col gap-1 overflow-y-auto max-h-[70px] custom-scrollbar pointer-events-none mt-1">
+              {/* User Names List - 다른 달 날짜에도 투표가 있으면 표시 */}
+              {dateVotes.length > 0 && (
+                <div className={`w-full flex flex-col gap-1 overflow-y-auto max-h-[70px] custom-scrollbar pointer-events-none mt-1 ${!day.isCurrentMonth ? 'opacity-70' : ''}`}>
                   {dateVotes.map((vote) => {
                     const user = users.find(u => u.id === vote.userId);
                     if (!user) return null;
                     const isAvailable = vote.type === 'available';
                     
+                    // 다른 달 날짜는 Perfect Match 체크에서 제외 (현재 달만)
+                    const isDayPerfectMatch = day.isCurrentMonth && isPerfectMatch;
+                    
                     // Contrast Logic Improved
                     // Perfect Match: White text with shadow
                     // Others: Dark text (Gray-900 or Gray-500) for readability
-                    const textColor = isPerfectMatch 
+                    const textColor = isDayPerfectMatch 
                         ? 'text-white drop-shadow-md' 
-                        : (isAvailable ? 'text-gray-900' : 'text-gray-500');
+                        : (isAvailable ? (day.isCurrentMonth ? 'text-gray-900' : 'text-gray-700') : 'text-gray-500');
 
                     const iconColor = isAvailable 
-                        ? (isPerfectMatch ? 'text-yellow-200 drop-shadow-sm' : 'text-orange-500')
+                        ? (isDayPerfectMatch ? 'text-yellow-200 drop-shadow-sm' : (day.isCurrentMonth ? 'text-orange-500' : 'text-orange-400'))
                         : 'text-gray-400';
 
                     return (
@@ -317,7 +409,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-red-400 rounded-lg flex items-center justify-center shadow-sm">
                 <Crown className="w-3 h-3 text-white" />
             </div>
-            <span>완전 딱이야!</span>
+            <span>모두 가능!</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 bg-gray-100 rounded-lg flex items-center justify-center">

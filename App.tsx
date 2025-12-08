@@ -1,39 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { Calendar } from './components/Calendar';
 import { ModeToggle } from './components/ModeToggle';
 import { Button } from './components/Button';
 import { DateVote, User, VoteType } from './types';
-import { Users, MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart } from 'lucide-react';
+import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle } from 'lucide-react';
 import { generateItinerary } from './services/geminiService';
-
-// 백엔드가 없으므로 시뮬레이션을 위한 한국 이름 데이터
-const NAMES = ['지수', '민호', '서연', '준호', '유진', '도윤', '하은'];
-
-// URL 공유를 위한 데이터 최소화 인터페이스
-interface MinUser {
-  i: string; // id
-  n: string; // name
-}
-interface MinVote {
-  d: string; // date (compressed YYYYMMDD)
-  ui: number; // user index
-  t: 0 | 1; // 1: available, 0: unavailable
-}
-interface MinPayload {
-  u: MinUser[];
-  v: MinVote[];
-  dst: string; // destination
-}
+import {
+  createTrip,
+  getTripByShareCode,
+  getTripUsers,
+  getDateVotes,
+  addTripUser,
+  upsertDateVote,
+  upsertDateVotesBatch,
+  deleteDateVotes,
+  updateTripDestination,
+  subscribeToTrip,
+  subscribeToTripUsers,
+  subscribeToDateVotes
+} from './services/tripService';
 
 // Short ID generator (6 chars)
 const generateId = () => Math.random().toString(36).substring(2, 8);
-
-// Date Helpers for Compression (YYYY-MM-DD <-> YYYYMMDD)
-const compressDate = (iso: string) => iso.replace(/-/g, '');
-const decompressDate = (str: string) => {
-    if (str.length !== 8) return str;
-    return `${str.slice(0, 4)}-${str.slice(4, 6)}-${str.slice(6, 8)}`;
-};
 
 const App: React.FC = () => {
   // State
@@ -44,6 +33,17 @@ const App: React.FC = () => {
   const [votes, setVotes] = useState<DateVote[]>([]);
   const [voteMode, setVoteMode] = useState<VoteType>('available');
   
+  // Trip State
+  const [currentTripId, setCurrentTripId] = useState<string | null>(null);
+  const [shareCode, setShareCode] = useState<string | null>(null);
+  const [isLoadingTrip, setIsLoadingTrip] = useState(false);
+  const [tripStartDate, setTripStartDate] = useState<string | null>(null);
+  const [tripEndDate, setTripEndDate] = useState<string | null>(null);
+  
+  // 기간 설정 State (최초 유저용)
+  const [startDateInput, setStartDateInput] = useState('');
+  const [endDateInput, setEndDateInput] = useState('');
+  
   // Share State
   const [isCopied, setIsCopied] = useState(false);
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
@@ -53,93 +53,133 @@ const App: React.FC = () => {
   const [itinerary, setItinerary] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Initialize Data from LocalStorage and URL
+  // Modal State
+  const [showNewTripModal, setShowNewTripModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+
+  // 중복 실행 방지를 위한 ref
+  const hasInitialized = useRef(false);
+
+  // Initialize Trip from URL (기존 Trip 로드만, 새로 생성하지 않음)
   useEffect(() => {
-    const initData = () => {
-      // 1. Load Local User
-      const savedUserStr = localStorage.getItem('tripsync_user');
-      let localUser: User | null = null;
-      if (savedUserStr) {
-        try {
-          localUser = JSON.parse(savedUserStr);
-          setCurrentUser(localUser);
-        } catch (e) {
-          console.error("Failed to parse user", e);
-        }
-      }
+    // 이미 초기화되었으면 스킵
+    if (hasInitialized.current) {
+      console.log('⏭️ initTrip: Already initialized, skipping...');
+      return;
+    }
 
-      // 2. Load Shared Data from URL
-      const params = new URLSearchParams(window.location.search);
-      const dataStr = params.get('d');
+    const initTrip = async () => {
+      console.log('🚀 initTrip: Starting trip initialization...');
+      hasInitialized.current = true;
+      setIsLoadingTrip(true);
       
-      let sharedUsers: User[] = [];
-      let sharedVotes: DateVote[] = [];
-      let sharedDest = '제주도';
+      try {
+        // URL에서 share_code 확인
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('trip');
+        console.log('🔗 initTrip: URL trip code', code || 'none');
 
-      if (dataStr) {
-        try {
-          // Restore Base64 standard characters
-          const base64 = dataStr.replace(/-/g, '+').replace(/_/g, '/');
-          // Decode Base64 with UTF-8 support
-          const jsonStr = decodeURIComponent(escape(atob(base64)));
-          const payload: MinPayload = JSON.parse(jsonStr);
-          
-          // Reconstruct Users
-          if (Array.isArray(payload.u)) {
-            sharedUsers = payload.u.map(u => ({ id: u.i, name: u.n }));
+        if (code) {
+          // 기존 Trip 로드
+          console.log('📥 initTrip: Loading existing trip...', { code });
+          const trip = await getTripByShareCode(code);
+          if (trip) {
+            console.log('✅ initTrip: Trip loaded', { tripId: trip.id, shareCode: trip.share_code, destination: trip.destination });
+            
+            setCurrentTripId(trip.id);
+            setShareCode(trip.share_code);
+            setDestination(trip.destination);
+            setTripStartDate(trip.start_date || null);
+            setTripEndDate(trip.end_date || null);
+
+            // Load users and votes
+            console.log('📊 initTrip: Loading users and votes...');
+            const tripUsers = await getTripUsers(trip.id);
+            const tripVotes = await getDateVotes(trip.id);
+            console.log('✅ initTrip: Data loaded', { usersCount: tripUsers.length, votesCount: tripVotes.length });
+
+            setUsers(tripUsers);
+            setVotes(tripVotes);
+
+            // Local user가 있으면 추가 (하지만 currentUser는 설정하지 않음 - 로그인 화면 유지)
+            const savedUserStr = localStorage.getItem('tripsync_user');
+            if (savedUserStr) {
+              try {
+                const localUser = JSON.parse(savedUserStr);
+                console.log('👤 initTrip: Found saved user, adding to trip...', { userId: localUser.id, userName: localUser.name });
+                await addTripUser(trip.id, localUser);
+                console.log('✅ initTrip: Saved user added to trip');
+              } catch (error) {
+                console.error("❌ initTrip: Failed to add user to trip", error);
+              }
+            }
+          } else {
+            console.warn('⚠️ initTrip: Trip not found');
+            alert("존재하지 않는 여행 일정입니다.");
           }
-
-          // Reconstruct Votes
-          if (Array.isArray(payload.v) && sharedUsers.length > 0) {
-            sharedVotes = payload.v.map(v => {
-              const user = sharedUsers[v.ui];
-              return {
-                date: decompressDate(v.d),
-                userId: user ? user.id : '',
-                type: (v.t === 1 ? 'available' : 'unavailable') as VoteType
-              };
-            }).filter(v => v.userId !== '');
-          }
-
-          if (payload.dst) sharedDest = payload.dst;
-          
-          setDestination(sharedDest);
-          setVotes(sharedVotes);
-        } catch (e) {
-          console.error("Failed to parse shared data", e);
+        } else {
+          // URL에 trip 코드가 없으면 Trip 생성하지 않음
+          // 사용자가 로그인할 때 생성됨
+          console.log('📝 initTrip: No trip code in URL, waiting for user login...');
         }
+      } catch (error) {
+        console.error("❌ initTrip: Failed to initialize trip", error);
+        alert("일정을 불러오는데 실패했습니다.");
+        hasInitialized.current = false; // 에러 시 재시도 가능하도록
+      } finally {
+        setIsLoadingTrip(false);
+        console.log('✅ initTrip: Initialization complete');
       }
-
-      // 3. Merge Users (Shared + Local)
-      let finalUsers = [...sharedUsers];
-      
-      if (localUser) {
-        const exists = finalUsers.find(u => u.id === localUser!.id);
-        if (!exists) {
-          finalUsers.push(localUser);
-        }
-      }
-      
-      setUsers(finalUsers);
     };
 
-    initData();
+    initTrip();
   }, []);
+
+  // Real-time subscriptions
+  useEffect(() => {
+    if (!currentTripId) {
+      console.log('📡 Subscriptions: No tripId, skipping subscriptions');
+      return;
+    }
+
+    console.log('📡 Subscriptions: Setting up real-time subscriptions', { tripId: currentTripId });
+
+    // Subscribe to trip changes
+    const tripSubscription = subscribeToTrip(currentTripId, (trip) => {
+      console.log('📡 Subscription: Trip updated', { destination: trip.destination });
+      setDestination(trip.destination);
+      setTripStartDate(trip.start_date || null);
+      setTripEndDate(trip.end_date || null);
+    });
+
+    // Subscribe to user changes
+    const usersSubscription = subscribeToTripUsers(currentTripId, (updatedUsers) => {
+      console.log('📡 Subscription: Users updated', { count: updatedUsers.length, users: updatedUsers.map(u => u.name) });
+      setUsers(updatedUsers);
+    });
+
+    // Subscribe to vote changes
+    const votesSubscription = subscribeToDateVotes(currentTripId, (updatedVotes) => {
+      console.log('📡 Subscription: Votes updated', { count: updatedVotes.length });
+      setVotes(updatedVotes);
+    });
+
+    console.log('✅ Subscriptions: All subscriptions active');
+
+    return () => {
+      console.log('🔌 Subscriptions: Cleaning up subscriptions');
+      tripSubscription.unsubscribe();
+      usersSubscription.unsubscribe();
+      votesSubscription.unsubscribe();
+    };
+  }, [currentTripId]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!nameInput.trim()) return;
     
-    // Check if user already exists in the list (simple name check for safety)
-    const existing = users.find(u => u.name === nameInput.trim());
-    if (existing) {
-        if (!window.confirm(`${existing.name}님으로 계속하시겠습니까?`)) {
-            return;
-        }
-        confirmUser(existing);
-        return;
-    }
-
+    // 이름 입력 필드에서는 항상 새 유저로 생성
+    // 기존 유저 재접속은 하단 버튼으로만 가능
     const newUser: User = {
       id: generateId(),
       name: nameInput.trim()
@@ -148,13 +188,57 @@ const App: React.FC = () => {
     confirmUser(newUser);
   };
 
-  const confirmUser = (user: User) => {
+  const confirmUser = async (user: User) => {
+    console.log('👤 confirmUser: Starting', { userId: user.id, userName: user.name });
     setCurrentUser(user);
-    setUsers(prev => {
-        if (prev.find(u => u.id === user.id)) return prev;
-        return [...prev, user];
-    });
     localStorage.setItem('tripsync_user', JSON.stringify(user));
+
+    // Trip이 없으면 생성 (사용자가 로그인할 때 생성)
+    if (!currentTripId) {
+      console.log('📝 confirmUser: No trip exists, creating new trip...');
+      setIsLoadingTrip(true);
+      try {
+        const newTrip = await createTrip(
+          destination,
+          startDateInput || null,
+          endDateInput || null
+        );
+        console.log('✅ confirmUser: Trip created', { tripId: newTrip.id, shareCode: newTrip.share_code });
+        setCurrentTripId(newTrip.id);
+        setShareCode(newTrip.share_code);
+        setTripStartDate(newTrip.start_date || null);
+        setTripEndDate(newTrip.end_date || null);
+        
+        // 사용자 추가
+        console.log('👤 confirmUser: Adding user to new trip...');
+        await addTripUser(newTrip.id, user);
+        console.log('✅ confirmUser: User added to trip successfully');
+        
+        // 초기 데이터 로드
+        const tripUsers = await getTripUsers(newTrip.id);
+        const tripVotes = await getDateVotes(newTrip.id);
+        setUsers(tripUsers);
+        setVotes(tripVotes);
+        console.log('✅ confirmUser: Initial data loaded', { usersCount: tripUsers.length, votesCount: tripVotes.length });
+      } catch (error) {
+        console.error("❌ confirmUser: Failed to create trip and add user", error);
+        alert("일정 생성에 실패했습니다. 다시 시도해주세요.");
+        setCurrentUser(null); // 실패 시 로그인 상태 리셋
+      } finally {
+        setIsLoadingTrip(false);
+      }
+    } else {
+      // Trip이 있으면 사용자 추가
+      console.log('👤 confirmUser: Trip exists, adding user...', { tripId: currentTripId });
+      try {
+        await addTripUser(currentTripId, user);
+        console.log('✅ confirmUser: User added to existing trip successfully');
+        // Users will be updated via subscription
+      } catch (error) {
+        console.error("❌ confirmUser: Failed to add user", error);
+        alert("사용자 추가에 실패했습니다.");
+      }
+    }
   };
 
   /**
@@ -162,96 +246,101 @@ const App: React.FC = () => {
    * @param dateIsoOrList 날짜 문자열 또는 날짜 문자열 배열
    * @param shouldRemove true일 경우 해당 날짜의 투표를 삭제(취소)함. undefined일 경우 기존 토글 로직.
    */
-  const handleVote = (dateIsoOrList: string | string[], shouldRemove?: boolean) => {
-    if (!currentUser) return;
+  const handleVote = async (dateIsoOrList: string | string[], shouldRemove?: boolean) => {
+    if (!currentUser) {
+      console.warn("⚠️ handleVote: currentUser is null");
+      alert("먼저 로그인해주세요.");
+      return;
+    }
+    if (!currentTripId) {
+      console.warn("⚠️ handleVote: currentTripId is null");
+      alert("일정을 불러오는 중입니다. 잠시만 기다려주세요.");
+      return;
+    }
 
     const datesToUpdate = Array.isArray(dateIsoOrList) ? dateIsoOrList : [dateIsoOrList];
 
-    setVotes(prev => {
-      // 1. 해당 날짜들에 대한 내 기존 투표를 모두 제거 (Clean slate)
-      const filteredVotes = prev.filter(v => 
-        !(datesToUpdate.includes(v.date) && v.userId === currentUser.id)
-      );
-
-      // 2. 삭제(취소) 모드라면 여기서 종료
-      if (shouldRemove) {
-          return filteredVotes;
-      }
-
-      // 3. shouldRemove가 명시되지 않은 단일 클릭의 경우 (Legacy Toggle)
-      //    -> 이미 선택된 상태였다면 제거된 상태 그대로 반환 (Toggle Off)
-      if (shouldRemove === undefined && !Array.isArray(dateIsoOrList)) {
-         const existingVote = prev.find(v => v.date === dateIsoOrList && v.userId === currentUser.id);
-         if (existingVote && existingVote.type === voteMode) {
-             return filteredVotes; 
-         }
-      }
-
-      // 4. 새로운 투표 추가
-      const newEntries = datesToUpdate.map(date => ({
-        date,
-        userId: currentUser.id,
-        type: voteMode
-      }));
-
-      return [...filteredVotes, ...newEntries];
-    });
-  };
-
-  const addFakeFriend = () => {
-    const randomName = NAMES[Math.floor(Math.random() * NAMES.length)] + ` #${users.length}`;
-    const fakeId = generateId();
-    const fakeUser: User = { id: fakeId, name: randomName };
-    
-    setUsers(prev => [...prev, fakeUser]);
-
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    
-    const newVotes: DateVote[] = [];
-    for (let i = 1; i <= daysInMonth; i++) {
-        const rand = Math.random();
-        const dateIso = new Date(year, month, i).toISOString().split('T')[0];
-        
-        if (rand < 0.4) {
-            newVotes.push({ date: dateIso, userId: fakeId, type: 'available' });
-        } else if (rand > 0.9) {
-            newVotes.push({ date: dateIso, userId: fakeId, type: 'unavailable' });
-        }
-    }
-    setVotes(prev => [...prev, ...newVotes]);
-  };
-
-  const handleShare = async () => {
-    const minUsers: MinUser[] = users.map(u => ({ i: u.id, n: u.name }));
-    const minVotes: MinVote[] = votes.map(v => {
-      const userIndex = users.findIndex(u => u.id === v.userId);
-      return {
-        d: compressDate(v.date),
-        ui: userIndex,
-        t: v.type === 'available' ? 1 : 0
-      };
-    }).filter(v => v.ui !== -1);
-
-    const payload: MinPayload = {
-      u: minUsers,
-      v: minVotes,
-      dst: destination
-    };
+    // Optimistic Update를 위한 이전 상태 저장 (에러 시 복구용)
+    const previousVotes = [...votes];
 
     try {
-      const jsonStr = JSON.stringify(payload);
-      const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
-      const urlSafeEncoded = encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      if (shouldRemove) {
+        // 삭제 - Optimistic Update
+        setVotes(prev => prev.filter(v => 
+          !(datesToUpdate.includes(v.date) && v.userId === currentUser.id)
+        ));
+        
+        await deleteDateVotes(currentTripId, datesToUpdate, currentUser.id);
+      } else {
+        // 단일 클릭의 경우 토글 로직
+        if (shouldRemove === undefined && !Array.isArray(dateIsoOrList)) {
+          const existingVote = votes.find(v => v.date === dateIsoOrList && v.userId === currentUser.id);
+          if (existingVote && existingVote.type === voteMode) {
+            // 이미 선택된 상태면 삭제 - Optimistic Update
+            setVotes(prev => prev.filter(v => 
+              !(v.date === dateIsoOrList && v.userId === currentUser.id)
+            ));
+            
+            await deleteDateVotes(currentTripId, [dateIsoOrList], currentUser.id);
+            return;
+          }
+        }
+
+        // 추가/업데이트 - Optimistic Update
+        setVotes(prev => {
+          // 기존 투표 제거
+          const filtered = prev.filter(v => 
+            !(datesToUpdate.includes(v.date) && v.userId === currentUser.id)
+          );
+          // 새 투표 추가
+          const newVotes = datesToUpdate.map(date => ({
+            date,
+            userId: currentUser.id,
+            type: voteMode
+          }));
+          return [...filtered, ...newVotes];
+        });
+
+        // DB 저장 - 배치로 한 번에 저장
+        await upsertDateVotesBatch(
+          currentTripId,
+          datesToUpdate.map(date => ({
+            date,
+            userId: currentUser.id,
+            voteType: voteMode
+          }))
+        );
+      }
+      // 구독은 다른 사용자의 변경사항을 받기 위해 유지
+    } catch (error) {
+      console.error("❌ handleVote: Failed to vote", error);
+      // 에러 시 이전 상태로 복구
+      setVotes(previousVotes);
       
-      let baseUrl = window.location.href.split('?')[0];
-      baseUrl = baseUrl.split('#')[0];
-      
-      const url = `${baseUrl}?d=${urlSafeEncoded}`;
-      
-      setGeneratedUrl(url); 
-      
+      // DB에서 최신 상태 다시 로드 시도
+      try {
+        const updatedVotes = await getDateVotes(currentTripId);
+        setVotes(updatedVotes);
+      } catch (reloadError) {
+        console.error("❌ handleVote: Failed to reload votes", reloadError);
+      }
+      alert("투표 저장에 실패했습니다.");
+    }
+  };
+
+
+  const handleShare = async () => {
+    if (!shareCode) {
+      alert("일정을 불러오는 중입니다. 잠시만 기다려주세요.");
+      return;
+    }
+
+    try {
+      const baseUrl = window.location.origin;
+      const url = `${baseUrl}?trip=${shareCode}`;
+
+      setGeneratedUrl(url);
+
       try {
         await navigator.clipboard.writeText(url);
         setIsCopied(true);
@@ -262,6 +351,19 @@ const App: React.FC = () => {
     } catch (e) {
       console.error("Failed to generate URL", e);
       alert("링크 생성에 실패했습니다.");
+    }
+  };
+
+  const handleDestinationChange = async (newDestination: string) => {
+    setDestination(newDestination);
+
+    if (currentTripId) {
+      try {
+        await updateTripDestination(currentTripId, newDestination);
+        // Destination will be updated via subscription
+      } catch (error) {
+        console.error("Failed to update destination", error);
+      }
     }
   };
 
@@ -295,37 +397,152 @@ const App: React.FC = () => {
     setIsGenerating(false);
   };
 
+  const handleNewTrip = () => {
+    setShowNewTripModal(true);
+  };
+
+  const confirmNewTrip = () => {
+    // 모든 상태 초기화
+    setCurrentUser(null);
+    setCurrentTripId(null);
+    setShareCode(null);
+    setUsers([]);
+    setVotes([]);
+    setDestination('제주도');
+    setTripStartDate(null);
+    setTripEndDate(null);
+    setStartDateInput('');
+    setEndDateInput('');
+    setGeneratedUrl(null);
+    setIsCopied(false);
+    setItinerary(null);
+    setNameInput('');
+    
+    // 초기화 ref 리셋
+    hasInitialized.current = false;
+    
+    // URL에서 trip 파라미터 제거
+    window.history.pushState({}, '', window.location.pathname);
+    
+    setShowNewTripModal(false);
+  };
+
+  const handleExit = () => {
+    setShowExitModal(true);
+  };
+
+  const confirmExit = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('tripsync_user');
+    setShowExitModal(false);
+  };
+
+  // Loading state
+  if (isLoadingTrip) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fff7ed]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">일정을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fff7ed] p-4 font-sans">
-        <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-orange-100 max-w-md w-full text-center border border-orange-50">
-          <div className="mb-6 flex justify-center">
-            <div className="bg-orange-100 p-5 rounded-full animate-bounce">
-              <Plane className="w-10 h-10 text-orange-500" strokeWidth={2.5} />
+        <div className="bg-white p-10 sm:p-12 rounded-[2rem] shadow-xl shadow-orange-100 max-w-xl w-full text-center border border-orange-50">
+          <div className="mb-8 flex justify-center">
+            <div className="bg-orange-100 p-6 rounded-full animate-bounce">
+              <Plane className="w-12 h-12 text-orange-500" strokeWidth={2.5} />
             </div>
           </div>
-          <h1 className="text-3xl font-hand font-bold text-gray-800 mb-3">언제갈래? ✈️</h1>
-          <p className="text-gray-500 mb-8 leading-relaxed">
+          <h1 className="text-4xl sm:text-5xl font-hand font-bold text-gray-800 mb-4">언제갈래? ✈️</h1>
+          <p className="text-base sm:text-lg text-gray-500 mb-10 leading-relaxed">
             친구들과 떠나는 설레는 여행!<br/>
-            우리 언제 만날지 여기서 정해봐요.
+            우리 언제 떠날지 여기에서 정해봐요.
           </p>
           
-          <form onSubmit={handleLogin} className="space-y-4 mb-8">
+          {/* 초대 링크 접속 시 기간 표시 */}
+          {currentTripId && (tripStartDate || tripEndDate) && (
+            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <CalendarIcon className="w-4 h-4 text-orange-600" />
+                <span className="text-sm font-semibold text-orange-900">여행 기간</span>
+              </div>
+              <p className="text-sm text-orange-700">
+                {tripStartDate && tripEndDate 
+                  ? `${new Date(tripStartDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} ~ ${new Date(tripEndDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}`
+                  : tripStartDate 
+                    ? `${new Date(tripStartDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}부터`
+                    : tripEndDate
+                      ? `${new Date(tripEndDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}까지`
+                      : ''
+                }
+              </p>
+            </div>
+          )}
+          
+          <form onSubmit={handleLogin} className="space-y-5 mb-10">
             <input
               type="text"
               placeholder="닉네임이 뭐에요?"
-              className="w-full px-6 py-4 rounded-full bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition-all text-center text-lg font-medium placeholder:text-gray-400 text-gray-900"
+              className="w-full px-8 py-5 rounded-full bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition-all text-center text-xl font-medium placeholder:text-gray-400 text-gray-900"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               required
             />
-            <Button type="submit" className="w-full text-lg shadow-lg shadow-orange-200" size="lg">시작하기</Button>
+            
+            {/* 최초 유저만 기간 설정 표시 */}
+            {!currentTripId && users.length === 0 && (
+              <div className="pt-2 pb-1">
+                <div className="bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-100 rounded-2xl p-5 sm:p-6 shadow-sm">
+                  <div className="flex items-center gap-2 mb-4">
+                    <CalendarIcon className="w-5 h-5 text-orange-500" />
+                    <p className="text-base font-medium text-gray-700">여행 기간 설정 <span className="text-sm text-gray-400 font-normal">(선택)</span></p>
+                  </div>
+                  <div className="flex gap-2 sm:gap-3">
+                    <div className="flex-1 relative min-w-0">
+                      <label className="block text-sm text-gray-600 mb-2 pl-1 font-medium">시작일</label>
+                      <div className="relative">
+                        <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 pointer-events-none" />
+                        <input
+                          type="date"
+                          className="w-full pl-10 pr-3 py-3 rounded-xl bg-white border-2 border-orange-100 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition-all text-sm text-gray-900 shadow-sm hover:border-orange-200"
+                          value={startDateInput}
+                          onChange={(e) => setStartDateInput(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-end pb-8">
+                      <span className="text-orange-400 font-bold text-lg">~</span>
+                    </div>
+                    <div className="flex-1 relative min-w-0">
+                      <label className="block text-sm text-gray-600 mb-2 pl-1 font-medium">종료일</label>
+                      <div className="relative">
+                        <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 pointer-events-none" />
+                        <input
+                          type="date"
+                          className="w-full pl-10 pr-3 py-3 rounded-xl bg-white border-2 border-orange-100 focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition-all text-sm text-gray-900 shadow-sm hover:border-orange-200"
+                          value={endDateInput}
+                          onChange={(e) => setEndDateInput(e.target.value)}
+                          min={startDateInput || undefined}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <Button type="submit" className="w-full text-xl py-6 shadow-lg shadow-orange-200" size="lg">시작하기</Button>
           </form>
 
           {/* Existing Users Selection for Re-login */}
           {users.length > 0 && (
               <div className="border-t border-gray-100 pt-6">
-                  <p className="text-sm text-gray-400 mb-3 font-medium">이미 참여하고 있나요?</p>
+                  <p className="text-sm text-gray-400 mb-3 font-medium">이미 참여하고 있나요? 이름을 클릭하세요 👇</p>
                   <div className="flex flex-wrap justify-center gap-2">
                       {users.map(u => (
                           <button
@@ -357,16 +574,19 @@ const App: React.FC = () => {
                </div>
                <span className="font-hand font-bold text-2xl text-gray-800 tracking-tight pt-1">언제갈래</span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={handleNewTrip}
+                className="text-xs sm:text-sm font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">새로운 일정 만들기</span>
+                <span className="sm:hidden">새 일정</span>
+              </button>
               <span className="hidden sm:inline-block text-sm text-gray-500 bg-orange-50 px-3 py-1 rounded-full">
                 반가워요, <strong className="text-orange-600">{currentUser.name}</strong>님! 👋
               </span>
-              <button onClick={() => {
-                  if(window.confirm("정말 나가시겠어요?")) {
-                    setCurrentUser(null);
-                    localStorage.removeItem('tripsync_user');
-                  }
-              }} className="text-xs font-medium text-gray-400 hover:text-orange-500 transition-colors">나가기</button>
+              <button onClick={handleExit} className="text-xs font-medium text-gray-400 hover:text-orange-500 transition-colors">나가기</button>
             </div>
           </div>
         </div>
@@ -388,10 +608,6 @@ const App: React.FC = () => {
              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                <ModeToggle mode={voteMode} setMode={setVoteMode} />
                <div className="h-8 w-px bg-gray-100 hidden sm:block mx-1"></div>
-               <Button variant="ghost" size="sm" onClick={addFakeFriend} className="gap-2 text-xs hidden sm:flex">
-                  <Users className="w-3 h-3" />
-                  테스트 친구
-               </Button>
                <Button 
                   variant="secondary" 
                   size="md" 
@@ -440,6 +656,8 @@ const App: React.FC = () => {
           currentUserId={currentUser.id}
           voteMode={voteMode}
           onVote={handleVote}
+          startDate={tripStartDate}
+          endDate={tripEndDate}
         />
 
         {/* AI Itinerary Section */}
@@ -468,7 +686,7 @@ const App: React.FC = () => {
                         <input 
                             type="text" 
                             value={destination}
-                            onChange={(e) => setDestination(e.target.value)}
+                            onChange={(e) => handleDestinationChange(e.target.value)}
                             className="w-full pl-11 pr-4 py-3.5 rounded-full bg-white text-gray-900 placeholder:text-gray-400 focus:ring-4 focus:ring-orange-300/50 border-none shadow-lg"
                             placeholder="예: 제주도, 오사카..."
                         />
@@ -500,6 +718,84 @@ const App: React.FC = () => {
            </div>
         </div>
       </main>
+
+      {/* 새로운 일정 만들기 모달 */}
+      {showNewTripModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowNewTripModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-xl border border-orange-100 max-w-md w-full p-6 animate-in fade-in slide-in-from-bottom-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-orange-100 p-2 rounded-full">
+                <PlusCircle className="w-5 h-5 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800">새로운 일정 만들기</h3>
+            </div>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              새로운 여행 일정을 만들면 현재 일정에서 나가게 됩니다.<br/>
+              새로운 일정을 만들까요?
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => setShowNewTripModal(false)}
+                className="flex-1"
+              >
+                취소
+              </Button>
+              <Button
+                onClick={confirmNewTrip}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                만들기
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 나가기 모달 */}
+      {showExitModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowExitModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-xl border border-orange-100 max-w-md w-full p-6 animate-in fade-in slide-in-from-bottom-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-orange-100 p-2 rounded-full">
+                <X className="w-5 h-5 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800">나가기</h3>
+            </div>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              정말 나가시겠어요?<br/>
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => setShowExitModal(false)}
+                className="flex-1"
+              >
+                취소
+              </Button>
+              <Button
+                onClick={confirmExit}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                나가기
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      <Analytics />
     </div>
   );
 };
