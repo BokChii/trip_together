@@ -122,7 +122,13 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const getDayStats = (isoDate: string) => {
-    const dateVotes = votes.filter(v => v.date === isoDate);
+    // selectedUserId가 있으면 해당 유저의 투표만 필터링, 없으면 전체 참여자
+    let dateVotes = votes.filter(v => v.date === isoDate);
+    
+    if (selectedUserId) {
+      dateVotes = dateVotes.filter(v => v.userId === selectedUserId);
+    }
+    
     const availableCount = dateVotes.filter(v => v.type === 'available').length;
     const unavailableCount = dateVotes.filter(v => v.type === 'unavailable').length;
     
@@ -214,14 +220,9 @@ export const Calendar: React.FC<CalendarProps> = ({
     }
 
     const { availableCount, unavailableCount, myVote } = getDayStats(isoDate);
-    const totalUsers = users.length;
+    // selectedUserId가 있으면 해당 유저만, 없으면 전체 참여자 수
+    const totalUsers = selectedUserId ? 1 : users.length;
     const isPerfectMatch = totalUsers > 0 && availableCount === totalUsers;
-    
-    // 선택된 유저의 날짜 확인
-    const selectedUserVote = selectedUserId 
-      ? votes.find(v => v.date === isoDate && v.user_id === selectedUserId)
-      : null;
-    const isSelectedUserDate = selectedUserVote !== undefined && selectedUserVote !== null;
     
     // 다른 달 날짜인 경우 투명도 적용 (시각적 구분)
     const opacityClass = isCurrentMonth ? "" : "opacity-70";
@@ -262,11 +263,13 @@ export const Calendar: React.FC<CalendarProps> = ({
       }
 
       // Heatmap Logic (Orange Theme)
+      // selectedUserId가 있으면 해당 유저만 필터링된 결과를 표시
       if (isPerfectMatch) {
         // 모두 가능: 진한 오렌지/레드오렌지
         classes += "bg-gradient-to-br from-orange-400 to-red-400 text-white shadow-md scale-[1.03] z-[5] rounded-xl " + opacityClass + " ";
       } else if (totalUsers > 0 && availableCount > 0) {
-        const intensity = availableCount / totalUsers;
+        // selectedUserId가 있으면 intensity는 항상 1.0 (해당 유저가 선택한 날짜)
+        const intensity = selectedUserId ? 1.0 : availableCount / totalUsers;
         if (intensity >= 0.75) classes += "bg-orange-300 text-white hover:bg-orange-400 rounded-lg " + opacityClass + " ";
         else if (intensity >= 0.5) classes += "bg-orange-200 text-orange-900 hover:bg-orange-300 rounded-lg " + opacityClass + " ";
         else if (intensity >= 0.25) classes += "bg-orange-100 text-orange-800 hover:bg-orange-200 rounded-lg " + opacityClass + " ";
@@ -275,15 +278,6 @@ export const Calendar: React.FC<CalendarProps> = ({
          classes += "bg-gray-100 text-gray-400 hover:bg-gray-200 rounded-lg " + opacityClass + " ";
       } else {
         classes += (isCurrentMonth ? "bg-white hover:bg-orange-50" : "bg-gray-50/50") + " text-gray-700 rounded-lg " + opacityClass + " ";
-      }
-
-      // Selected User Highlight (강조 표시) - Heatmap Logic 이후에 적용하여 덮어쓰기 방지
-      if (isSelectedUserDate && selectedUserId && selectedUserVote) {
-        if (selectedUserVote.vote_type === 'available') {
-          classes += " ring-4 ring-orange-500 ring-offset-2 ring-offset-white shadow-lg z-[6] ";
-        } else if (selectedUserVote.vote_type === 'unavailable') {
-          classes += " ring-4 ring-gray-500 ring-offset-2 ring-offset-white shadow-lg z-[6] ";
-        }
       }
     }
     

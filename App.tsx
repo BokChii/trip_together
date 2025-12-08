@@ -661,9 +661,9 @@ const App: React.FC = () => {
             <div className="flex flex-wrap gap-2">
               {users.map(user => {
                 const isSelected = selectedUserId === user.id;
-                const userVotes = votes.filter(v => v.user_id === user.id);
-                const availableCount = userVotes.filter(v => v.vote_type === 'available').length;
-                const unavailableCount = userVotes.filter(v => v.vote_type === 'unavailable').length;
+                const userVotes = votes.filter(v => v.userId === user.id);
+                const availableCount = userVotes.filter(v => v.type === 'available').length;
+                const unavailableCount = userVotes.filter(v => v.type === 'unavailable').length;
                 
                 return (
                   <button
@@ -696,7 +696,7 @@ const App: React.FC = () => {
             </div>
             {selectedUserId && (
               <p className="text-xs text-orange-600 mt-3 font-medium">
-                👆 {users.find(u => u.id === selectedUserId)?.name}님이 선택한 날짜가 강조됩니다
+                👆 {users.find(u => u.id === selectedUserId)?.name}님이 선택한 날짜만 표시됩니다
               </p>
             )}
           </div>
