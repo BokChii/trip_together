@@ -165,13 +165,21 @@ const App: React.FC = () => {
             setVotes(tripVotes);
 
             // Local user가 있으면 추가 (하지만 currentUser는 설정하지 않음 - 로그인 화면 유지)
+            // ⚠️ 같은 trip에 속한 사용자만 자동 추가 (다른 trip의 사용자는 제외)
             const savedUserStr = localStorage.getItem('tripsync_user');
             if (savedUserStr) {
               try {
                 const localUser = JSON.parse(savedUserStr);
-                // console.log('👤 initTrip: Found saved user, adding to trip...', { userId: localUser.id, userName: localUser.name });
-                await addTripUser(trip.id, localUser);
-                // console.log('✅ initTrip: Saved user added to trip');
+                
+                // localStorage의 trip_id와 현재 trip_id를 비교
+                // 같은 trip이 아니면 자동 추가하지 않음 (다른 trip의 사용자 정보가 섞이는 것을 방지)
+                if (localUser.trip_id && localUser.trip_id === trip.id) {
+                  // console.log('👤 initTrip: Found saved user for this trip, adding...', { userId: localUser.id, userName: localUser.name });
+                  await addTripUser(trip.id, localUser);
+                  // console.log('✅ initTrip: Saved user added to trip');
+                } else {
+                  // console.log('👤 initTrip: Saved user is for different trip, skipping auto-add', { savedTripId: localUser.trip_id, currentTripId: trip.id });
+                }
               } catch (error) {
                 // console.error("❌ initTrip: Failed to add user to trip", error);
               }
@@ -257,7 +265,6 @@ const App: React.FC = () => {
   const confirmUser = async (user: User) => {
     // console.log('👤 confirmUser: Starting', { userId: user.id, userName: user.name });
     setCurrentUser(user);
-    localStorage.setItem('tripsync_user', JSON.stringify(user));
 
     // Trip이 없으면 생성 (사용자가 로그인할 때 생성)
     if (!currentTripId) {
@@ -279,6 +286,13 @@ const App: React.FC = () => {
         // console.log('👤 confirmUser: Adding user to new trip...');
         await addTripUser(newTrip.id, user);
         // console.log('✅ confirmUser: User added to trip successfully');
+        
+        // localStorage에 사용자 정보와 trip_id를 함께 저장
+        const userWithTripId = {
+          ...user,
+          trip_id: newTrip.id
+        };
+        localStorage.setItem('tripsync_user', JSON.stringify(userWithTripId));
         
         // 초기 데이터 로드
         const tripUsers = await getTripUsers(newTrip.id);
@@ -305,6 +319,14 @@ const App: React.FC = () => {
       try {
         await addTripUser(currentTripId, user);
         // console.log('✅ confirmUser: User added to existing trip successfully');
+        
+        // localStorage에 사용자 정보와 trip_id를 함께 저장
+        const userWithTripId = {
+          ...user,
+          trip_id: currentTripId
+        };
+        localStorage.setItem('tripsync_user', JSON.stringify(userWithTripId));
+        
         // Users will be updated via subscription
       } catch (error) {
         // console.error("❌ confirmUser: Failed to add user", error);
