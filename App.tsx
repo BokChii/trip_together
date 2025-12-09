@@ -104,6 +104,7 @@ const App: React.FC = () => {
   // Modal State
   const [showNewTripModal, setShowNewTripModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showNoDateModal, setShowNoDateModal] = useState(false);
 
   // Selected User for Highlighting
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -440,7 +441,7 @@ const App: React.FC = () => {
 
     const maxVotes = Math.max(...Object.values(voteCounts), 0);
     if (maxVotes === 0) {
-        alert("먼저 가능한 날짜를 선택해주세요!");
+        setShowNoDateModal(true);
         return;
     }
 
@@ -1029,7 +1030,7 @@ const App: React.FC = () => {
                 
                 <div className="flex flex-col sm:flex-row gap-2 max-w-md mt-6">
                     <div className="relative flex-grow">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                         <input 
                             type="text" 
                             value={destination}
@@ -1441,6 +1442,38 @@ const App: React.FC = () => {
                 className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
               >
                 나가기
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 날짜 미선택 알림 모달 */}
+      {showNoDateModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowNoDateModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-orange-100 p-2 rounded-full">
+                <CalendarHeart className="w-5 h-5 text-orange-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800">날짜를 선택해주세요</h3>
+            </div>
+            <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
+              AI 여행 일정을 추천받으려면<br/>
+              먼저 캘린더에서 <strong className="text-orange-600">가능한 날짜를 선택</strong>해주세요! 📅
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => setShowNoDateModal(false)}
+                className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                확인
               </Button>
             </div>
           </div>
