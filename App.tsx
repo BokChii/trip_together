@@ -550,6 +550,26 @@ const App: React.FC = () => {
             </div>
           )}
           
+          {/* Existing Users Selection for Re-login - 여행 기간과 닉네임 입력칸 사이로 이동 */}
+          {users.length > 0 && (
+              <div className="mb-6 p-4 bg-white border border-orange-100 rounded-xl">
+                  <p className="text-sm text-gray-500 mb-3 font-medium text-center">이미 참여하고 있나요? 이름을 클릭하세요 👇</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                      {users.map(u => (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => confirmUser(u)}
+                            className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] bg-orange-50 hover:bg-orange-100 text-gray-700 hover:text-orange-600 rounded-full text-sm border-2 border-orange-200 hover:border-orange-300 transition-all"
+                          >
+                              <span className="font-bold">{u.name}</span>
+                              <ArrowRight className="w-3 h-3" />
+                          </button>
+                      ))}
+                  </div>
+              </div>
+          )}
+          
           <form onSubmit={handleLogin} className="space-y-5 mb-10">
             <input
               type="text"
@@ -620,25 +640,6 @@ const App: React.FC = () => {
             <BookOpen className="w-4 h-4" />
             사용법 보기
           </button>
-
-          {/* Existing Users Selection for Re-login */}
-          {users.length > 0 && (
-              <div className="border-t border-gray-100 pt-6">
-                  <p className="text-sm text-gray-400 mb-3 font-medium">이미 참여하고 있나요? 이름을 클릭하세요 👇</p>
-                  <div className="flex flex-wrap justify-center gap-2">
-                      {users.map(u => (
-                          <button
-                            key={u.id}
-                            onClick={() => confirmUser(u)}
-                            className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] bg-white hover:bg-orange-50 text-gray-600 hover:text-orange-600 rounded-full text-sm border-2 border-gray-100 hover:border-orange-200 transition-all"
-                          >
-                              <span className="font-bold">{u.name}</span>
-                              <ArrowRight className="w-3 h-3" />
-                          </button>
-                      ))}
-                  </div>
-              </div>
-          )}
           </div>
         </div>
         
@@ -846,7 +847,7 @@ const App: React.FC = () => {
                     <h4 className="text-sm font-semibold text-gray-800 mb-1">👥 참여자 확인</h4>
                     <p className="text-xs text-gray-600 leading-relaxed">
                       • 참여자 이름 클릭: 해당 참여자만 보기<br/>
-                      • <strong>"모두 가능"</strong> 클릭: 모든 참여자가 가능한 날짜만 보기
+                      • <strong>"가장 많이 가능"</strong> 클릭: 가장 많은 참여자가 가능한 날짜만 보기
                     </p>
                   </div>
                 </div>
@@ -930,7 +931,7 @@ const App: React.FC = () => {
             </div>
             <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
               <div className="flex gap-2 min-w-max sm:flex-wrap sm:min-w-0">
-                {/* "모두 가능" 버튼 추가 */}
+                {/* "가장 많이 가능" 버튼 추가 */}
                 <button
                   onClick={() => setSelectedUserId(selectedUserId === 'all' ? null : 'all')}
                   className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
@@ -940,7 +941,7 @@ const App: React.FC = () => {
                   }`}
                 >
                   <Crown className="w-4 h-4" />
-                  <span>모두 가능</span>
+                  <span>가장 많이 가능</span>
                 </button>
                 
                 {users.map(user => {
@@ -1211,9 +1212,9 @@ const App: React.FC = () => {
                       <Crown className="w-4 h-4 text-orange-600" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-gray-800 mb-1">모두 가능한 날짜</h4>
+                      <h4 className="text-sm font-semibold text-gray-800 mb-1">가장 많이 가능한 날짜</h4>
                       <p className="text-xs text-gray-600 leading-relaxed">
-                        👑 표시가 있는 날짜는 모든 참여자가 가능한 날짜입니다!
+                        👑 표시가 있는 날짜는 가장 많은 참여자가 가능한 날짜입니다!
                       </p>
                     </div>
                   </div>
@@ -1268,10 +1269,10 @@ const App: React.FC = () => {
                       <Crown className="w-4 h-4 text-orange-600" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-gray-800 mb-1">"모두 가능" 필터</h4>
+                      <h4 className="text-sm font-semibold text-gray-800 mb-1">"가장 많이 가능" 필터</h4>
                       <p className="text-xs text-gray-600 leading-relaxed">
-                        참여자 리스트 맨 앞의 <strong>"모두 가능"</strong> 버튼을 클릭하면 
-                        모든 참여자가 가능한 날짜만 표시됩니다.
+                        참여자 리스트 맨 앞의 <strong>"가장 많이 가능"</strong> 버튼을 클릭하면 
+                        가장 많은 참여자가 가능한 날짜만 표시됩니다.
                       </p>
                     </div>
                   </div>

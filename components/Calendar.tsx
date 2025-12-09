@@ -138,18 +138,36 @@ export const Calendar: React.FC<CalendarProps> = ({
     return isMonthInRange(nextMonth.getFullYear(), nextMonth.getMonth());
   };
 
+  // 'all' 필터를 위한 최대 가능 인원 수 계산 (useMemo로 최적화)
+  const maxAvailableCount = useMemo(() => {
+    if (selectedUserId !== 'all') return 0;
+    
+    // 모든 날짜에 대해 가능한 사람 수 계산
+    const dateCounts: Record<string, number> = {};
+    votes.forEach(v => {
+      if (v.type === 'available') {
+        dateCounts[v.date] = (dateCounts[v.date] || 0) + 1;
+      }
+    });
+    
+    // 최대값 찾기
+    const counts = Object.values(dateCounts);
+    return counts.length > 0 ? Math.max(...counts) : 0;
+  }, [votes, selectedUserId]);
+
   const getDayStats = (isoDate: string) => {
-    // selectedUserId가 'all'이면 모든 참여자가 가능한 날짜만 필터링
     let dateVotes = votes.filter(v => v.date === isoDate);
     
     if (selectedUserId === 'all') {
-      // 모든 참여자가 가능한 날짜만 필터링
+      // 가장 많이 가능한 날짜만 필터링
       const availableVotes = dateVotes.filter(v => v.type === 'available');
-      const allAvailable = availableVotes.length === users.length && users.length > 0;
-      if (!allAvailable) {
+      const availableCount = availableVotes.length;
+      
+      // 최대 가능 인원 수와 같지 않으면 필터링
+      if (availableCount !== maxAvailableCount || maxAvailableCount === 0) {
         return { availableCount: 0, unavailableCount: 0, myVote: undefined, dateVotes: [] };
       }
-      // 모두 가능한 경우 전체 투표 반환
+      // 최대값과 같은 경우 전체 투표 반환
     } else if (selectedUserId) {
       dateVotes = dateVotes.filter(v => v.userId === selectedUserId);
     }
