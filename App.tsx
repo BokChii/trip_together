@@ -117,6 +117,10 @@ const App: React.FC = () => {
 
   // 중복 실행 방지를 위한 ref
   const hasInitialized = useRef(false);
+  
+  // 입력 중인지 추적하는 ref (구독 업데이트 방지용)
+  const isTypingDestination = useRef(false);
+  const destinationUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize Trip from URL (기존 Trip 로드만, 새로 생성하지 않음)
   useEffect(() => {
@@ -205,7 +209,10 @@ const App: React.FC = () => {
     // Subscribe to trip changes
     const tripSubscription = subscribeToTrip(currentTripId, (trip) => {
       // console.log('📡 Subscription: Trip updated', { destination: trip.destination });
-      setDestination(trip.destination);
+      // 입력 중이 아닐 때만 destination 업데이트 (다른 사용자의 변경만 반영)
+      if (!isTypingDestination.current) {
+        setDestination(trip.destination);
+      }
       setTripStartDate(trip.start_date || null);
       setTripEndDate(trip.end_date || null);
     });
@@ -418,16 +425,35 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDestinationChange = async (newDestination: string) => {
+  const handleDestinationChange = (newDestination: string) => {
+    // 입력 중 플래그 설정
+    isTypingDestination.current = true;
+    
+    // 상태는 즉시 업데이트
     setDestination(newDestination);
 
+    // 이전 timeout이 있으면 취소
+    if (destinationUpdateTimeout.current) {
+      clearTimeout(destinationUpdateTimeout.current);
+    }
+
+    // DB 업데이트는 debounce 처리 (입력이 끝난 후에만 업데이트)
     if (currentTripId) {
-      try {
-        await updateTripDestination(currentTripId, newDestination);
-        // Destination will be updated via subscription
-      } catch (error) {
-        // console.error("Failed to update destination", error);
-      }
+      destinationUpdateTimeout.current = setTimeout(async () => {
+        try {
+          await updateTripDestination(currentTripId, newDestination);
+          // 입력 완료 후 플래그 해제 (약간의 딜레이를 두어 구독 업데이트와 충돌 방지)
+          setTimeout(() => {
+            isTypingDestination.current = false;
+          }, 200);
+        } catch (error) {
+          // console.error("Failed to update destination", error);
+          isTypingDestination.current = false;
+        }
+        destinationUpdateTimeout.current = null;
+      }, 500); // 500ms debounce
+    } else {
+      isTypingDestination.current = false;
     }
   };
 
