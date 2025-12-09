@@ -1074,7 +1074,7 @@ const App: React.FC = () => {
               © 2025 언제갈래? All rights reserved.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-400">
-              <span>기획: 장동원, 김동신</span>
+              <span>기획: Jay, Shin</span>
               <span className="hidden sm:inline">•</span>
               <a 
                 href="mailto:kdshin@freshmilk.kr" 
