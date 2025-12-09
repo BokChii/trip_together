@@ -105,6 +105,7 @@ const App: React.FC = () => {
   const [showNewTripModal, setShowNewTripModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showNoDateModal, setShowNoDateModal] = useState(false);
+  const [showCopySuccessModal, setShowCopySuccessModal] = useState(false);
 
   // Selected User for Highlighting
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -576,18 +577,18 @@ const App: React.FC = () => {
     const { dates, participants } = formatBestDates();
     
     if (!dates) {
-      alert('선택된 날짜가 없습니다.');
+      setShowNoDateModal(true);
       return;
     }
 
-    // 날짜와 참여자 명단을 함께 복사
+    // 텍스트 형식 변경
     const textToCopy = participants 
-      ? `${dates}\n\n참여자: ${participants}`
-      : dates;
+      ? `가장 많이 가능한 일정:\n\n${dates}\n\n참여자: ${participants}`
+      : `가장 많이 가능한 일정:\n\n${dates}`;
 
     try {
       await navigator.clipboard.writeText(textToCopy);
-      alert('일정이 복사되었습니다!');
+      setShowCopySuccessModal(true);
     } catch (error) {
       alert('복사에 실패했습니다.');
     }
@@ -1637,6 +1638,38 @@ const App: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 onClick={() => setShowNoDateModal(false)}
+                className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                확인
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 복사 성공 모달 */}
+      {showCopySuccessModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowCopySuccessModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-green-100 p-2 rounded-full">
+                <Check className="w-5 h-5 text-green-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800">복사 완료!</h3>
+            </div>
+            <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
+              가장 많이 가능한 일정이 클립보드에 복사되었습니다!<br/>
+              친구들에게 공유해보세요! 📋✨
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => setShowCopySuccessModal(false)}
                 className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
               >
                 확인
