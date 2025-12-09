@@ -487,6 +487,112 @@ const App: React.FC = () => {
     setIsGenerating(false);
   };
 
+  // 날짜를 연속된 그룹으로 묶고 포맷팅하는 함수
+  const formatBestDates = (): { dates: string; participants: string } => {
+    const voteCounts: Record<string, number> = {};
+    votes.forEach(v => {
+      if (v.type === 'available') {
+        voteCounts[v.date] = (voteCounts[v.date] || 0) + 1;
+      }
+    });
+
+    const maxVotes = Math.max(...Object.values(voteCounts), 0);
+    if (maxVotes === 0) {
+      return { dates: '', participants: '' };
+    }
+
+    // 가장 많이 선택된 날짜들만 필터링
+    const bestDates = Object.keys(voteCounts)
+      .filter(d => voteCounts[d] === maxVotes)
+      .sort()
+      .map(d => new Date(d));
+
+    if (bestDates.length === 0) {
+      return { dates: '', participants: '' };
+    }
+
+    // 연속된 날짜 그룹으로 묶기
+    const groups: Date[][] = [];
+    let currentGroup: Date[] = [bestDates[0]];
+
+    for (let i = 1; i < bestDates.length; i++) {
+      const prevDate = new Date(bestDates[i - 1]);
+      const currentDate = new Date(bestDates[i]);
+      const daysDiff = (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+
+      if (daysDiff === 1) {
+        // 연속된 날짜
+        currentGroup.push(currentDate);
+      } else {
+        // 연속되지 않은 날짜 - 새 그룹 시작
+        groups.push(currentGroup);
+        currentGroup = [currentDate];
+      }
+    }
+    groups.push(currentGroup);
+
+    // 그룹을 문자열로 포맷팅
+    const formatGroup = (group: Date[]): string => {
+      if (group.length === 1) {
+        const date = group[0];
+        return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+      } else {
+        const start = group[0];
+        const end = group[group.length - 1];
+        const startMonth = start.getMonth() + 1;
+        const endMonth = end.getMonth() + 1;
+        
+        if (startMonth === endMonth) {
+          return `${startMonth}월 ${start.getDate()}~${end.getDate()}일`;
+        } else {
+          return `${startMonth}월 ${start.getDate()}일~${endMonth}월 ${end.getDate()}일`;
+        }
+      }
+    };
+
+    const datesText = groups.map(formatGroup).join(', ');
+
+    // 일자 선택에 참여한 참가자 명단 추출
+    const participantIds = new Set<string>();
+    votes.forEach(v => {
+      if (v.type === 'available') {
+        participantIds.add(v.userId);
+      }
+    });
+
+    const participantNames = Array.from(participantIds)
+      .map(id => users.find(u => u.id === id)?.name)
+      .filter((name): name is string => !!name)
+      .join(', ');
+
+    return {
+      dates: datesText,
+      participants: participantNames
+    };
+  };
+
+  // 복사 핸들러
+  const handleCopyBestDates = async () => {
+    const { dates, participants } = formatBestDates();
+    
+    if (!dates) {
+      alert('선택된 날짜가 없습니다.');
+      return;
+    }
+
+    // 날짜와 참여자 명단을 함께 복사
+    const textToCopy = participants 
+      ? `${dates}\n\n참여자: ${participants}`
+      : dates;
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      alert('일정이 복사되었습니다!');
+    } catch (error) {
+      alert('복사에 실패했습니다.');
+    }
+  };
+
   const handleNewTrip = () => {
     setShowNewTripModal(true);
   };
@@ -1033,6 +1139,40 @@ const App: React.FC = () => {
           endDate={tripEndDate}
           selectedUserId={selectedUserId}
         />
+
+        {/* Best Dates Copy Section */}
+        <div className="bg-white rounded-[2rem] p-5 sm:p-6 shadow-sm border border-orange-50">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex-1">
+              <h3 className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                <CalendarHeart className="w-5 h-5 text-orange-500" />
+                📅 가장 많이 가능한 일정
+              </h3>
+              {formatBestDates().dates ? (
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-700 font-medium">
+                    {formatBestDates().dates}
+                  </p>
+                  {formatBestDates().participants && (
+                    <p className="text-xs text-gray-500">
+                      참여자: {formatBestDates().participants}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500">아직 선택된 날짜가 없습니다</p>
+              )}
+            </div>
+            <Button
+              onClick={handleCopyBestDates}
+              disabled={!formatBestDates().dates}
+              className="bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              복사하기
+            </Button>
+          </div>
+        </div>
 
         {/* AI Itinerary Section */}
         <div className="bg-gradient-to-br from-orange-400 to-rose-400 rounded-[2rem] p-6 sm:p-10 text-white shadow-xl shadow-orange-200 overflow-hidden relative">
