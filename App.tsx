@@ -686,15 +686,6 @@ const App: React.FC = () => {
           </div>
           <h1 className="text-4xl sm:text-5xl font-hand font-bold text-gray-800 mb-4">언제갈래? ✈️</h1>
           
-          {/* 다른 참가자의 링크로 접속한 경우 */}
-          {currentTripId && users.length > 0 && (
-            <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-rose-50 border border-orange-200 rounded-xl">
-              <p className="text-base sm:text-lg text-orange-700 font-semibold">
-                {users[0].name}님의 여행일정 입니다 ✈️
-              </p>
-            </div>
-          )}
-          
           <p className="text-base sm:text-lg text-gray-500 mb-10 leading-relaxed">
             친구들과 떠나는 설레는 여행!<br/>
             우리 언제 떠날지 여기에서 정해봐요.
@@ -723,6 +714,12 @@ const App: React.FC = () => {
           {/* Existing Users Selection for Re-login - 여행 기간과 닉네임 입력칸 사이로 이동 */}
           {users.length > 0 && (
               <div className="mb-6 p-4 bg-white border border-orange-100 rounded-xl">
+                  {/* 다른 참가자의 링크로 접속한 경우 - 최상단에 배치 */}
+                  {currentTripId && (
+                    <p className="text-base font-bold text-orange-700 mb-3 text-center">
+                      {users[0].name}님의 여행일정 입니다 ✈️
+                    </p>
+                  )}
                   <p className="text-sm text-gray-500 mb-3 font-medium text-center">이미 참여하고 있나요? 이름을 클릭하세요 👇</p>
                   <div className="flex flex-wrap justify-center gap-2">
                       {users.map(u => (
@@ -1042,7 +1039,7 @@ const App: React.FC = () => {
         <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 shadow-sm -mx-4 sm:mx-0 px-4 sm:px-0 mb-4">
           <div className="bg-white p-3 sm:p-4 rounded-b-[1.5rem]">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-500 font-medium">선택 모드</p>
+              <p className="text-sm font-bold text-gray-800">날짜 선택 모드</p>
               <ModeToggle mode={voteMode} setMode={setVoteMode} />
             </div>
           </div>
