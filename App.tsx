@@ -242,6 +242,31 @@ const App: React.FC = () => {
       currentUser.id // 현재 사용자 ID 전달
     );
 
+    // 주기적 DB 동기화 (실시간 구독 백업)
+    // 실시간 구독이 놓친 변경사항(특히 DELETE 이벤트)을 보완
+    // 3초 주기로 동기화하여 서버 부하 최소화하면서도 실시간성 유지
+    const syncInterval = setInterval(async () => {
+      try {
+        const latestVotes = await getDateVotes(currentTripId);
+        // 변경사항이 있을 때만 상태 업데이트 (불필요한 리렌더링 방지)
+        setVotes(prevVotes => {
+          // 간단한 비교: 길이와 내용이 같으면 업데이트하지 않음
+          if (prevVotes.length === latestVotes.length) {
+            const prevMap = new Map(prevVotes.map(v => [`${v.date}-${v.userId}-${v.type}`, true]));
+            const hasChanges = latestVotes.some(v => !prevMap.has(`${v.date}-${v.userId}-${v.type}`));
+            if (!hasChanges) {
+              return prevVotes; // 변경사항 없음
+            }
+          }
+          // 변경사항이 있으면 업데이트
+          return latestVotes;
+        });
+      } catch (error) {
+        // 에러 발생 시에도 앱이 계속 작동하도록 조용히 처리
+        // console.error('❌ Periodic sync: Error fetching votes:', error);
+      }
+    }, 3000); // 3초마다 동기화 (서버 부하 최소화)
+
     // console.log('✅ Subscriptions: All subscriptions active');
 
     return () => {
@@ -249,6 +274,7 @@ const App: React.FC = () => {
       tripSubscription.unsubscribe();
       usersSubscription.unsubscribe();
       votesSubscription.unsubscribe();
+      clearInterval(syncInterval); // 인터벌 정리 (메모리 누수 방지)
     };
   }, [currentTripId, currentUser]);
 
