@@ -322,3 +322,17 @@ export const subscribeToDateVotes = (
   return channel;
 };
 
+// trips 테이블의 총 row 수 가져오기 (서비스 통계용)
+export const getTripsCount = async (): Promise<number> => {
+  const { count, error } = await supabase
+    .from('trips')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) {
+    console.error('❌ Error getting trips count:', error);
+    return 0;
+  }
+
+  return count || 0;
+};
+

@@ -19,7 +19,8 @@ import {
   updateTripDestination,
   subscribeToTrip,
   subscribeToTripUsers,
-  subscribeToDateVotes
+  subscribeToDateVotes,
+  getTripsCount
 } from './services/tripService';
 
 // Short ID generator (6 chars)
@@ -51,6 +52,10 @@ const App: React.FC = () => {
   
   // 날짜 범위 선택 캘린더 토글 State
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+  
+  // Service Stats State
+  const [tripsCount, setTripsCount] = useState<number | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   // 날짜 범위 선택 핸들러
   const handleDateRangeClick = (isoDate: string) => {
@@ -277,6 +282,25 @@ const App: React.FC = () => {
       clearInterval(syncInterval); // 인터벌 정리 (메모리 누수 방지)
     };
   }, [currentTripId, currentUser]);
+
+  // 서비스 통계 로드 (로그인 페이지에서만)
+  useEffect(() => {
+    if (!currentUser) {
+      const loadStats = async () => {
+        setIsLoadingStats(true);
+        try {
+          const count = await getTripsCount();
+          setTripsCount(count);
+        } catch (error) {
+          console.error('❌ Error loading trips count:', error);
+        } finally {
+          setIsLoadingStats(false);
+        }
+      };
+      
+      loadStats();
+    }
+  }, [currentUser]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -721,6 +745,16 @@ const App: React.FC = () => {
             친구들과 떠나는 설레는 여행!<br/>
             우리 언제 떠날지 여기에서 정해봐요.
           </p>
+          
+          {/* 서비스 통계 배너 */}
+          {!isLoadingStats && tripsCount !== null && (
+            <div className="mb-8 p-4 bg-gradient-to-r from-orange-50 to-rose-50 border border-orange-200 rounded-xl shadow-sm">
+              <p className="text-sm sm:text-base text-gray-700 leading-relaxed text-center">
+                현재 <span className="font-bold text-orange-600">언제갈래</span>를 통해{' '}
+                <span className="font-bold text-orange-600">{tripsCount.toLocaleString('ko-KR')}개</span>의 여행 일정이 계획되고 있어요! ✈️
+              </p>
+            </div>
+          )}
           
           {/* 초대 링크 접속 시 기간 표시 */}
           {currentTripId && (tripStartDate || tripEndDate) && (
