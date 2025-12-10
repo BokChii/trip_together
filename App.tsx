@@ -525,10 +525,14 @@ const App: React.FC = () => {
     }
 
     // 가장 많이 선택된 날짜들만 필터링
+    // 타임존 문제 해결: ISO 문자열을 로컬 타임존으로 파싱
     const bestDates = Object.keys(voteCounts)
       .filter(d => voteCounts[d] === maxVotes)
       .sort()
-      .map(d => new Date(d));
+      .map(d => {
+        const [year, month, day] = d.split('-').map(Number);
+        return new Date(year, month - 1, day);
+      });
 
     if (bestDates.length === 0) {
       return { dates: '', participants: '' };
@@ -539,8 +543,8 @@ const App: React.FC = () => {
     let currentGroup: Date[] = [bestDates[0]];
 
     for (let i = 1; i < bestDates.length; i++) {
-      const prevDate = new Date(bestDates[i - 1]);
-      const currentDate = new Date(bestDates[i]);
+      const prevDate = bestDates[i - 1];
+      const currentDate = bestDates[i];
       const daysDiff = (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
 
       if (daysDiff === 1) {
@@ -1102,6 +1106,14 @@ const App: React.FC = () => {
                   👆 {users.find(u => u.id === selectedUserId)?.name}님이 선택한 날짜만 표시됩니다
                 </p>
               )}
+              
+              {/* ModeToggle - 가능/불가 토글 */}
+              <div className="mt-4 pt-4 border-t border-orange-100">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-500 font-medium">투표 모드</p>
+                  <ModeToggle mode={voteMode} setMode={setVoteMode} />
+                </div>
+              </div>
             </div>
           </div>
         )}

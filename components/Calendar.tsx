@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, User as UserIcon, Crown, Heart, CalendarHeart } from 'lucide-react';
 import { CalendarDay, DateVote, User, VoteType } from '../types';
-import { ModeToggle } from './ModeToggle';
 
 interface CalendarProps {
   currentDate: Date;
@@ -436,17 +435,14 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   return (
     <div className="w-full max-w-5xl mx-auto bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-orange-100/50 overflow-hidden select-none">
-      {/* Header with ModeToggle */}
+      {/* Header */}
       <div className="p-4 sm:p-6 border-b border-orange-100 bg-gradient-to-r from-orange-50/50 to-rose-50/50">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
-              <CalendarHeart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />
-              언제가 좋으세요?
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-500 pl-1">드래그해서 여러 날짜를 쓱- 선택해보세요.</p>
-          </div>
-          <ModeToggle mode={voteMode} setMode={setVoteMode} />
+        <div className="flex flex-col gap-1 mb-4">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+            <CalendarHeart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />
+            언제가 좋으세요?
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-500 pl-1">드래그해서 여러 날짜를 쓱- 선택해보세요.</p>
         </div>
         
         {/* Calendar Navigation */}
