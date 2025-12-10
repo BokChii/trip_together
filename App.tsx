@@ -1036,6 +1036,54 @@ const App: React.FC = () => {
           )}
         </div>
         
+        {/* 친구 초대하기 - 가이드 아래, 캘린더 위로 이동 */}
+        <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm border border-orange-50">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-1">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-orange-500" />
+                친구 초대하기
+              </h3>
+              <p className="text-xs text-gray-500">링크를 복사해서 친구들에게 공유하세요</p>
+            </div>
+            <Button 
+              variant="secondary" 
+              size="md" 
+              onClick={handleShare} 
+              className={`gap-2 transition-all duration-300 ${isCopied ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
+            >
+              {isCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+              {isCopied ? "복사완료!" : "초대하기"}
+            </Button>
+          </div>
+
+          {/* Generated Link Display */}
+          {generatedUrl && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300 mt-4 pt-4 border-t border-orange-100">
+              <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={generatedUrl} 
+                  className="flex-1 bg-white border border-orange-200 rounded-lg px-4 py-2.5 text-xs sm:text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <Button size="sm" onClick={() => {
+                  navigator.clipboard.writeText(generatedUrl);
+                  setIsCopied(true);
+                  setTimeout(() => setIsCopied(false), 2000);
+                }}>
+                  {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </Button>
+                <button onClick={() => setGeneratedUrl(null)} className="p-2 text-gray-400 hover:text-gray-600">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="text-xs text-orange-600 mt-2 ml-2 font-medium">✨ 이 링크를 친구들에게 보내주세요!</p>
+            </div>
+          )}
+        </div>
+        
         {/* ModeToggle - 가능/불가 토글 (항상 표시, Sticky) */}
         <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 shadow-sm -mx-4 sm:mx-0 px-4 sm:px-0 mb-4">
           <div className="bg-white p-3 sm:p-4 rounded-b-[1.5rem]">
@@ -1142,54 +1190,6 @@ const App: React.FC = () => {
           endDate={tripEndDate}
           selectedUserId={selectedUserId}
         />
-
-        {/* 친구 초대하기 - 캘린더 아래로 이동 */}
-        <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm border border-orange-50">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <Share2 className="w-4 h-4 text-orange-500" />
-                친구 초대하기
-              </h3>
-              <p className="text-xs text-gray-500">링크를 복사해서 친구들에게 공유하세요</p>
-            </div>
-            <Button 
-              variant="secondary" 
-              size="md" 
-              onClick={handleShare} 
-              className={`gap-2 transition-all duration-300 ${isCopied ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
-            >
-              {isCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-              {isCopied ? "복사완료!" : "초대하기"}
-            </Button>
-          </div>
-
-          {/* Generated Link Display */}
-          {generatedUrl && (
-            <div className="animate-in fade-in slide-in-from-top-2 duration-300 mt-4 pt-4 border-t border-orange-100">
-              <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
-                <input 
-                  type="text" 
-                  readOnly 
-                  value={generatedUrl} 
-                  className="flex-1 bg-white border border-orange-200 rounded-lg px-4 py-2.5 text-xs sm:text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
-                  onClick={(e) => e.currentTarget.select()}
-                />
-                <Button size="sm" onClick={() => {
-                  navigator.clipboard.writeText(generatedUrl);
-                  setIsCopied(true);
-                  setTimeout(() => setIsCopied(false), 2000);
-                }}>
-                  {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </Button>
-                <button onClick={() => setGeneratedUrl(null)} className="p-2 text-gray-400 hover:text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <p className="text-xs text-orange-600 mt-2 ml-2 font-medium">✨ 이 링크를 친구들에게 보내주세요!</p>
-            </div>
-          )}
-        </div>
 
         {/* Best Dates Copy Section */}
         <div className="bg-white rounded-[2rem] p-5 sm:p-6 shadow-sm border border-orange-50">
