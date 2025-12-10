@@ -935,7 +935,7 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
         
         {/* 사용법 가이드 (접을 수 있는 형태) */}
         <div className="bg-white rounded-[1.5rem] shadow-sm border border-orange-50 overflow-hidden">
@@ -1024,57 +1024,52 @@ const App: React.FC = () => {
           )}
         </div>
         
-        {/* Controls */}
-        <div className="flex flex-col gap-5 bg-white p-5 sm:p-6 rounded-[2rem] shadow-sm border border-orange-50">
-           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-             <div className="flex flex-col gap-1">
-               <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
-                   <CalendarHeart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />
-                   언제가 좋으세요?
-               </h2>
-               <p className="text-xs sm:text-sm text-gray-500 pl-1">드래그해서 여러 날짜를 쓱- 선택해보세요.</p>
-             </div>
-             
-             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-               <ModeToggle mode={voteMode} setMode={setVoteMode} />
-               <div className="h-8 w-px bg-gray-100 hidden sm:block mx-1"></div>
-               <Button 
-                  variant="secondary" 
-                  size="md" 
-                  onClick={handleShare} 
-                  className={`gap-2 flex-1 sm:flex-none justify-center transition-all duration-300 ${isCopied ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
-               >
-                  {isCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-                  {isCopied ? "복사완료!" : "초대하기"}
-               </Button>
-             </div>
-           </div>
+        {/* 초대하기 버튼 (별도 박스로 분리) */}
+        <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm border border-orange-50">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-1">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-orange-500" />
+                친구 초대하기
+              </h3>
+              <p className="text-xs text-gray-500">링크를 복사해서 친구들에게 공유하세요</p>
+            </div>
+            <Button 
+              variant="secondary" 
+              size="md" 
+              onClick={handleShare} 
+              className={`gap-2 transition-all duration-300 ${isCopied ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
+            >
+              {isCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+              {isCopied ? "복사완료!" : "초대하기"}
+            </Button>
+          </div>
 
-           {/* Generated Link Display */}
-           {generatedUrl && (
-             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-               <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
-                 <input 
-                   type="text" 
-                   readOnly 
-                   value={generatedUrl} 
-                   className="flex-1 bg-white border border-orange-200 rounded-lg px-4 py-2.5 text-xs sm:text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
-                   onClick={(e) => e.currentTarget.select()}
-                 />
-                 <Button size="sm" onClick={() => {
-                    navigator.clipboard.writeText(generatedUrl);
-                    setIsCopied(true);
-                    setTimeout(() => setIsCopied(false), 2000);
-                 }}>
-                   {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                 </Button>
-                 <button onClick={() => setGeneratedUrl(null)} className="p-2 text-gray-400 hover:text-gray-600">
-                    <X className="w-4 h-4" />
-                 </button>
-               </div>
-               <p className="text-xs text-orange-600 mt-2 ml-2 font-medium">✨ 이 링크를 친구들에게 보내주세요!</p>
-             </div>
-           )}
+          {/* Generated Link Display */}
+          {generatedUrl && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300 mt-4 pt-4 border-t border-orange-100">
+              <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={generatedUrl} 
+                  className="flex-1 bg-white border border-orange-200 rounded-lg px-4 py-2.5 text-xs sm:text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <Button size="sm" onClick={() => {
+                  navigator.clipboard.writeText(generatedUrl);
+                  setIsCopied(true);
+                  setTimeout(() => setIsCopied(false), 2000);
+                }}>
+                  {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </Button>
+                <button onClick={() => setGeneratedUrl(null)} className="p-2 text-gray-400 hover:text-gray-600">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="text-xs text-orange-600 mt-2 ml-2 font-medium">✨ 이 링크를 친구들에게 보내주세요!</p>
+            </div>
+          )}
         </div>
 
         {/* Participants List */}
@@ -1102,6 +1097,7 @@ const App: React.FC = () => {
                 
                 {users.map(user => {
                   const isSelected = selectedUserId === user.id;
+                  const isCurrentUser = user.id === currentUser.id;
                   const userVotes = votes.filter(v => v.userId === user.id);
                   const availableCount = userVotes.filter(v => v.type === 'available').length;
                   const unavailableCount = userVotes.filter(v => v.type === 'unavailable').length;
@@ -1110,23 +1106,30 @@ const App: React.FC = () => {
                     <button
                       key={user.id}
                       onClick={() => setSelectedUserId(isSelected ? null : user.id)}
-                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap relative ${
                         isSelected
                           ? 'bg-orange-500 text-white shadow-md scale-105'
-                          : 'bg-orange-50 text-orange-700 hover:bg-orange-100 hover:scale-105'
+                          : isCurrentUser
+                            ? 'bg-orange-200 text-orange-800 border-2 border-orange-400 font-semibold hover:bg-orange-300'
+                            : 'bg-orange-50 text-orange-700 hover:bg-orange-100 hover:scale-105'
                       }`}
                     >
+                      {isCurrentUser && (
+                        <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                          나
+                        </span>
+                      )}
                       <span>{user.name}</span>
                       {availableCount > 0 && (
                         <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                          isSelected ? 'bg-white/30' : 'bg-orange-200'
+                          isSelected ? 'bg-white/30' : isCurrentUser ? 'bg-orange-300' : 'bg-orange-200'
                         }`}>
                           가능 {availableCount}
                         </span>
                       )}
                       {unavailableCount > 0 && (
                         <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                          isSelected ? 'bg-white/30' : 'bg-gray-200'
+                          isSelected ? 'bg-white/30' : isCurrentUser ? 'bg-gray-300' : 'bg-gray-200'
                         }`}>
                           불가 {unavailableCount}
                         </span>
@@ -1157,6 +1160,7 @@ const App: React.FC = () => {
           users={users}
           currentUserId={currentUser.id}
           voteMode={voteMode}
+          setVoteMode={setVoteMode}
           onVote={handleVote}
           startDate={tripStartDate}
           endDate={tripEndDate}

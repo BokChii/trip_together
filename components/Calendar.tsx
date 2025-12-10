@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, User as UserIcon, Crown, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User as UserIcon, Crown, Heart, CalendarHeart } from 'lucide-react';
 import { CalendarDay, DateVote, User, VoteType } from '../types';
+import { ModeToggle } from './ModeToggle';
 
 interface CalendarProps {
   currentDate: Date;
@@ -9,6 +10,7 @@ interface CalendarProps {
   users: User[];
   currentUserId: string;
   voteMode: VoteType;
+  setVoteMode: (mode: VoteType) => void;
   onVote: (dateIso: string | string[], shouldRemove?: boolean) => void;
   startDate?: string | null;
   endDate?: string | null;
@@ -22,6 +24,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   users,
   currentUserId,
   voteMode,
+  setVoteMode,
   onVote,
   startDate,
   endDate,
@@ -433,39 +436,53 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   return (
     <div className="w-full max-w-5xl mx-auto bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-orange-100/50 overflow-hidden select-none">
-      {/* Header */}
-      <div className="p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 border-b border-orange-100">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <button 
-            onClick={() => changeMonth(-1)} 
-            disabled={!canGoToPreviousMonth()}
-            className={`min-w-[44px] min-h-[44px] p-2 rounded-full transition-colors flex items-center justify-center ${
-              canGoToPreviousMonth()
-                ? 'hover:bg-orange-50 text-orange-400 cursor-pointer active:bg-orange-100'
-                : 'text-gray-300 cursor-not-allowed opacity-50'
-            }`}
-          >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
-          </button>
-          <h2 className="text-lg sm:text-2xl font-bold text-gray-800 tracking-wide text-center flex-1">
-            {currentDate.toLocaleString('ko-KR', { month: 'long', year: 'numeric' })}
-          </h2>
-          <button 
-            onClick={() => changeMonth(1)} 
-            disabled={!canGoToNextMonth()}
-            className={`min-w-[44px] min-h-[44px] p-2 rounded-full transition-colors flex items-center justify-center ${
-              canGoToNextMonth()
-                ? 'hover:bg-orange-50 text-orange-400 cursor-pointer active:bg-orange-100'
-                : 'text-gray-300 cursor-not-allowed opacity-50'
-            }`}
-          >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
-          </button>
+      {/* Header with ModeToggle */}
+      <div className="p-4 sm:p-6 border-b border-orange-100 bg-gradient-to-r from-orange-50/50 to-rose-50/50">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+              <CalendarHeart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />
+              언제가 좋으세요?
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 pl-1">드래그해서 여러 날짜를 쓱- 선택해보세요.</p>
+          </div>
+          <ModeToggle mode={voteMode} setMode={setVoteMode} />
         </div>
         
-        <div className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] bg-orange-50 rounded-full text-xs sm:text-sm text-orange-600 font-medium">
-          <UserIcon className="w-4 h-4" />
-          <span>{users.length}명 참여중</span>
+        {/* Calendar Navigation */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button 
+              onClick={() => changeMonth(-1)} 
+              disabled={!canGoToPreviousMonth()}
+              className={`min-w-[44px] min-h-[44px] p-2 rounded-full transition-colors flex items-center justify-center ${
+                canGoToPreviousMonth()
+                  ? 'hover:bg-orange-50 text-orange-400 cursor-pointer active:bg-orange-100'
+                  : 'text-gray-300 cursor-not-allowed opacity-50'
+              }`}
+            >
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
+            </button>
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-800 tracking-wide text-center flex-1">
+              {currentDate.toLocaleString('ko-KR', { month: 'long', year: 'numeric' })}
+            </h2>
+            <button 
+              onClick={() => changeMonth(1)} 
+              disabled={!canGoToNextMonth()}
+              className={`min-w-[44px] min-h-[44px] p-2 rounded-full transition-colors flex items-center justify-center ${
+                canGoToNextMonth()
+                  ? 'hover:bg-orange-50 text-orange-400 cursor-pointer active:bg-orange-100'
+                  : 'text-gray-300 cursor-not-allowed opacity-50'
+              }`}
+            >
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] bg-orange-50 rounded-full text-xs sm:text-sm text-orange-600 font-medium">
+            <UserIcon className="w-4 h-4" />
+            <span>{users.length}명 참여중</span>
+          </div>
         </div>
       </div>
 
