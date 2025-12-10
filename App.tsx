@@ -96,7 +96,7 @@ const App: React.FC = () => {
       setEndDateInput('');
     }
   }, [dateRangeStart, dateRangeEnd]);
-
+  
   // Share State
   const [isCopied, setIsCopied] = useState(false);
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
@@ -143,7 +143,7 @@ const App: React.FC = () => {
       
       try {
         // URL에서 share_code 확인
-        const params = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(window.location.search);
         const code = params.get('trip');
         // console.log('🔗 initTrip: URL trip code', code || 'none');
 
@@ -421,9 +421,9 @@ const App: React.FC = () => {
         await deleteDateVotes(currentTripId, datesToUpdate, currentUser.id);
       } else {
         // 단일 클릭의 경우 토글 로직
-        if (shouldRemove === undefined && !Array.isArray(dateIsoOrList)) {
+      if (shouldRemove === undefined && !Array.isArray(dateIsoOrList)) {
           const existingVote = votes.find(v => v.date === dateIsoOrList && v.userId === currentUser.id);
-          if (existingVote && existingVote.type === voteMode) {
+         if (existingVote && existingVote.type === voteMode) {
             // 이미 선택된 상태면 삭제 - Optimistic Update
             setVotes(prev => prev.filter(v => 
               !(v.date === dateIsoOrList && v.userId === currentUser.id)
@@ -442,10 +442,10 @@ const App: React.FC = () => {
           );
           // 새 투표 추가
           const newVotes = datesToUpdate.map(date => ({
-            date,
-            userId: currentUser.id,
-            type: voteMode
-          }));
+        date,
+        userId: currentUser.id,
+        type: voteMode
+      }));
           return [...filtered, ...newVotes];
         });
 
@@ -486,9 +486,9 @@ const App: React.FC = () => {
     try {
       const baseUrl = window.location.origin;
       const url = `${baseUrl}?trip=${shareCode}`;
-
-      setGeneratedUrl(url);
-
+      
+      setGeneratedUrl(url); 
+      
       try {
         await navigator.clipboard.writeText(url);
         setIsCopied(true);
@@ -734,31 +734,31 @@ const App: React.FC = () => {
       <div className="min-h-screen flex flex-col bg-[#fff7ed] p-4 font-sans">
         <div className="flex-1 flex items-center justify-center">
           <div className="bg-white p-10 sm:p-12 rounded-[2rem] shadow-xl shadow-orange-100 max-w-xl w-full text-center border border-orange-50">
-          <div className="mb-8 flex justify-center">
+          <div className="mb-6 flex justify-center">
             <div className="bg-orange-100 p-6 rounded-full animate-bounce">
               <Plane className="w-12 h-12 text-orange-500" strokeWidth={2.5} />
             </div>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-hand font-bold text-gray-800 mb-4">언제갈래? ✈️</h1>
+          <h1 className="text-4xl sm:text-5xl font-hand font-bold text-gray-800 mb-3">언제갈래? ✈️</h1>
           
-          <p className="text-base sm:text-lg text-gray-500 mb-10 leading-relaxed">
+          <p className="text-base sm:text-lg text-gray-500 mb-6 leading-relaxed">
             친구들과 떠나는 설레는 여행!<br/>
             우리 언제 떠날지 여기에서 정해봐요.
           </p>
           
           {/* 서비스 통계 배너 */}
           {!isLoadingStats && tripsCount !== null && (
-            <div className="mb-8 p-4 bg-gradient-to-r from-orange-50 to-rose-50 border border-orange-200 rounded-xl shadow-sm">
+            <div className="mb-5 p-3 bg-gradient-to-r from-orange-50 to-rose-50 border border-orange-200 rounded-xl shadow-sm">
               <p className="text-sm sm:text-base text-gray-700 leading-relaxed text-center">
                 현재 <span className="font-bold text-orange-600">언제갈래</span>를 통해{' '}
-                <span className="font-bold text-orange-600">{tripsCount.toLocaleString('ko-KR')}개</span>의 여행 일정이 계획되고 있어요! ✈️
+                <span className="font-bold text-orange-600">{tripsCount.toLocaleString('ko-KR')}개</span>의 여행 일정이 계획되고 있어요!
               </p>
             </div>
           )}
           
           {/* 초대 링크 접속 시 기간 표시 */}
           {currentTripId && (tripStartDate || tripEndDate) && (
-            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+            <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
                 <CalendarIcon className="w-4 h-4 text-orange-600" />
                 <span className="text-sm font-semibold text-orange-900">여행 기간</span>
@@ -778,7 +778,7 @@ const App: React.FC = () => {
           
           {/* Existing Users Selection for Re-login - 여행 기간과 닉네임 입력칸 사이로 이동 */}
           {users.length > 0 && (
-              <div className="mb-6 p-4 bg-white border border-orange-100 rounded-xl">
+              <div className="mb-4 p-4 bg-white border border-orange-100 rounded-xl">
                   {/* 다른 참가자의 링크로 접속한 경우 - 최상단에 배치 */}
                   {currentTripId && (
                     <p className="text-base font-bold text-orange-700 mb-3 text-center">
@@ -802,7 +802,7 @@ const App: React.FC = () => {
               </div>
           )}
           
-          <form onSubmit={handleLogin} className="space-y-5 mb-10">
+          <form onSubmit={handleLogin} className="space-y-4 mb-6">
             <input
               type="text"
               placeholder="닉네임이 뭐에요?"
@@ -824,7 +824,7 @@ const App: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <CalendarIcon className="w-5 h-5 text-orange-500" />
                       <p className="text-base font-medium text-gray-700">여행 기간 설정 <span className="text-sm text-gray-400 font-normal">(선택)</span></p>
-                    </div>
+        </div>
                     <ChevronDown 
                       className={`w-5 h-5 text-orange-500 transition-transform duration-200 ${
                         showDateRangePicker ? 'rotate-180' : ''
@@ -867,7 +867,7 @@ const App: React.FC = () => {
           {/* 사용법 보기 버튼 */}
           <button
             onClick={() => setShowTutorial(true)}
-            className="w-full mt-4 text-sm text-gray-500 hover:text-orange-600 transition-colors flex items-center justify-center gap-2"
+            className="w-full mt-3 text-sm text-gray-500 hover:text-orange-600 transition-colors flex items-center justify-center gap-2"
           >
             <BookOpen className="w-4 h-4" />
             사용법 보기
@@ -1022,7 +1022,7 @@ const App: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="bg-orange-100 p-2 rounded-full">
                 <BookOpen className="w-5 h-5 text-orange-600" />
-              </div>
+             </div>
               <div className="text-left">
                 <h3 className="text-sm font-bold text-gray-800">사용법 가이드</h3>
                 <p className="text-xs text-gray-500">언제갈래? 서비스 이용 방법</p>
@@ -1110,42 +1110,42 @@ const App: React.FC = () => {
               </h3>
               <p className="text-xs text-gray-500">링크를 복사해서 친구들에게 공유하세요</p>
             </div>
-            <Button 
-              variant="secondary" 
-              size="md" 
-              onClick={handleShare} 
+               <Button 
+                  variant="secondary" 
+                  size="md" 
+                  onClick={handleShare} 
               className={`gap-2 transition-all duration-300 ${isCopied ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
-            >
-              {isCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-              {isCopied ? "복사완료!" : "초대하기"}
-            </Button>
-          </div>
+               >
+                  {isCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                  {isCopied ? "복사완료!" : "초대하기"}
+               </Button>
+           </div>
 
-          {/* Generated Link Display */}
-          {generatedUrl && (
+           {/* Generated Link Display */}
+           {generatedUrl && (
             <div className="animate-in fade-in slide-in-from-top-2 duration-300 mt-4 pt-4 border-t border-orange-100">
-              <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
-                <input 
-                  type="text" 
-                  readOnly 
-                  value={generatedUrl} 
-                  className="flex-1 bg-white border border-orange-200 rounded-lg px-4 py-2.5 text-xs sm:text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
-                  onClick={(e) => e.currentTarget.select()}
-                />
-                <Button size="sm" onClick={() => {
-                  navigator.clipboard.writeText(generatedUrl);
-                  setIsCopied(true);
-                  setTimeout(() => setIsCopied(false), 2000);
-                }}>
-                  {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </Button>
-                <button onClick={() => setGeneratedUrl(null)} className="p-2 text-gray-400 hover:text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <p className="text-xs text-orange-600 mt-2 ml-2 font-medium">✨ 이 링크를 친구들에게 보내주세요!</p>
-            </div>
-          )}
+               <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
+                 <input 
+                   type="text" 
+                   readOnly 
+                   value={generatedUrl} 
+                   className="flex-1 bg-white border border-orange-200 rounded-lg px-4 py-2.5 text-xs sm:text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                   onClick={(e) => e.currentTarget.select()}
+                 />
+                 <Button size="sm" onClick={() => {
+                    navigator.clipboard.writeText(generatedUrl);
+                    setIsCopied(true);
+                    setTimeout(() => setIsCopied(false), 2000);
+                 }}>
+                   {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                 </Button>
+                 <button onClick={() => setGeneratedUrl(null)} className="p-2 text-gray-400 hover:text-gray-600">
+                    <X className="w-4 h-4" />
+                 </button>
+               </div>
+               <p className="text-xs text-orange-600 mt-2 ml-2 font-medium">✨ 이 링크를 친구들에게 보내주세요!</p>
+             </div>
+           )}
         </div>
         
         {/* ModeToggle - 가능/불가 토글 (항상 표시, Sticky) */}
