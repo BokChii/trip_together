@@ -2,6 +2,14 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, User as UserIcon, Crown, Heart, CalendarHeart } from 'lucide-react';
 import { CalendarDay, DateVote, User, VoteType } from '../types';
 
+// 로컬 타임존 기준 ISO 문자열 생성 (타임존 문제 해결)
+const toLocalISOString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 interface CalendarProps {
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
@@ -68,7 +76,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         date: d,
         isCurrentMonth: false,
         isToday: false,
-        isoString: d.toISOString().split('T')[0]
+        isoString: toLocalISOString(d)
       });
     }
 
@@ -79,7 +87,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         date: d,
         isCurrentMonth: true,
         isToday,
-        isoString: d.toISOString().split('T')[0]
+        isoString: toLocalISOString(d)
       });
     }
 
@@ -90,7 +98,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         date: d,
         isCurrentMonth: false,
         isToday: false,
-        isoString: d.toISOString().split('T')[0]
+        isoString: toLocalISOString(d)
       });
     }
 
@@ -192,7 +200,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 
       const current = new Date(startDate);
       while (current <= endDate) {
-          range.push(current.toISOString().split('T')[0]);
+          range.push(toLocalISOString(current));
           current.setDate(current.getDate() + 1);
       }
       return range;
@@ -405,9 +413,9 @@ export const Calendar: React.FC<CalendarProps> = ({
       // My Vote Highlight (두꺼운 테두리만 추가)
       let myVoteBorder = '';
       if (myVote === 'available') {
-        myVoteBorder = "ring-4 ring-inset ring-orange-500 ";
+        myVoteBorder = "ring-4 ring-inset ring-orange-700 ";
       } else if (myVote === 'unavailable') {
-        myVoteBorder = "ring-4 ring-inset ring-gray-400 ";
+        myVoteBorder = "ring-4 ring-inset ring-gray-500 ";
       }
 
       // Heatmap Logic (Orange Theme)

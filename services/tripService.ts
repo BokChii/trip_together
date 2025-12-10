@@ -280,13 +280,19 @@ export const subscribeToDateVotes = (
   const channel = supabase
     .channel(`date_votes:${tripId}`)
     .on('postgres_changes', {
-      event: '*',
+      event: '*', // INSERT, UPDATE, DELETE 모두 감지
       schema: 'public',
       table: 'date_votes',
       filter: `trip_id=eq.${tripId}`
     }, async (payload) => {
-      // console.log('📡 subscribeToDateVotes: Change detected', { event: payload.eventType });
+      // console.log('📡 subscribeToDateVotes: Change detected', { 
+      //   event: payload.eventType,
+      //   old: payload.old,
+      //   new: payload.new
+      // });
       try {
+        // DB 업데이트 완료 대기 (삭제 이벤트가 즉시 반영되도록)
+        await new Promise(resolve => setTimeout(resolve, 100));
         const votes = await getDateVotes(tripId);
         callback(votes);
       } catch (error) {

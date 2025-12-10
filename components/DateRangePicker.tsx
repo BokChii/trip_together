@@ -1,6 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 
+// 로컬 타임존 기준 ISO 문자열 생성 (타임존 문제 해결)
+const toLocalISOString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 interface DateRangePickerProps {
   startDate: string | null;
   endDate: string | null;
@@ -29,7 +37,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         date: d,
         isCurrentMonth: false,
         isToday: false,
-        isoString: d.toISOString().split('T')[0]
+        isoString: toLocalISOString(d)
       });
     }
 
@@ -40,7 +48,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         date: d,
         isCurrentMonth: true,
         isToday,
-        isoString: d.toISOString().split('T')[0]
+        isoString: toLocalISOString(d)
       });
     }
 
@@ -51,7 +59,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         date: d,
         isCurrentMonth: false,
         isToday: false,
-        isoString: d.toISOString().split('T')[0]
+        isoString: toLocalISOString(d)
       });
     }
 
