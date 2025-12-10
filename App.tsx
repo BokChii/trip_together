@@ -524,28 +524,27 @@ const App: React.FC = () => {
       return { dates: '', participants: '' };
     }
 
-    // 가장 많이 선택된 날짜들만 필터링
-    // 타임존 문제 해결: ISO 문자열을 로컬 타임존으로 파싱
+    // 가장 많이 선택된 날짜들만 필터링 (ISO 문자열 그대로 사용)
     const bestDates = Object.keys(voteCounts)
       .filter(d => voteCounts[d] === maxVotes)
-      .sort()
-      .map(d => {
-        const [year, month, day] = d.split('-').map(Number);
-        return new Date(year, month - 1, day);
-      });
+      .sort();
 
     if (bestDates.length === 0) {
       return { dates: '', participants: '' };
     }
 
-    // 연속된 날짜 그룹으로 묶기
-    const groups: Date[][] = [];
-    let currentGroup: Date[] = [bestDates[0]];
+    // 연속된 날짜 그룹으로 묶기 (ISO 문자열 비교)
+    const groups: string[][] = [];
+    let currentGroup: string[] = [bestDates[0]];
 
     for (let i = 1; i < bestDates.length; i++) {
       const prevDate = bestDates[i - 1];
       const currentDate = bestDates[i];
-      const daysDiff = (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+      
+      // ISO 문자열을 직접 비교하여 연속 여부 확인
+      const prev = new Date(prevDate + 'T00:00:00');
+      const curr = new Date(currentDate + 'T00:00:00');
+      const daysDiff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
 
       if (daysDiff === 1) {
         // 연속된 날짜
@@ -558,21 +557,19 @@ const App: React.FC = () => {
     }
     groups.push(currentGroup);
 
-    // 그룹을 문자열로 포맷팅
-    const formatGroup = (group: Date[]): string => {
+    // 그룹을 문자열로 포맷팅 (ISO 문자열에서 직접 추출)
+    const formatGroup = (group: string[]): string => {
       if (group.length === 1) {
-        const date = group[0];
-        return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+        const [year, month, day] = group[0].split('-').map(Number);
+        return `${month}월 ${day}일`;
       } else {
-        const start = group[0];
-        const end = group[group.length - 1];
-        const startMonth = start.getMonth() + 1;
-        const endMonth = end.getMonth() + 1;
+        const [startYear, startMonth, startDay] = group[0].split('-').map(Number);
+        const [endYear, endMonth, endDay] = group[group.length - 1].split('-').map(Number);
         
         if (startMonth === endMonth) {
-          return `${startMonth}월 ${start.getDate()}~${end.getDate()}일`;
+          return `${startMonth}월 ${startDay}~${endDay}일`;
         } else {
-          return `${startMonth}월 ${start.getDate()}일~${endMonth}월 ${end.getDate()}일`;
+          return `${startMonth}월 ${startDay}일~${endMonth}월 ${endDay}일`;
         }
       }
     };
