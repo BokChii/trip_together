@@ -275,7 +275,8 @@ export const subscribeToTripUsers = (
 // 실시간 구독: 투표 변경 감지
 export const subscribeToDateVotes = (
   tripId: string,
-  callback: (votes: DateVote[]) => void
+  callback: (votes: DateVote[]) => void,
+  currentUserId?: string // 현재 사용자 ID (자신의 변경사항 필터링용)
 ) => {
   const channel = supabase
     .channel(`date_votes:${tripId}`)
@@ -285,21 +286,38 @@ export const subscribeToDateVotes = (
       table: 'date_votes',
       filter: `trip_id=eq.${tripId}`
     }, async (payload) => {
+      // 자신이 변경한 이벤트는 무시 (Optimistic Update로 이미 반영됨)
+      if (currentUserId) {
+        const changedUserId = payload.new?.user_id || payload.old?.user_id;
+        if (changedUserId === currentUserId) {
+          // console.log('📡 subscribeToDateVotes: Ignoring own change');
+          return;
+        }
+      }
+
       // console.log('📡 subscribeToDateVotes: Change detected', { 
       //   event: payload.eventType,
-      //   old: payload.old,
-      //   new: payload.new
+      //   userId: payload.new?.user_id || payload.old?.user_id,
+      //   currentUserId
       // });
+      
       try {
         // DB 업데이트 완료 대기 (삭제 이벤트가 즉시 반영되도록)
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
         const votes = await getDateVotes(tripId);
         callback(votes);
       } catch (error) {
-        // console.error('❌ subscribeToDateVotes: Error fetching date votes:', error);
+        console.error('❌ subscribeToDateVotes: Error fetching date votes:', error);
       }
     })
-    .subscribe();
+    .subscribe((status) => {
+      // 구독 상태 모니터링
+      if (status === 'SUBSCRIBED') {
+        // console.log('✅ subscribeToDateVotes: Subscribed successfully');
+      } else if (status === 'CHANNEL_ERROR') {
+        console.error('❌ subscribeToDateVotes: Channel error');
+      }
+    });
   
   return channel;
 };

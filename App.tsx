@@ -208,12 +208,12 @@ const App: React.FC = () => {
 
   // Real-time subscriptions
   useEffect(() => {
-    if (!currentTripId) {
-      // console.log('📡 Subscriptions: No tripId, skipping subscriptions');
+    if (!currentTripId || !currentUser) {
+      // console.log('📡 Subscriptions: No tripId or currentUser, skipping subscriptions');
       return;
     }
 
-    // console.log('📡 Subscriptions: Setting up real-time subscriptions', { tripId: currentTripId });
+    // console.log('📡 Subscriptions: Setting up real-time subscriptions', { tripId: currentTripId, userId: currentUser.id });
 
     // Subscribe to trip changes
     const tripSubscription = subscribeToTrip(currentTripId, (trip) => {
@@ -232,11 +232,15 @@ const App: React.FC = () => {
       setUsers(updatedUsers);
     });
 
-    // Subscribe to vote changes
-    const votesSubscription = subscribeToDateVotes(currentTripId, (updatedVotes) => {
-      // console.log('📡 Subscription: Votes updated', { count: updatedVotes.length });
-      setVotes(updatedVotes);
-    });
+    // Subscribe to vote changes - currentUserId 전달하여 자신의 변경사항 필터링
+    const votesSubscription = subscribeToDateVotes(
+      currentTripId, 
+      (updatedVotes) => {
+        // console.log('📡 Subscription: Votes updated', { count: updatedVotes.length });
+        setVotes(updatedVotes);
+      },
+      currentUser.id // 현재 사용자 ID 전달
+    );
 
     // console.log('✅ Subscriptions: All subscriptions active');
 
@@ -246,7 +250,7 @@ const App: React.FC = () => {
       usersSubscription.unsubscribe();
       votesSubscription.unsubscribe();
     };
-  }, [currentTripId]);
+  }, [currentTripId, currentUser]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
