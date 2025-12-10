@@ -533,7 +533,7 @@ const App: React.FC = () => {
       return { dates: '', participants: '' };
     }
 
-    // 연속된 날짜 그룹으로 묶기 (ISO 문자열 비교)
+    // 연속된 날짜 그룹으로 묶기 (ISO 문자열 직접 파싱)
     const groups: string[][] = [];
     let currentGroup: string[] = [bestDates[0]];
 
@@ -541,10 +541,14 @@ const App: React.FC = () => {
       const prevDate = bestDates[i - 1];
       const currentDate = bestDates[i];
       
-      // ISO 문자열을 직접 비교하여 연속 여부 확인
-      const prev = new Date(prevDate + 'T00:00:00');
-      const curr = new Date(currentDate + 'T00:00:00');
-      const daysDiff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+      // ISO 문자열을 직접 파싱하여 날짜 차이 계산 (타임존 문제 해결)
+      const [prevYear, prevMonth, prevDay] = prevDate.split('-').map(Number);
+      const [currYear, currMonth, currDay] = currentDate.split('-').map(Number);
+      
+      // 날짜 차이 계산 (로컬 타임존 기준)
+      const prevDateObj = new Date(prevYear, prevMonth - 1, prevDay);
+      const currDateObj = new Date(currYear, currMonth - 1, currDay);
+      const daysDiff = (currDateObj.getTime() - prevDateObj.getTime()) / (1000 * 60 * 60 * 24);
 
       if (daysDiff === 1) {
         // 연속된 날짜

@@ -402,30 +402,30 @@ export const Calendar: React.FC<CalendarProps> = ({
       classes += "bg-gray-50/50 text-gray-400 hover:bg-gray-100 " + opacityClass + " ";
     } else {
 
-      // My Vote Highlight (배경색으로 구분)
+      // My Vote Highlight (두꺼운 테두리만 추가)
+      let myVoteBorder = '';
       if (myVote === 'available') {
-        // 내가 선택한 날짜는 항상 진한 오렌지 배경
-        classes += "bg-orange-500 text-white ring-4 ring-inset ring-orange-600 rounded-lg z-[2] font-bold ";
+        myVoteBorder = "ring-4 ring-inset ring-orange-500 ";
       } else if (myVote === 'unavailable') {
-        // 내가 불가능으로 선택한 날짜는 진한 회색
-        classes += "bg-gray-400 text-white ring-4 ring-inset ring-gray-500 rounded-lg z-[2] font-bold ";
+        myVoteBorder = "ring-4 ring-inset ring-gray-400 ";
+      }
+
+      // Heatmap Logic (Orange Theme)
+      // selectedUserId가 있으면 해당 유저만 필터링된 결과를 표시
+      if (isPerfectMatch) {
+        // 모두 가능: 진한 오렌지/레드오렌지
+        classes += "bg-gradient-to-br from-orange-400 to-red-400 text-white shadow-md scale-[1.03] z-[5] rounded-xl " + opacityClass + " " + myVoteBorder;
+      } else if (totalUsers > 0 && availableCount > 0) {
+        // selectedUserId가 있으면 intensity는 항상 1.0 (해당 유저가 선택한 날짜)
+        const intensity = selectedUserId ? 1.0 : availableCount / totalUsers;
+        if (intensity >= 0.75) classes += "bg-orange-300 text-white hover:bg-orange-400 rounded-lg " + opacityClass + " " + myVoteBorder;
+        else if (intensity >= 0.5) classes += "bg-orange-200 text-orange-900 hover:bg-orange-300 rounded-lg " + opacityClass + " " + myVoteBorder;
+        else if (intensity >= 0.25) classes += "bg-orange-100 text-orange-800 hover:bg-orange-200 rounded-lg " + opacityClass + " " + myVoteBorder;
+        else classes += "bg-orange-50 text-orange-800 hover:bg-orange-100 rounded-lg " + opacityClass + " " + myVoteBorder;
+      } else if (availableCount === 0 && unavailableCount > 0) {
+         classes += "bg-gray-100 text-gray-400 hover:bg-gray-200 rounded-lg " + opacityClass + " " + myVoteBorder;
       } else {
-        // 다른 사람이 선택한 날짜는 기존 로직 사용
-        if (isPerfectMatch) {
-          // 모두 가능: 진한 오렌지/레드오렌지
-          classes += "bg-gradient-to-br from-orange-400 to-red-400 text-white shadow-md scale-[1.03] z-[5] rounded-xl " + opacityClass + " ";
-        } else if (totalUsers > 0 && availableCount > 0) {
-          // selectedUserId가 있으면 intensity는 항상 1.0 (해당 유저가 선택한 날짜)
-          const intensity = selectedUserId ? 1.0 : availableCount / totalUsers;
-          if (intensity >= 0.75) classes += "bg-orange-300 text-white hover:bg-orange-400 rounded-lg " + opacityClass + " ";
-          else if (intensity >= 0.5) classes += "bg-orange-200 text-orange-900 hover:bg-orange-300 rounded-lg " + opacityClass + " ";
-          else if (intensity >= 0.25) classes += "bg-orange-100 text-orange-800 hover:bg-orange-200 rounded-lg " + opacityClass + " ";
-          else classes += "bg-orange-50 text-orange-800 hover:bg-orange-100 rounded-lg " + opacityClass + " ";
-        } else if (availableCount === 0 && unavailableCount > 0) {
-           classes += "bg-gray-100 text-gray-400 hover:bg-gray-200 rounded-lg " + opacityClass + " ";
-        } else {
-          classes += (isCurrentMonth ? "bg-white hover:bg-orange-50" : "bg-gray-50/50 hover:bg-gray-100") + " text-gray-700 rounded-lg " + opacityClass + " ";
-        }
+        classes += (isCurrentMonth ? "bg-white hover:bg-orange-50" : "bg-gray-50/50 hover:bg-gray-100") + " text-gray-700 rounded-lg " + opacityClass + " " + myVoteBorder;
       }
     }
     
