@@ -22,3 +22,16 @@ export const compareLocalDates = (date1: string, date2: string): number => {
   return d1.getTime() - d2.getTime();
 };
 
+// 로컬 타임존 기준 타임스탬프 ISO 문자열 생성 (YYYY-MM-DDTHH:mm:ss+09:00)
+// 한국 시간대(UTC+9) 기준으로 타임스탬프를 생성
+// new Date()는 로컬 시간을 반환하므로, 로컬 시간의 연월일시분초를 추출하여 ISO 형식으로 변환
+export const toLocalTimestamp = (date: Date = new Date()): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}+09:00`;
+};
+

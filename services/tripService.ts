@@ -1,5 +1,6 @@
 import { supabase } from '../supabase/client';
 import { User, DateVote } from '../types';
+import { toLocalTimestamp } from '../utils/dateUtils';
 
 export interface Trip {
   id: string;
@@ -39,7 +40,8 @@ export const createTrip = async (
           destination, 
           share_code: shareCode,
           start_date: startDate || null,
-          end_date: endDate || null
+          end_date: endDate || null,
+          created_at: toLocalTimestamp() // 한국 시간대(KST) 기준으로 명시적 설정
         })
         .select()
         .single();
@@ -116,7 +118,8 @@ export const addTripUser = async (tripId: string, user: User): Promise<void> => 
     .upsert({
       trip_id: tripId,
       user_id: user.id,
-      name: user.name
+      name: user.name,
+      created_at: toLocalTimestamp() // 한국 시간대(KST) 기준으로 명시적 설정
     }, {
       onConflict: 'trip_id,user_id'
     })
@@ -221,14 +224,13 @@ export const updateTripDestination = async (
   destination: string
 ): Promise<void> => {
   // updated_at은 로컬 타임존(한국 시간대) 기준으로 저장
-  // 주의: 일반적으로 TIMESTAMPTZ는 UTC로 저장하는 것이 표준이지만,
-  // 한국 시간대 기준 서비스이므로 로컬 타임존으로 저장
-  const now = new Date();
-  const localISOString = now.toISOString().slice(0, 19) + '+09:00'; // KST (UTC+9)
-  
+  // 한국 시간대(KST, UTC+9) 기준으로 타임스탬프 생성
   const { error } = await supabase
     .from('trips')
-    .update({ destination, updated_at: localISOString })
+    .update({ 
+      destination, 
+      updated_at: toLocalTimestamp() // 올바른 로컬 타임스탬프 사용
+    })
     .eq('id', tripId);
 
   if (error) throw error;
