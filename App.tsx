@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+// @ts-expect-error - @vercel/analytics 타입 선언 문제 (로컬 개발 환경에서 타입 오류 발생)
 import { Analytics } from '@vercel/analytics/react';
 import { Calendar } from './components/Calendar';
 import { DateRangePicker } from './components/DateRangePicker';
@@ -1794,7 +1795,9 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
-      <Analytics />
+      {/* Analytics는 프로덕션 환경에서만 활성화 (로컬 개발 환경 타입 오류 방지) */}
+      {/* @ts-ignore - import.meta.env.PROD는 Vite에서 제공하는 환경 변수 */}
+      {import.meta.env.PROD && <Analytics />}
     </div>
   );
 };
