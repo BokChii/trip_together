@@ -30,9 +30,10 @@ export const removeMarkdown = (text: string): string => {
     cleaned = cleaned.replace(/__([^_]+?)__/g, '$1');
   }
   
-  // 이탤릭 제거 (*text* 또는 _text_) - 볼드가 아닌 경우만
-  cleaned = cleaned.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '$1');
-  cleaned = cleaned.replace(/(?<!_)_([^_\n]+?)_(?!_)/g, '$1');
+  // 이탤릭 제거 (*text* 또는 _text_) - 볼드가 이미 제거되었으므로 안전하게 처리
+  // lookbehind 대신 더 호환성 높은 패턴 사용 (Vercel 빌드 환경 호환성)
+  cleaned = cleaned.replace(/\b\*([^*\n]+?)\*\b/g, '$1');
+  cleaned = cleaned.replace(/\b_([^_\n]+?)_\b/g, '$1');
   
   // 링크 제거 [text](url) -> text
   cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
