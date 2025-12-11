@@ -24,6 +24,7 @@ import {
   getTripsCount
 } from './services/tripService';
 import { parseLocalDate } from './utils/dateUtils';
+import { validateDestination } from './utils/inputValidation';
 
 // Short ID generator (6 chars)
 const generateId = () => Math.random().toString(36).substring(2, 8);
@@ -538,6 +539,13 @@ const App: React.FC = () => {
   };
 
   const handleGenerateItinerary = async () => {
+    // 입력 검증 (프롬프트 인젝션 방지)
+    const validation = validateDestination(destination);
+    if (!validation.valid) {
+      alert(validation.error || '올바른 여행지를 입력해주세요.');
+      return;
+    }
+
     const voteCounts: Record<string, number> = {};
     votes.forEach(v => {
         if (v.type === 'available') {
