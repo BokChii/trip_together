@@ -1,13 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
-
-// 로컬 타임존 기준 ISO 문자열 생성 (타임존 문제 해결)
-const toLocalISOString = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+import { toLocalISOString, parseLocalDate } from '../utils/dateUtils';
 
 interface DateRangePickerProps {
   startDate: string | null;
@@ -74,9 +67,10 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   const isDateInRange = (isoDate: string): boolean => {
     if (!startDate || !endDate) return false;
-    const date = new Date(isoDate);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // 로컬 타임존 기준으로 날짜 비교 (한국 시간대)
+    const date = parseLocalDate(isoDate);
+    const start = parseLocalDate(startDate);
+    const end = parseLocalDate(endDate);
     return date >= start && date <= end;
   };
 
@@ -89,7 +83,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   };
 
   const getCellStyles = (isoDate: string, isCurrentMonth: boolean) => {
-    const date = new Date(isoDate);
+    // 로컬 타임존 기준으로 날짜 비교 (한국 시간대)
+    const date = parseLocalDate(isoDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const isPast = date < today;

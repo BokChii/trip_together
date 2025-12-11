@@ -220,9 +220,15 @@ export const updateTripDestination = async (
   tripId: string,
   destination: string
 ): Promise<void> => {
+  // updated_at은 로컬 타임존(한국 시간대) 기준으로 저장
+  // 주의: 일반적으로 TIMESTAMPTZ는 UTC로 저장하는 것이 표준이지만,
+  // 한국 시간대 기준 서비스이므로 로컬 타임존으로 저장
+  const now = new Date();
+  const localISOString = now.toISOString().slice(0, 19) + '+09:00'; // KST (UTC+9)
+  
   const { error } = await supabase
     .from('trips')
-    .update({ destination, updated_at: new Date().toISOString() })
+    .update({ destination, updated_at: localISOString })
     .eq('id', tripId);
 
   if (error) throw error;

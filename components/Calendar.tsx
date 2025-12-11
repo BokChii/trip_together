@@ -1,14 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, User as UserIcon, Crown, Heart, CalendarHeart } from 'lucide-react';
 import { CalendarDay, DateVote, User, VoteType } from '../types';
-
-// 로컬 타임존 기준 ISO 문자열 생성 (타임존 문제 해결)
-const toLocalISOString = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+import { toLocalISOString, parseLocalDate } from '../utils/dateUtils';
 
 interface CalendarProps {
   currentDate: Date;
@@ -115,8 +108,9 @@ export const Calendar: React.FC<CalendarProps> = ({
   const isMonthInRange = (year: number, month: number): boolean => {
     if (!startDate && !endDate) return true; // 기간 제한이 없으면 모두 허용
     
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
+    // 로컬 타임존 기준으로 날짜 비교 (한국 시간대)
+    const start = startDate ? parseLocalDate(startDate) : null;
+    const end = endDate ? parseLocalDate(endDate) : null;
     
     // 해당 월의 첫날과 마지막날
     const monthStart = new Date(year, month, 1);
@@ -191,8 +185,9 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const getRange = (start: string, end: string): string[] => {
-      const s = new Date(start);
-      const e = new Date(end);
+      // 로컬 타임존 기준으로 날짜 비교 (한국 시간대)
+      const s = parseLocalDate(start);
+      const e = parseLocalDate(end);
       const range: string[] = [];
       
       const startDate = s < e ? s : e;
@@ -278,9 +273,10 @@ export const Calendar: React.FC<CalendarProps> = ({
         e.preventDefault(); // 스크롤 방지
         const date = getDateFromTouch(e as unknown as React.TouchEvent);
         if (date) {
-          const dateObj = new Date(date);
-          const start = startDate ? new Date(startDate) : null;
-          const end = endDate ? new Date(endDate) : null;
+          // 로컬 타임존 기준으로 날짜 비교 (한국 시간대)
+          const dateObj = parseLocalDate(date);
+          const start = startDate ? parseLocalDate(startDate) : null;
+          const end = endDate ? parseLocalDate(endDate) : null;
           let isInRange = true;
           if (start && end) {
             isInRange = dateObj >= start && dateObj <= end;
@@ -351,9 +347,10 @@ export const Calendar: React.FC<CalendarProps> = ({
   const isDateInRange = (isoDate: string): boolean => {
     if (!startDate && !endDate) return true; // 기간 제한이 없으면 모두 허용
     
-    const date = new Date(isoDate);
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
+    // 로컬 타임존 기준으로 날짜 비교 (한국 시간대)
+    const date = parseLocalDate(isoDate);
+    const start = startDate ? parseLocalDate(startDate) : null;
+    const end = endDate ? parseLocalDate(endDate) : null;
     
     if (start && end) {
       return date >= start && date <= end;
@@ -383,9 +380,10 @@ export const Calendar: React.FC<CalendarProps> = ({
     
     let isInDragRange = false;
     if (isDragging && dragStart && dragEnd) {
-        const s = new Date(dragStart);
-        const e = new Date(dragEnd);
-        const c = new Date(isoDate);
+        // 로컬 타임존 기준으로 날짜 비교 (한국 시간대)
+        const s = parseLocalDate(dragStart);
+        const e = parseLocalDate(dragEnd);
+        const c = parseLocalDate(isoDate);
         if ((c >= s && c <= e) || (c >= e && c <= s)) {
             isInDragRange = true;
         }

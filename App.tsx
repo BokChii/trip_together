@@ -22,6 +22,7 @@ import {
   subscribeToDateVotes,
   getTripsCount
 } from './services/tripService';
+import { parseLocalDate } from './utils/dateUtils';
 
 // Short ID generator (6 chars)
 const generateId = () => Math.random().toString(36).substring(2, 8);
@@ -65,8 +66,9 @@ const App: React.FC = () => {
       setDateRangeEnd(null);
     } else if (!dateRangeEnd) {
       // 두 번째 클릭: 종료일 설정
-      const startDate = new Date(dateRangeStart);
-      const clickedDate = new Date(isoDate);
+      // 로컬 타임존 기준으로 날짜 비교 (한국 시간대)
+      const startDate = parseLocalDate(dateRangeStart);
+      const clickedDate = parseLocalDate(isoDate);
       
       if (clickedDate < startDate) {
         // 클릭한 날짜가 시작일보다 이전이면 리셋 후 새로운 시작일로
