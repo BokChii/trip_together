@@ -1016,93 +1016,6 @@ const App: React.FC = () => {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
         
-        {/* 사용법 가이드 (접을 수 있는 형태) */}
-        <div className="bg-white rounded-[1.5rem] shadow-sm border border-orange-50 overflow-hidden">
-          <button
-            onClick={() => setShowGuide(!showGuide)}
-            className="w-full flex items-center justify-between p-4 hover:bg-orange-50 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-orange-100 p-2 rounded-full">
-                <BookOpen className="w-5 h-5 text-orange-600" />
-             </div>
-              <div className="text-left">
-                <h3 className="text-sm font-bold text-gray-800">사용법 가이드</h3>
-                <p className="text-xs text-gray-500">언제갈래? 서비스 이용 방법</p>
-              </div>
-            </div>
-            {showGuide ? (
-              <ChevronLeft className="w-5 h-5 text-gray-400 rotate-90" />
-            ) : (
-              <ChevronRight className="w-5 h-5 text-gray-400 rotate-90" />
-            )}
-          </button>
-          
-          {showGuide && (
-            <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2">
-              <div className="pt-2 pb-3 border-t border-orange-100">
-                <p className="text-xs text-gray-600 mb-4 leading-relaxed">
-                  <strong className="text-orange-600">언제갈래?</strong>는 친구들과 함께 여행 일정을 조율하는 서비스입니다. 
-                  각자 가능한 날짜를 선택하면 모두가 가능한 날짜를 한눈에 확인할 수 있어요! ✈️
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex gap-3">
-                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                    <CalendarHeart className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">📅 날짜 선택</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      • 단일 클릭/탭: 날짜 선택 또는 해제<br/>
-                      • 드래그: 여러 날짜를 한 번에 선택 (모바일에서도 가능!)
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                    <Check className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">✅ 투표 모드</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      • <strong>"가능해요"</strong>: 선택한 날짜에 가능 표시<br/>
-                      • <strong>"안돼요"</strong>: 선택한 날짜에 불가능 표시
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                    <UserIcon className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">👥 참여자 확인</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      • 참여자 이름 클릭: 해당 참여자만 보기<br/>
-                      • <strong>"가장 많이 가능"</strong> 클릭: 가장 많은 참여자가 가능한 날짜만 보기
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                    <Share2 className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">🔗 공유하기</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      • <strong>"초대하기"</strong> 버튼으로 링크 복사 후 친구들에게 공유하세요!
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        
         {/* 친구 초대하기 - 가이드 아래, 캘린더 위로 이동 */}
         <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm border border-orange-50">
           <div className="flex items-center justify-between gap-3">
@@ -1290,6 +1203,93 @@ const App: React.FC = () => {
               복사하기
             </Button>
           </div>
+        </div>
+
+        {/* 사용법 가이드 (접을 수 있는 형태) */}
+        <div className="bg-white rounded-[1.5rem] shadow-sm border border-orange-50 overflow-hidden">
+          <button
+            onClick={() => setShowGuide(!showGuide)}
+            className="w-full flex items-center justify-between p-4 hover:bg-orange-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-100 p-2 rounded-full">
+                <BookOpen className="w-5 h-5 text-orange-600" />
+             </div>
+              <div className="text-left">
+                <h3 className="text-sm font-bold text-gray-800">사용법 가이드</h3>
+                <p className="text-xs text-gray-500">언제갈래? 서비스 이용 방법</p>
+              </div>
+            </div>
+            {showGuide ? (
+              <ChevronLeft className="w-5 h-5 text-gray-400 rotate-90" />
+            ) : (
+              <ChevronRight className="w-5 h-5 text-gray-400 rotate-90" />
+            )}
+          </button>
+          
+          {showGuide && (
+            <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2">
+              <div className="pt-2 pb-3 border-t border-orange-100">
+                <p className="text-xs text-gray-600 mb-4 leading-relaxed">
+                  <strong className="text-orange-600">언제갈래?</strong>는 친구들과 함께 여행 일정을 조율하는 서비스입니다. 
+                  각자 가능한 날짜를 선택하면 모두가 가능한 날짜를 한눈에 확인할 수 있어요! ✈️
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                    <CalendarHeart className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-1">📅 날짜 선택</h4>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      • 단일 클릭/탭: 날짜 선택 또는 해제<br/>
+                      • 드래그: 여러 날짜를 한 번에 선택 (모바일에서도 가능!)
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                    <Check className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-1">✅ 투표 모드</h4>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      • <strong>"가능해요"</strong>: 선택한 날짜에 가능 표시<br/>
+                      • <strong>"안돼요"</strong>: 선택한 날짜에 불가능 표시
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                    <UserIcon className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-1">👥 참여자 확인</h4>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      • 참여자 이름 클릭: 해당 참여자만 보기<br/>
+                      • <strong>"가장 많이 가능"</strong> 클릭: 가장 많은 참여자가 가능한 날짜만 보기
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
+                    <Share2 className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-1">🔗 공유하기</h4>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      • <strong>"초대하기"</strong> 버튼으로 링크 복사 후 친구들에게 공유하세요!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* AI Itinerary Section */}
