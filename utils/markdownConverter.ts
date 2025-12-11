@@ -21,7 +21,14 @@ export const removeMarkdown = (text: string): string => {
   // 헤더 제거 (# ## ### 등) - 헤더 기호만 제거, 내용은 유지
   cleaned = cleaned.replace(/^#{1,6}\s+(.+)$/gm, '$1');
   
-  // 볼드는 유지 (제거하지 않음) - **text** 또는 __text__ 형태 유지
+  // 볼드 제거 (**text** 또는 __text__) - 여러 번 반복 처리 (중첩된 경우)
+  let prevCleaned = '';
+  while (prevCleaned !== cleaned) {
+    prevCleaned = cleaned;
+    cleaned = cleaned.replace(/\*\*([^*]+?)\*\*/g, '$1');
+    cleaned = cleaned.replace(/__([^_]+?)__/g, '$1');
+  }
+  
   // 리스트 기호는 유지 (제거하지 않음) - -, *, + 형태 유지
   // 번호 리스트는 유지 (제거하지 않음) - 1. 2. 등 형태 유지
   // 들여쓰기는 유지 (제거하지 않음)
