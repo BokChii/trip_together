@@ -7,7 +7,7 @@ import { ModeToggle } from './components/ModeToggle';
 import { Button } from './components/Button';
 import { DateVote, User, VoteType } from './types';
 import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
-import { generateItinerary } from './services/geminiService';
+import { generateItineraryStream } from './services/geminiService';
 import {
   createTrip,
   getTripByShareCode,
@@ -558,12 +558,18 @@ const App: React.FC = () => {
     if (!startDate) return;
 
     setIsGenerating(true);
-    const plan = await generateItinerary({
+    setItinerary(''); // 초기화
+    
+    // 스트리밍 응답 처리
+    await generateItineraryStream({
         destination,
         startDate,
         endDate: endDate || startDate
+    }, (chunk) => {
+        // 실시간으로 텍스트 추가
+        setItinerary(prev => (prev || '') + chunk);
     });
-    setItinerary(plan);
+    
     setIsGenerating(false);
   };
 

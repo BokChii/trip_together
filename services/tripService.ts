@@ -161,7 +161,8 @@ export const upsertDateVote = async (
       trip_id: tripId,
       date,
       user_id: userId,
-      vote_type: voteType
+      vote_type: voteType,
+      created_at: toLocalTimestamp() // 한국 시간대(KST) 기준으로 명시적 설정
     }, {
       onConflict: 'trip_id,date,user_id'
     });
@@ -186,7 +187,8 @@ export const upsertDateVotesBatch = async (
         trip_id: tripId,
         date: v.date,
         user_id: v.userId,
-        vote_type: v.voteType
+        vote_type: v.voteType,
+        created_at: toLocalTimestamp() // 한국 시간대(KST) 기준으로 명시적 설정
       })),
       {
         onConflict: 'trip_id,date,user_id'
