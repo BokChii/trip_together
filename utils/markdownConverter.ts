@@ -9,22 +9,30 @@ export const removeMarkdown = (text: string): string => {
 
   let cleaned = text;
 
-  // 코드 블록 제거
+  // 코드 블록 제거 (먼저 처리)
   cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
   
   // 인라인 코드 제거
   cleaned = cleaned.replace(/`([^`]+)`/g, '$1');
   
-  // 헤더 제거 (# ## ### 등)
+  // 구분선 제거 (---, ***, ___) - 줄 전체 또는 줄 중간
+  cleaned = cleaned.replace(/^[-*_]{3,}\s*$/gm, '');
+  cleaned = cleaned.replace(/\s*[-*_]{3,}\s*/g, ' ');
+  
+  // 헤더 제거 (# ## ### 등) - 이모지나 특수문자 포함
   cleaned = cleaned.replace(/^#{1,6}\s+(.+)$/gm, '$1');
   
-  // 볼드 제거 (**text** 또는 __text__)
-  cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, '$1');
-  cleaned = cleaned.replace(/__([^_]+)__/g, '$1');
+  // 볼드 제거 (**text** 또는 __text__) - 여러 번 반복 처리 (중첩된 경우)
+  let prevCleaned = '';
+  while (prevCleaned !== cleaned) {
+    prevCleaned = cleaned;
+    cleaned = cleaned.replace(/\*\*([^*]+?)\*\*/g, '$1');
+    cleaned = cleaned.replace(/__([^_]+?)__/g, '$1');
+  }
   
-  // 이탤릭 제거 (*text* 또는 _text_)
-  cleaned = cleaned.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '$1');
-  cleaned = cleaned.replace(/_([^_]+)_/g, '$1');
+  // 이탤릭 제거 (*text* 또는 _text_) - 볼드가 아닌 경우만
+  cleaned = cleaned.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '$1');
+  cleaned = cleaned.replace(/(?<!_)_([^_\n]+?)_(?!_)/g, '$1');
   
   // 링크 제거 [text](url) -> text
   cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
@@ -32,14 +40,11 @@ export const removeMarkdown = (text: string): string => {
   // 이미지 제거 ![alt](url) -> alt
   cleaned = cleaned.replace(/!\[([^\]]+)\]\([^\)]+\)/g, '$1');
   
-  // 리스트 기호 제거 (-, *, +)
+  // 리스트 기호 제거 (-, *, +) - 들여쓰기 포함
   cleaned = cleaned.replace(/^[\s]*[-*+]\s+/gm, '');
   
   // 번호 리스트 제거 (1. 2. 등)
   cleaned = cleaned.replace(/^\s*\d+\.\s+/gm, '');
-  
-  // 구분선 제거 (---, ***, ___)
-  cleaned = cleaned.replace(/^[-*_]{3,}$/gm, '');
   
   // 인용구 제거 (>)
   cleaned = cleaned.replace(/^>\s+/gm, '');
