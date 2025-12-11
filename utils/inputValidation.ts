@@ -2,8 +2,9 @@
 
 // 금지 키워드 목록
 const FORBIDDEN_KEYWORDS = [
-  'api key', 'api_key', 'apikey', 'api-key',
-  'password', 'secret', 'token',
+  'api key', 'api_key', 'apikey', 'api-key', 'api키',
+  'gemini', 'gpt', 'openai', 'claude', // AI 서비스 이름
+  'password', 'secret', 'token', 'credential',
   'ignore', 'forget', '무시', '잊어',
   'system', 'admin', 'root',
   'prompt', 'instruction', '지시',
@@ -20,6 +21,10 @@ const INJECTION_PATTERNS = [
   /system\s*:/i,
   /user\s*:/i,
   /assistant\s*:/i,
+  // API 키 관련 패턴
+  /(api|키|key).*알려|알려.*(api|키|key)/i,
+  /(gemini|gpt|openai).*(api|키|key)/i,
+  /(api|키|key).*(gemini|gpt|openai)/i,
 ];
 
 // 입력 검증 함수
@@ -41,14 +46,20 @@ export const validateDestination = (input: string): { valid: boolean; error?: st
     }
   }
 
-  // 3. 프롬프트 인젝션 패턴 검사
+  // 3. API 키 관련 특수 패턴 검사 (띄어쓰기 없이도 체크)
+  const apiKeyPattern = /(api|에이피아이).*(키|key|키이)/i;
+  if (apiKeyPattern.test(input)) {
+    return { valid: false, error: '부적절한 입력이 감지되었습니다. 여행지 이름만 입력해주세요.' };
+  }
+
+  // 4. 프롬프트 인젝션 패턴 검사
   for (const pattern of INJECTION_PATTERNS) {
     if (pattern.test(input)) {
       return { valid: false, error: '부적절한 입력이 감지되었습니다. 여행지 이름만 입력해주세요.' };
     }
   }
 
-  // 4. 특수 문자 과다 사용 검사 (프롬프트 인젝션 시도 가능성)
+  // 5. 특수 문자 과다 사용 검사 (프롬프트 인젝션 시도 가능성)
   const specialCharCount = (input.match(/[<>{}[\]\\|`]/g) || []).length;
   if (specialCharCount > 3) {
     return { valid: false, error: '부적절한 입력이 감지되었습니다.' };
