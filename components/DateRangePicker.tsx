@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { toLocalISOString, parseLocalDate } from '../utils/dateUtils';
 
@@ -14,6 +14,19 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   onDateClick,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  // startDate가 선택되면 해당 월로 이동
+  useEffect(() => {
+    if (startDate) {
+      const start = parseLocalDate(startDate);
+      const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+      // 현재 월과 다를 때만 업데이트 (무한 루프 방지)
+      if (currentDate.getFullYear() !== startMonth.getFullYear() || 
+          currentDate.getMonth() !== startMonth.getMonth()) {
+        setCurrentDate(startMonth);
+      }
+    }
+  }, [startDate]);
 
   const daysInMonth = useMemo(() => {
     const year = currentDate.getFullYear();

@@ -341,6 +341,12 @@ const App: React.FC = () => {
         setTripStartDate(newTrip.start_date || null);
         setTripEndDate(newTrip.end_date || null);
         
+        // tripStartDate가 있으면 해당 월로 달력 이동
+        if (newTrip.start_date) {
+          const startDate = parseLocalDate(newTrip.start_date);
+          setCurrentDate(new Date(startDate.getFullYear(), startDate.getMonth(), 1));
+        }
+        
         // 사용자 추가
         // console.log('👤 confirmUser: Adding user to new trip...');
         await addTripUser(newTrip.id, user);

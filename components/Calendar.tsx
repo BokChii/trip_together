@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, User as UserIcon, Crown, Heart, CalendarHeart } from 'lucide-react';
 import { CalendarDay, DateVote, User, VoteType } from '../types';
 import { toLocalISOString, parseLocalDate } from '../utils/dateUtils';
+import { isKoreanHoliday, isSunday } from '../utils/koreanHolidays';
 
 interface CalendarProps {
   currentDate: Date;
@@ -375,6 +376,10 @@ export const Calendar: React.FC<CalendarProps> = ({
     const totalUsers = selectedUserId === 'all' ? users.length : (selectedUserId ? 1 : users.length);
     const isPerfectMatch = totalUsers > 0 && availableCount === totalUsers;
     
+    // 공휴일 및 일요일 체크
+    const holiday = isKoreanHoliday(isoDate);
+    const isSun = isSunday(isoDate);
+    
     // 다른 달 날짜인 경우 투명도 적용 (시각적 구분)
     const opacityClass = isCurrentMonth ? "" : "opacity-70";
     
@@ -432,6 +437,18 @@ export const Calendar: React.FC<CalendarProps> = ({
          classes += "bg-gray-100 text-gray-400 hover:bg-gray-200 rounded-lg " + opacityClass + " " + myVoteBorder;
       } else {
         classes += (isCurrentMonth ? "bg-white hover:bg-orange-50" : "bg-gray-50/50 hover:bg-gray-100") + " text-gray-700 rounded-lg " + opacityClass + " " + myVoteBorder;
+      }
+    }
+    
+    // 공휴일 및 일요일 텍스트 색상 적용 (배경색이 있는 경우는 제외)
+    if (holiday || isSun) {
+      // 배경색이 없는 경우에만 빨간색 텍스트 적용
+      if (availableCount === 0 && unavailableCount === 0) {
+        if (holiday) {
+          classes += " text-rose-600 font-bold";
+        } else if (isSun) {
+          classes += " text-rose-400 font-bold";
+        }
       }
     }
     
@@ -538,9 +555,16 @@ export const Calendar: React.FC<CalendarProps> = ({
               `}
             >
               <div className="w-full flex justify-between items-start mb-1 pointer-events-none">
-                <span className={`text-sm font-bold ${day.isToday ? 'bg-orange-400 text-white shadow-sm w-7 h-7 flex items-center justify-center rounded-full' : ''} ${!day.isCurrentMonth ? 'text-gray-400' : ''}`}>
-                  {day.date.getDate()}
-                </span>
+                <div className="flex flex-col items-start">
+                  <span className={`text-sm font-bold ${day.isToday ? 'bg-orange-400 text-white shadow-sm w-7 h-7 flex items-center justify-center rounded-full' : ''} ${!day.isCurrentMonth ? 'text-gray-400' : ''}`}>
+                    {day.date.getDate()}
+                  </span>
+                  {isKoreanHoliday(day.isoString) && day.isCurrentMonth && (
+                    <span className="text-[9px] text-rose-600 font-bold mt-0.5 leading-tight">
+                      {isKoreanHoliday(day.isoString)?.name}
+                    </span>
+                  )}
+                </div>
                 {isPerfectMatch && day.isCurrentMonth && (
                   <Crown className="w-5 h-5 text-yellow-300 fill-yellow-300 animate-bounce" />
                 )}
