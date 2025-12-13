@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, User as UserIcon, Crown, Heart, CalendarHeart } from 'lucide-react';
 import { CalendarDay, DateVote, User, VoteType } from '../types';
 import { toLocalISOString, parseLocalDate } from '../utils/dateUtils';
-import { isKoreanHoliday, isSunday } from '../utils/koreanHolidays';
+import { isKoreanHoliday, isSunday, isSaturday } from '../utils/koreanHolidays';
 
 interface CalendarProps {
   currentDate: Date;
@@ -376,9 +376,10 @@ export const Calendar: React.FC<CalendarProps> = ({
     const totalUsers = selectedUserId === 'all' ? users.length : (selectedUserId ? 1 : users.length);
     const isPerfectMatch = totalUsers > 0 && availableCount === totalUsers;
     
-    // 공휴일 및 일요일 체크
+    // 공휴일, 일요일, 토요일 체크
     const holiday = isKoreanHoliday(isoDate);
     const isSun = isSunday(isoDate);
+    const isSat = isSaturday(isoDate);
     
     // 다른 달 날짜인 경우 투명도 적용 (시각적 구분)
     const opacityClass = isCurrentMonth ? "" : "opacity-70";
@@ -440,14 +441,16 @@ export const Calendar: React.FC<CalendarProps> = ({
       }
     }
     
-    // 공휴일 및 일요일 텍스트 색상 적용 (배경색이 있는 경우는 제외)
-    if (holiday || isSun) {
-      // 배경색이 없는 경우에만 빨간색 텍스트 적용
+    // 공휴일, 일요일, 토요일 텍스트 색상 적용 (배경색이 있는 경우는 제외)
+    if (holiday || isSun || isSat) {
+      // 배경색이 없는 경우에만 색상 텍스트 적용
       if (availableCount === 0 && unavailableCount === 0) {
         if (holiday) {
           classes += " text-rose-600 font-bold";
         } else if (isSun) {
           classes += " text-rose-400 font-bold";
+        } else if (isSat) {
+          classes += " text-blue-400 font-bold";
         }
       }
     }

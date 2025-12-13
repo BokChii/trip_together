@@ -165,6 +165,12 @@ const App: React.FC = () => {
             setTripStartDate(trip.start_date || null);
             setTripEndDate(trip.end_date || null);
 
+            // tripStartDate가 있으면 해당 월로 달력 이동
+            if (trip.start_date) {
+              const startDate = parseLocalDate(trip.start_date);
+              setCurrentDate(new Date(startDate.getFullYear(), startDate.getMonth(), 1));
+            }
+
             // Load users and votes
             // console.log('📊 initTrip: Loading users and votes...');
             const tripUsers = await getTripUsers(trip.id);
@@ -391,6 +397,12 @@ const App: React.FC = () => {
           trip_id: currentTripId
         };
         localStorage.setItem('tripsync_user', JSON.stringify(userWithTripId));
+        
+        // tripStartDate가 있으면 해당 월로 달력 이동
+        if (tripStartDate) {
+          const startDate = parseLocalDate(tripStartDate);
+          setCurrentDate(new Date(startDate.getFullYear(), startDate.getMonth(), 1));
+        }
         
         // Users will be updated via subscription
       } catch (error) {
@@ -1045,13 +1057,13 @@ const App: React.FC = () => {
         {/* 친구 초대하기 - 가이드 아래, 캘린더 위로 이동 */}
         <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm border border-orange-50">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-col gap-1">
+             <div className="flex flex-col gap-1">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Share2 className="w-4 h-4 text-orange-500" />
                 친구 초대하기
               </h3>
               <p className="text-xs text-gray-500">링크를 복사해서 친구들에게 공유하세요</p>
-            </div>
+             </div>
                <Button 
                   variant="secondary" 
                   size="md" 

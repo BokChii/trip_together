@@ -43,3 +43,9 @@ export const isSunday = (isoDate: string): boolean => {
   return date.getDay() === 0;
 };
 
+// 특정 날짜가 토요일인지 확인
+export const isSaturday = (isoDate: string): boolean => {
+  const date = new Date(isoDate + 'T00:00:00');
+  return date.getDay() === 6;
+};
+
