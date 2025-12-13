@@ -346,3 +346,27 @@ export const getTripsCount = async (): Promise<number> => {
   return count || 0;
 };
 
+// 버튼 클릭 이벤트 타입
+export type ButtonClickEvent = 'share' | 'copy_dates' | 'generate_itinerary';
+
+// 버튼 클릭 추적 (비동기, 실패해도 서비스 동작에는 영향 없음)
+export const trackButtonClick = async (
+  eventType: ButtonClickEvent,
+  tripId?: string,
+  userId?: string
+): Promise<void> => {
+  try {
+    await supabase
+      .from('button_clicks')
+      .insert({
+        event_type: eventType,
+        trip_id: tripId || null,
+        user_id: userId || null,
+        created_at: toLocalTimestamp()
+      });
+  } catch (error) {
+    // 클릭 추적 실패해도 서비스 동작에는 영향 없음
+    // console.error('Failed to track button click:', error);
+  }
+};
+

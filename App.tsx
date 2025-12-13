@@ -21,7 +21,8 @@ import {
   subscribeToTrip,
   subscribeToTripUsers,
   subscribeToDateVotes,
-  getTripsCount
+  getTripsCount,
+  trackButtonClick
 } from './services/tripService';
 import { parseLocalDate } from './utils/dateUtils';
 import { validateDestination } from './utils/inputValidation';
@@ -497,6 +498,9 @@ const App: React.FC = () => {
         await navigator.clipboard.writeText(url);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
+        
+        // 클릭 추적 추가
+        trackButtonClick('share', currentTripId || undefined, currentUser?.id);
       } catch (clipErr) {
         // console.warn("Clipboard failed", clipErr);
       }
@@ -573,6 +577,11 @@ const App: React.FC = () => {
     });
     setItinerary(plan);
     setIsGenerating(false);
+    
+    // 클릭 추적 추가 (성공적으로 일정 생성된 경우만)
+    if (plan && !plan.includes('죄송')) {
+      trackButtonClick('generate_itinerary', currentTripId || undefined, currentUser?.id);
+    }
   };
 
   // 날짜를 연속된 그룹으로 묶고 포맷팅하는 함수
@@ -681,6 +690,9 @@ const App: React.FC = () => {
     try {
       await navigator.clipboard.writeText(textToCopy);
       setShowCopySuccessModal(true);
+      
+      // 클릭 추적 추가
+      trackButtonClick('copy_dates', currentTripId || undefined, currentUser?.id);
     } catch (error) {
       alert('복사에 실패했습니다.');
     }
