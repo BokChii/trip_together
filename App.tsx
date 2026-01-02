@@ -404,7 +404,16 @@ const App: React.FC = () => {
           setCurrentDate(new Date(startDate.getFullYear(), startDate.getMonth(), 1));
         }
         
-        // Users will be updated via subscription
+        // 사용자 추가 후 최신 데이터 로드 (구독이 활성화되기 전에)
+        // 약간의 딜레이를 두어 DB 업데이트가 완료되도록 함
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const [tripUsers, tripVotes] = await Promise.all([
+          getTripUsers(currentTripId),
+          getDateVotes(currentTripId)
+        ]);
+        setUsers(tripUsers);
+        setVotes(tripVotes);
+        // console.log('✅ confirmUser: Latest data loaded after adding user', { usersCount: tripUsers.length, votesCount: tripVotes.length });
       } catch (error) {
         // console.error("❌ confirmUser: Failed to add user", error);
         alert("사용자 추가에 실패했습니다.");
@@ -442,6 +451,11 @@ const App: React.FC = () => {
         ));
         
         await deleteDateVotes(currentTripId, datesToUpdate, currentUser.id);
+        
+        // DB 저장 후 최신 데이터 로드 (자신의 변경사항도 반영)
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const updatedVotes = await getDateVotes(currentTripId);
+        setVotes(updatedVotes);
       } else {
         // 단일 클릭의 경우 토글 로직
       if (shouldRemove === undefined && !Array.isArray(dateIsoOrList)) {
@@ -453,6 +467,11 @@ const App: React.FC = () => {
             ));
             
             await deleteDateVotes(currentTripId, [dateIsoOrList], currentUser.id);
+            
+            // DB 저장 후 최신 데이터 로드
+            await new Promise(resolve => setTimeout(resolve, 100));
+            const updatedVotes = await getDateVotes(currentTripId);
+            setVotes(updatedVotes);
             return;
           }
         }
@@ -481,6 +500,11 @@ const App: React.FC = () => {
             voteType: voteMode
           }))
         );
+        
+        // DB 저장 후 최신 데이터 로드 (자신의 변경사항도 반영)
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const updatedVotes = await getDateVotes(currentTripId);
+        setVotes(updatedVotes);
       }
       // 구독은 다른 사용자의 변경사항을 받기 위해 유지
     } catch (error) {

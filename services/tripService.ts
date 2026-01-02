@@ -320,14 +320,7 @@ export const subscribeToDateVotes = (
         console.error('❌ subscribeToDateVotes: Error fetching date votes:', error);
       }
     })
-    .subscribe((status) => {
-      // 구독 상태 모니터링
-      if (status === 'SUBSCRIBED') {
-        // console.log('✅ subscribeToDateVotes: Subscribed successfully');
-      } else if (status === 'CHANNEL_ERROR') {
-        console.error('❌ subscribeToDateVotes: Channel error');
-      }
-    });
+    .subscribe();
   
   return channel;
 };
