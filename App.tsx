@@ -142,6 +142,25 @@ const TripPage: React.FC = () => {
   // 중복 실행 방지를 위한 ref
   const hasInitialized = useRef(false);
   
+  // 컴포넌트 마운트 시 인증 상태 확인
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const user = await getCurrentUser();
+        if (user) {
+          setAuthUser(user);
+          const profile = await getUserProfile(user.id);
+          setUserProfile(profile);
+        }
+      } catch (error) {
+        console.error('❌ Error checking auth:', error);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+    checkAuth();
+  }, []);
+  
   // 입력 중인지 추적하는 ref (구독 업데이트 방지용)
   const isTypingDestination = useRef(false);
   const destinationUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
