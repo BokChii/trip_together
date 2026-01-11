@@ -15,15 +15,14 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props 
 }) => {
-  // rounded-full로 변경하여 더 귀여운 느낌
-  const baseStyles = "inline-flex items-center justify-center rounded-full font-bold transition-all transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none shadow-sm";
+  const baseStyles = "inline-flex items-center justify-center rounded-lg font-semibold transition-all transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none shadow-sm";
   
   const variants = {
-    // 오렌지/코랄 테마
-    primary: "bg-orange-500 text-white hover:bg-orange-600 focus:ring-orange-400 shadow-orange-200",
-    secondary: "bg-white text-gray-700 border-2 border-orange-100 hover:border-orange-200 hover:bg-orange-50 focus:ring-orange-300",
-    danger: "bg-rose-400 text-white hover:bg-rose-500 focus:ring-rose-400",
-    ghost: "bg-transparent text-gray-600 hover:bg-orange-50 hover:text-orange-600",
+    // 차분한 오렌지 테마
+    primary: "bg-orange-600 text-white hover:bg-orange-700 focus:ring-orange-500 shadow-md",
+    secondary: "bg-white text-gray-700 border-2 border-orange-100 hover:border-orange-200 hover:bg-orange-50/50 focus:ring-orange-300",
+    danger: "bg-rose-500 text-white hover:bg-rose-600 focus:ring-rose-500",
+    ghost: "bg-transparent text-gray-600 hover:bg-orange-50/50 hover:text-orange-700",
   };
 
   const sizes = {

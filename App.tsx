@@ -785,7 +785,7 @@ const App: React.FC = () => {
   // Loading state
   if (isLoadingTrip) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fff7ed]">
+      <div className="min-h-screen flex items-center justify-center bg-[#faf8f5]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
           <p className="text-gray-600">일정을 불러오는 중...</p>
@@ -798,13 +798,13 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col bg-[#fff7ed] p-4 font-sans">
         <div className="flex-1 flex items-center justify-center">
-          <div className="bg-white p-10 sm:p-12 rounded-[2rem] shadow-xl shadow-orange-100 max-w-xl w-full text-center border border-orange-50">
+          <div className="bg-white p-10 sm:p-12 rounded-2xl shadow-md max-w-xl w-full text-center border border-orange-100/50">
           <div className="mb-6 flex justify-center">
-            <div className="bg-orange-100 p-6 rounded-full animate-bounce">
-              <Plane className="w-12 h-12 text-orange-500" strokeWidth={2.5} />
+            <div className="bg-orange-50 p-6 rounded-xl">
+              <Plane className="w-12 h-12 text-orange-600" strokeWidth={2.5} />
             </div>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-hand font-bold text-gray-800 mb-3">언제갈래? ✈️</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 tracking-tight">언제갈래 ✈️</h1>
           
           <p className="text-base sm:text-lg text-gray-500 mb-6 leading-relaxed">
             친구들과 떠나는 설레는 여행!<br/>
@@ -813,22 +813,22 @@ const App: React.FC = () => {
           
           {/* 서비스 통계 배너 */}
           {!isLoadingStats && tripsCount !== null && (
-            <div className="mb-5 p-3 bg-gradient-to-r from-orange-50 to-rose-50 border border-orange-200 rounded-xl shadow-sm">
+            <div className="mb-5 p-3 bg-orange-50/50 border border-orange-100 rounded-xl">
               <p className="text-sm sm:text-base text-gray-700 leading-relaxed text-center">
-                현재 <span className="font-bold text-orange-600">언제갈래</span>를 통해{' '}
-                <span className="font-bold text-orange-600">{tripsCount.toLocaleString('ko-KR')}개</span>의 여행 일정이 계획되고 있어요!
+                현재 <span className="font-semibold text-orange-700">언제갈래</span>를 통해{' '}
+                <span className="font-semibold text-orange-700">{tripsCount.toLocaleString('ko-KR')}개</span>의 여행 일정이 계획되고 있습니다
               </p>
             </div>
           )}
           
           {/* 초대 링크 접속 시 기간 표시 */}
           {currentTripId && (tripStartDate || tripEndDate) && (
-            <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+            <div className="mb-4 p-4 bg-orange-50/50 border border-orange-100 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
                 <CalendarIcon className="w-4 h-4 text-orange-600" />
-                <span className="text-sm font-semibold text-orange-900">여행 기간</span>
+                <span className="text-sm font-semibold text-gray-800">여행 기간</span>
               </div>
-              <p className="text-sm text-orange-700">
+              <p className="text-sm text-gray-700">
                 {tripStartDate && tripEndDate 
                   ? `${new Date(tripStartDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} ~ ${new Date(tripEndDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}`
                   : tripStartDate 
@@ -871,7 +871,7 @@ const App: React.FC = () => {
             <input
               type="text"
               placeholder="닉네임이 뭐에요?"
-              className="w-full px-6 sm:px-8 py-4 sm:py-5 min-h-[56px] rounded-full bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition-all text-center text-lg sm:text-xl font-medium placeholder:text-gray-400 text-gray-900"
+              className="w-full px-6 sm:px-8 py-4 sm:py-5 min-h-[56px] rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-center text-lg sm:text-xl font-medium placeholder:text-gray-400 text-gray-900"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               required
@@ -880,7 +880,7 @@ const App: React.FC = () => {
             {/* 최초 유저만 기간 설정 표시 */}
             {!currentTripId && users.length === 0 && (
               <div className="pt-2 pb-1">
-                <div className="bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-100 rounded-2xl p-5 sm:p-6 shadow-sm">
+                <div className="bg-orange-50/50 border border-orange-100 rounded-xl p-5 sm:p-6">
                   <button
                     type="button"
                     onClick={() => setShowDateRangePicker(!showDateRangePicker)}
@@ -899,13 +899,13 @@ const App: React.FC = () => {
                   
                   {/* 선택된 날짜 범위 표시 */}
                   {(dateRangeStart || dateRangeEnd) && (
-                    <div className="mb-4 p-3 bg-white rounded-xl border border-orange-200">
+                    <div className="mb-4 p-3 bg-white rounded-lg border border-orange-100">
                       <div className="flex items-center justify-center gap-2 text-sm">
-                        <span className="font-semibold text-orange-600">
+                        <span className="font-semibold text-orange-700">
                           {dateRangeStart ? new Date(dateRangeStart).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '시작일'}
                         </span>
                         <span className="text-orange-400">~</span>
-                        <span className="font-semibold text-orange-600">
+                        <span className="font-semibold text-orange-700">
                           {dateRangeEnd ? new Date(dateRangeEnd).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '종료일'}
                         </span>
                       </div>
@@ -926,7 +926,7 @@ const App: React.FC = () => {
               </div>
             )}
             
-            <Button type="submit" className="w-full text-lg sm:text-xl py-5 sm:py-6 min-h-[56px] shadow-lg shadow-orange-200" size="lg">시작하기</Button>
+            <Button type="submit" className="w-full text-lg sm:text-xl py-5 sm:py-6 min-h-[56px] shadow-md" size="lg">시작하기</Button>
           </form>
           
           {/* 사용법 보기 버튼 */}
@@ -981,14 +981,14 @@ const App: React.FC = () => {
             }}
           >
             <div 
-              className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
+              className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
               onClick={(e) => e.stopPropagation()}
             >
               {/* 튜토리얼 단계별 내용 - 로그인 화면용 간단 버전 */}
               {tutorialStep === 0 && (
                 <>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="bg-orange-100 p-2 rounded-full">
+                    <div className="bg-orange-50 p-2 rounded-lg">
                       <Plane className="w-5 h-5 text-orange-600" />
                     </div>
                     <h3 className="text-lg sm:text-xl font-bold text-gray-800">언제갈래? 시작하기</h3>
@@ -998,8 +998,8 @@ const App: React.FC = () => {
                       <strong className="text-orange-600">언제갈래?</strong>는 친구들과 함께 여행 일정을 조율하는 서비스입니다. 
                       각자 가능한 날짜를 선택하면 모두가 가능한 날짜를 한눈에 확인할 수 있어요! ✈️
                     </p>
-                    <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                      <p className="text-xs text-orange-800 leading-relaxed">
+                    <div className="bg-orange-50/50 p-4 rounded-lg border border-orange-100">
+                      <p className="text-xs text-gray-700 leading-relaxed">
                         💡 <strong>핵심 기능:</strong> 캘린더에서 드래그로 여러 날짜를 한 번에 선택하고, 
                         "가능해요" 또는 "안돼요"로 투표하세요. 모든 참여자가 가능한 날짜는 👑 표시로 보여집니다!
                       </p>
@@ -1042,32 +1042,32 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fff7ed] text-gray-900 pb-20 font-sans">
+    <div className="min-h-screen bg-[#faf8f5] text-gray-900 pb-20 font-sans">
       {/* Navbar */}
-      <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-orange-100">
+      <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-orange-100/50">
         <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between h-14 sm:h-16 items-center">
             <div className="flex items-center gap-1.5 sm:gap-2">
-               <div className="bg-orange-500 p-1 sm:p-1.5 rounded-lg">
+               <div className="bg-orange-600 p-1 sm:p-1.5 rounded-lg">
                    <Plane className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="currentColor" />
                </div>
-               <span className="font-hand font-bold text-xl sm:text-2xl text-gray-800 tracking-tight pt-1">언제갈래</span>
+               <span className="font-bold text-xl sm:text-2xl text-gray-900 tracking-tight">언제갈래</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <button 
                 onClick={handleNewTrip}
-                className="min-h-[44px] text-xs sm:text-sm font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-2.5 sm:px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                className="min-h-[44px] text-xs sm:text-sm font-medium text-orange-700 hover:text-orange-800 bg-orange-50 hover:bg-orange-100 px-2.5 sm:px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">새로운 일정 만들기</span>
                 <span className="sm:hidden">새 일정</span>
               </button>
-              <span className="hidden sm:inline-block text-sm text-gray-500 bg-orange-50 px-3 py-1 rounded-full">
-                반가워요, <strong className="text-orange-600">{currentUser.name}</strong>님! 👋
+              <span className="hidden sm:inline-block text-sm text-gray-600 bg-orange-50/50 px-3 py-1 rounded-lg">
+                반가워요, <strong className="text-orange-700">{currentUser.name}</strong>님
               </span>
               <button 
                 onClick={handleExit} 
-                className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-400 hover:text-orange-500 transition-colors"
+                className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors"
               >
                 나가기
               </button>
@@ -1079,7 +1079,7 @@ const App: React.FC = () => {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
         
         {/* 친구 초대하기 - 가이드 아래, 캘린더 위로 이동 */}
-        <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm border border-orange-50">
+        <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-orange-100/50">
           <div className="flex items-center justify-between gap-3">
              <div className="flex flex-col gap-1">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -1101,7 +1101,7 @@ const App: React.FC = () => {
 
            {/* Generated Link Display */}
            {generatedUrl && (
-            <div className="animate-in fade-in slide-in-from-top-2 duration-300 mt-4 pt-4 border-t border-orange-100">
+            <div className="mt-4 pt-4 border-t border-orange-100/50">
                <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
                  <input 
                    type="text" 
@@ -1150,7 +1150,7 @@ const App: React.FC = () => {
                 {/* "가장 많이 가능" 버튼 추가 */}
                 <button
                   onClick={() => setSelectedUserId(selectedUserId === 'all' ? null : 'all')}
-                  className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                     selectedUserId === 'all'
                       ? 'bg-gradient-to-r from-orange-400 to-red-400 text-white shadow-md scale-105'
                       : 'bg-gradient-to-r from-orange-50 to-rose-50 text-orange-700 hover:from-orange-100 hover:to-rose-100 hover:scale-105 border-2 border-orange-200'
@@ -1171,7 +1171,7 @@ const App: React.FC = () => {
                     <button
                       key={user.id}
                       onClick={() => setSelectedUserId(isSelected ? null : user.id)}
-                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap relative ${
+                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap relative ${
                         isSelected
                           ? 'bg-orange-500 text-white shadow-md scale-105'
                           : isCurrentUser
@@ -1234,7 +1234,7 @@ const App: React.FC = () => {
         />
 
         {/* Best Dates Copy Section */}
-        <div className="bg-white rounded-[2rem] p-5 sm:p-6 shadow-sm border border-orange-50">
+        <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-orange-100/50">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex-1">
               <h3 className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
@@ -1268,13 +1268,13 @@ const App: React.FC = () => {
         </div>
 
         {/* 사용법 가이드 (접을 수 있는 형태) */}
-        <div className="bg-white rounded-[1.5rem] shadow-sm border border-orange-50 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-orange-100/50 overflow-hidden">
           <button
             onClick={() => setShowGuide(!showGuide)}
             className="w-full flex items-center justify-between p-4 hover:bg-orange-50 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-orange-100 p-2 rounded-full">
+              <div className="bg-orange-50 p-2 rounded-lg">
                 <BookOpen className="w-5 h-5 text-orange-600" />
              </div>
               <div className="text-left">
@@ -1290,7 +1290,7 @@ const App: React.FC = () => {
           </button>
           
           {showGuide && (
-            <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2">
+            <div className="px-4 pb-4 space-y-4">
               <div className="pt-2 pb-3 border-t border-orange-100">
                 <p className="text-xs text-gray-600 mb-4 leading-relaxed">
                   <strong className="text-orange-600">언제갈래?</strong>는 친구들과 함께 여행 일정을 조율하는 서비스입니다. 
@@ -1355,21 +1355,21 @@ const App: React.FC = () => {
         </div>
 
         {/* AI Itinerary Section */}
-        <div className="bg-gradient-to-br from-orange-400 to-rose-400 rounded-[2rem] p-6 sm:p-10 text-white shadow-xl shadow-orange-200 overflow-hidden relative">
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 sm:p-10 text-white shadow-md overflow-hidden relative">
            {/* Background Decoration */}
            <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-           <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-yellow-300/20 rounded-full blur-2xl"></div>
+           <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
 
            <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
              <div className="flex-1 space-y-4">
-                <div className="flex items-center gap-2 text-orange-50 font-medium bg-white/20 w-fit px-3 py-1 rounded-full backdrop-blur-sm">
+                <div className="flex items-center gap-2 text-white font-medium bg-white/20 w-fit px-3 py-1 rounded-lg backdrop-blur-sm">
                   <MapPin className="w-4 h-4" />
                   <span>AI 여행 플래너</span>
                 </div>
-                <h3 className="text-2xl sm:text-4xl font-hand font-bold leading-tight">
+                <h3 className="text-2xl sm:text-4xl font-bold leading-tight">
                     어디로 떠나볼까요?
                 </h3>
-                <p className="text-orange-50 opacity-90 max-w-md">
+                <p className="text-white/90 max-w-md">
                     날짜가 정해졌나요? 여행지만 알려주세요.<br/>
                     Gemini가 <strong>딱 맞는 일정</strong>을 추천해드릴게요! 🏝️
                 </p>
@@ -1381,14 +1381,14 @@ const App: React.FC = () => {
                             type="text" 
                             value={destination}
                             onChange={(e) => handleDestinationChange(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3.5 rounded-full bg-white text-gray-900 placeholder:text-gray-400 focus:ring-4 focus:ring-orange-300/50 border-none shadow-lg"
+                            className="w-full pl-11 pr-4 py-3.5 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-300/50 border-none shadow-md"
                             placeholder="예: 제주도, 오사카..."
                         />
                     </div>
                     <Button 
                         onClick={handleGenerateItinerary} 
                         isLoading={isGenerating}
-                        className="bg-white text-orange-600 hover:bg-orange-50 border-none shadow-lg px-8 py-3.5"
+                        className="bg-white text-orange-600 hover:bg-orange-50 border-none shadow-md px-8 py-3.5"
                     >
                         추천받기
                     </Button>
@@ -1397,7 +1397,7 @@ const App: React.FC = () => {
              
              {/* Itinerary Result */}
              {itinerary && (
-                 <div className="flex-1 w-full bg-white/90 backdrop-blur-md rounded-[1.5rem] p-6 text-gray-800 shadow-lg border border-white/50">
+                 <div className="flex-1 w-full bg-white/90 backdrop-blur-md rounded-xl p-6 text-gray-800 shadow-md border border-white/50">
                     <h4 className="font-bold text-lg mb-4 flex items-center gap-2 text-orange-600">
                         <Plane className="w-5 h-5" />
                         {destination} 추천 코스
@@ -1414,7 +1414,7 @@ const App: React.FC = () => {
       </main>
 
       {/* 푸터 */}
-      <footer className="bg-white/80 backdrop-blur-md border-t border-orange-100 py-4 sm:py-6 mt-8">
+      <footer className="bg-white/80 backdrop-blur-md border-t border-orange-100/50 py-4 sm:py-6 mt-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-2">
             <p className="text-xs text-gray-400">
@@ -1456,14 +1456,14 @@ const App: React.FC = () => {
           }}
         >
           <div 
-            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
+            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 튜토리얼 단계별 내용 */}
             {tutorialStep === 0 && (
               <>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-orange-100 p-2 rounded-full">
+                  <div className="bg-orange-50 p-2 rounded-lg">
                     <Plane className="w-5 h-5 text-orange-600" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-gray-800">언제갈래? 시작하기</h3>
@@ -1526,7 +1526,7 @@ const App: React.FC = () => {
             {tutorialStep === 1 && (
               <>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-orange-100 p-2 rounded-full">
+                  <div className="bg-orange-50 p-2 rounded-lg">
                     <CalendarHeart className="w-5 h-5 text-orange-600" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-gray-800">날짜 선택하기</h3>
@@ -1594,7 +1594,7 @@ const App: React.FC = () => {
             {tutorialStep === 2 && (
               <>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-orange-100 p-2 rounded-full">
+                  <div className="bg-orange-50 p-2 rounded-lg">
                     <UserIcon className="w-5 h-5 text-orange-600" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-gray-800">참여자 필터</h3>
@@ -1653,7 +1653,7 @@ const App: React.FC = () => {
             {tutorialStep === 3 && (
               <>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-orange-100 p-2 rounded-full">
+                  <div className="bg-orange-50 p-2 rounded-lg">
                     <Share2 className="w-5 h-5 text-orange-600" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-gray-800">친구 초대하기</h3>
@@ -1724,11 +1724,11 @@ const App: React.FC = () => {
           onClick={() => setShowNewTripModal(false)}
         >
           <div 
-            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
+            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-orange-100 p-2 rounded-full">
+              <div className="bg-orange-50 p-2 rounded-lg">
                 <PlusCircle className="w-5 h-5 text-orange-600" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-800">새로운 일정 만들기</h3>
@@ -1763,11 +1763,11 @@ const App: React.FC = () => {
           onClick={() => setShowExitModal(false)}
         >
           <div 
-            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
+            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-orange-100 p-2 rounded-full">
+              <div className="bg-orange-50 p-2 rounded-lg">
                 <X className="w-5 h-5 text-orange-600" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-800">나가기</h3>
@@ -1801,11 +1801,11 @@ const App: React.FC = () => {
           onClick={() => setShowNoDateModal(false)}
         >
           <div 
-            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
+            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="bg-orange-100 p-2 rounded-full">
+              <div className="bg-orange-50 p-2 rounded-lg">
                 <CalendarHeart className="w-5 h-5 text-orange-600" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-800">날짜를 선택해주세요</h3>
@@ -1833,7 +1833,7 @@ const App: React.FC = () => {
           onClick={() => setShowCopySuccessModal(false)}
         >
           <div 
-            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-orange-100 max-w-md w-full sm:max-w-lg p-5 sm:p-6 animate-in fade-in slide-in-from-bottom-2"
+            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">

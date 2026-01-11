@@ -461,9 +461,9 @@ export const Calendar: React.FC<CalendarProps> = ({
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   return (
-    <div className="w-full max-w-5xl mx-auto bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-orange-100/50 overflow-hidden select-none">
+    <div className="w-full max-w-5xl mx-auto bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-orange-100/50 overflow-hidden select-none">
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-orange-100 bg-gradient-to-r from-orange-50/50 to-rose-50/50">
+      <div className="p-4 sm:p-6 border-b border-orange-100/50 bg-orange-50/30">
         <div className="flex flex-col gap-1 mb-4">
           <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
             <CalendarHeart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />
@@ -569,7 +569,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   )}
                 </div>
                 {isPerfectMatch && day.isCurrentMonth && (
-                  <Crown className="w-5 h-5 text-yellow-300 fill-yellow-300 animate-bounce" />
+                  <Crown className="w-5 h-5 text-yellow-300 fill-yellow-300" />
                 )}
               </div>
 
