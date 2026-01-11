@@ -99,6 +99,13 @@ const LoginPage: React.FC = () => {
             <p className="text-gray-600">친구들과 함께하는 여행 일정 조율</p>
           </div>
 
+          {/* 로그인 유도 텍스트 */}
+          <div className="mb-3 sm:mb-4 p-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/50 rounded-xl">
+            <p className="text-xs sm:text-sm text-gray-700 text-center leading-relaxed">
+              <span className="font-semibold text-orange-600">로그인</span>해서 내 여행 일정을 관리하고 여러 여행을 저장하세요 ✈️
+            </p>
+          </div>
+
           {/* 로그인 버튼들 */}
           <div className="space-y-3">
             <SocialLoginButton

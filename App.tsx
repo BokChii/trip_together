@@ -1029,6 +1029,13 @@ const TripPage: React.FC = () => {
           {/* OAuth 로그인 버튼 - 로그인하지 않은 사용자에게만 표시 */}
           {!authUser && (
             <>
+              {/* 로그인 유도 텍스트 */}
+              <div className="mb-3 sm:mb-4 p-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/50 rounded-xl">
+                <p className="text-xs sm:text-sm text-gray-700 text-center leading-relaxed">
+                  <span className="font-semibold text-orange-600">로그인</span>해서 내 여행 일정을 관리하고 여러 여행을 저장하세요 ✈️
+                </p>
+              </div>
+
               {/* 구분선 - OAuth 로그인 옵션 */}
               <div className="relative my-4 sm:my-6">
                 <div className="absolute inset-0 flex items-center">
@@ -1237,22 +1244,29 @@ const TripPage: React.FC = () => {
                   <span className="hidden sm:inline-block text-sm text-gray-600 bg-orange-50/50 px-3 py-1 rounded-lg">
                     반가워요, <strong className="text-orange-700">{currentUser.name}</strong>님
                   </span>
-                  <button 
-                    onClick={() => {
-                      // 현재 tripId가 있으면 URL 파라미터로 전달
-                      const tripParam = currentTripId ? `?tripId=${currentTripId}` : '';
-                      navigate(`/login${tripParam}`);
-                    }}
-                    className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
-                  >
-                    로그인
-                  </button>
-                  <button 
-                    onClick={handleExit} 
-                    className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors"
-                  >
-                    나가기
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <div className="hidden sm:block px-2 py-1 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/50 rounded-lg">
+                      <p className="text-xs text-gray-700 whitespace-nowrap">
+                        <span className="font-semibold text-orange-600">로그인</span>해서 여러 여행 저장
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        // 현재 tripId가 있으면 URL 파라미터로 전달
+                        const tripParam = currentTripId ? `?tripId=${currentTripId}` : '';
+                        navigate(`/login${tripParam}`);
+                      }}
+                      className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
+                    >
+                      로그인
+                    </button>
+                    <button 
+                      onClick={handleExit} 
+                      className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors"
+                    >
+                      나가기
+                    </button>
+                  </div>
                 </>
               )}
             </div>

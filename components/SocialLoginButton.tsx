@@ -12,16 +12,20 @@ export const SocialLoginButton: React.FC<SocialLoginButtonProps> = ({
   disabled = false,
 }) => {
   const isKakao = provider === 'kakao';
+  // 카카오톡 로그인은 일시적으로 비활성화
+  const isKakaoDisabled = isKakao || disabled;
 
-  const baseClasses = "inline-flex items-center justify-center rounded-lg font-semibold transition-all transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none w-full text-lg sm:text-xl py-5 sm:py-6 min-h-[56px] shadow-md flex items-center justify-center gap-3";
+  const baseClasses = "inline-flex items-center justify-center rounded-lg font-semibold transition-all transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed w-full text-lg sm:text-xl py-5 sm:py-6 min-h-[56px] shadow-md flex items-center justify-center gap-3";
   
-  const kakaoClasses = `${baseClasses} bg-[#FEE500] hover:bg-[#FDD835] text-[#000000]`;
+  const kakaoClasses = isKakaoDisabled 
+    ? `${baseClasses} bg-gray-300 text-gray-500 cursor-not-allowed`
+    : `${baseClasses} bg-[#FEE500] hover:bg-[#FDD835] text-[#000000]`;
   const googleClasses = `${baseClasses} bg-white hover:bg-gray-50 text-gray-700 border border-gray-300`;
 
   return (
     <button
       onClick={onClick}
-      disabled={disabled}
+      disabled={isKakaoDisabled}
       className={isKakao ? kakaoClasses : googleClasses}
     >
       {isKakao ? (
