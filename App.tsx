@@ -36,6 +36,8 @@ import { getCurrentUser, signInWithKakao, signInWithGoogle, signOut, getUserProf
 const generateId = () => Math.random().toString(36).substring(2, 8);
 
 const TripPage: React.FC = () => {
+  const navigate = useNavigate();
+  
   // State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [nameInput, setNameInput] = useState('');
