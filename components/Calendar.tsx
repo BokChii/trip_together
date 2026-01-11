@@ -414,12 +414,12 @@ export const Calendar: React.FC<CalendarProps> = ({
       classes += "bg-gray-50/50 text-gray-400 hover:bg-gray-100 " + opacityClass + " ";
     } else {
 
-      // My Vote Highlight (두꺼운 테두리만 추가)
+      // My Vote Highlight (모바일에서는 더 가늘게)
       let myVoteBorder = '';
       if (myVote === 'available') {
-        myVoteBorder = "ring-4 ring-inset ring-orange-700 ";
+        myVoteBorder = "ring-2 sm:ring-4 ring-inset ring-orange-700 ";
       } else if (myVote === 'unavailable') {
-        myVoteBorder = "ring-4 ring-inset ring-gray-500 ";
+        myVoteBorder = "ring-2 sm:ring-4 ring-inset ring-gray-500 ";
       }
 
       // Heatmap Logic (Orange Theme)
@@ -519,7 +519,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       </div>
 
       {/* Grid Body */}
-      <div className="grid grid-cols-7 auto-rows-fr p-2 gap-1 sm:gap-2 bg-orange-50/30" style={{ touchAction: 'pan-y' }}>
+      <div className="grid grid-cols-7 auto-rows-fr p-1 sm:p-2 gap-0.5 sm:gap-2 bg-orange-50/30" style={{ touchAction: 'pan-y' }}>
         {daysInMonth.map((day, idx) => {
           const { availableCount, dateVotes } = getDayStats(day.isoString);
           const totalUsers = users.length;
@@ -553,13 +553,13 @@ export const Calendar: React.FC<CalendarProps> = ({
               }}
               onTouchEnd={handleTouchEnd}
               className={`
-                min-h-[70px] sm:min-h-[100px] md:min-h-[120px] p-2 flex flex-col items-start justify-start shadow-sm
+                min-h-[80px] sm:min-h-[100px] md:min-h-[120px] p-1.5 sm:p-2 flex flex-col items-start justify-start shadow-sm
                 ${getCellStyles(day.isoString, day.isCurrentMonth)}
               `}
             >
               <div className="w-full flex justify-between items-start mb-1 pointer-events-none">
                 <div className="flex flex-col items-start">
-                  <span className={`text-sm font-bold ${day.isToday ? 'bg-orange-400 text-white shadow-sm w-7 h-7 flex items-center justify-center rounded-full' : ''} ${!day.isCurrentMonth ? 'text-gray-400' : ''}`}>
+                  <span className={`text-xs sm:text-sm font-bold ${day.isToday ? 'bg-orange-400 text-white shadow-sm w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full' : ''} ${!day.isCurrentMonth ? 'text-gray-400' : ''}`}>
                     {day.date.getDate()}
                   </span>
                   {isKoreanHoliday(day.isoString) && day.isCurrentMonth && (
@@ -575,7 +575,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 
               {/* User Names List - 다른 달 날짜에도 투표가 있으면 표시 */}
               {dateVotes.length > 0 && (
-                <div className={`w-full flex flex-col gap-1 overflow-y-auto max-h-[70px] custom-scrollbar pointer-events-none mt-1 ${!day.isCurrentMonth ? 'opacity-70' : ''}`}>
+                <div className={`w-full flex flex-col gap-0.5 sm:gap-1 overflow-y-auto max-h-[60px] sm:max-h-[70px] custom-scrollbar pointer-events-none mt-1 ${!day.isCurrentMonth ? 'opacity-70' : ''}`}>
                   {dateVotes.map((vote) => {
                     const user = users.find(u => u.id === vote.userId);
                     if (!user) return null;
@@ -596,13 +596,13 @@ export const Calendar: React.FC<CalendarProps> = ({
                         : 'text-gray-400';
 
                     return (
-                      <div key={vote.userId + vote.date} className={`text-[11px] flex items-center gap-1.5 leading-tight ${textColor}`}>
+                      <div key={vote.userId + vote.date} className={`text-[10px] sm:text-[11px] flex items-center gap-1 leading-tight ${textColor}`}>
                          {isAvailable ? (
-                             <Heart className={`w-2.5 h-2.5 ${iconColor} fill-current`} />
+                             <Heart className={`w-2 h-2 sm:w-2.5 sm:h-2.5 ${iconColor} fill-current flex-shrink-0`} />
                          ) : (
-                             <span className={`${iconColor} font-bold text-[10px]`}>-</span>
+                             <span className={`${iconColor} font-bold text-[9px] sm:text-[10px] flex-shrink-0`}>-</span>
                          )}
-                         <span className="truncate max-w-[50px] sm:max-w-[70px] font-bold">{user.name}</span>
+                         <span className="truncate max-w-[60px] sm:max-w-[70px] md:max-w-[80px] font-semibold">{user.name}</span>
                       </div>
                     );
                   })}
