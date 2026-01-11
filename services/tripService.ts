@@ -401,6 +401,42 @@ export const getUserParticipatedTrips = async (userId: string): Promise<Trip[]> 
   return uniqueTrips;
 };
 
+// 현재 참여 중인 여행의 auth_user_id 업데이트 (로그인 시 사용)
+export const updateTripUserAuthId = async (
+  tripId: string,
+  userId: string,
+  authUserId: string
+): Promise<void> => {
+  const { error } = await supabase
+    .from('trip_users')
+    .update({ auth_user_id: authUserId })
+    .eq('trip_id', tripId)
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('❌ updateTripUserAuthId: Error', error);
+    throw error;
+  }
+};
+
+// 현재 사용자가 참여 중인 모든 여행의 auth_user_id 업데이트 (로그인 시 사용)
+// userId는 localStorage에 저장된 익명 사용자의 user_id
+export const updateAllTripUsersAuthId = async (
+  userId: string,
+  authUserId: string
+): Promise<void> => {
+  const { error } = await supabase
+    .from('trip_users')
+    .update({ auth_user_id: authUserId })
+    .eq('user_id', userId)
+    .is('auth_user_id', null); // auth_user_id가 null인 경우만 업데이트
+
+  if (error) {
+    console.error('❌ updateAllTripUsersAuthId: Error', error);
+    throw error;
+  }
+};
+
 // Trip 삭제 (생성자만 가능)
 export const deleteTrip = async (tripId: string, userId: string): Promise<void> => {
   // 먼저 생성자인지 확인

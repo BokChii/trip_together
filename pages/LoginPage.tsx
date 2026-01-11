@@ -41,7 +41,16 @@ const LoginPage: React.FC = () => {
   const handleKakaoLogin = async () => {
     setIsLoading(true);
     try {
-      await signInWithKakao();
+      // URL 파라미터에서 tripId 가져오기
+      const urlParams = new URLSearchParams(window.location.search);
+      const tripId = urlParams.get('tripId');
+      
+      // tripId가 있으면 리디렉션 URL에 포함
+      const redirectTo = tripId 
+        ? `${window.location.origin}/auth/callback?tripId=${tripId}`
+        : `${window.location.origin}/auth/callback`;
+      
+      await signInWithKakao(redirectTo);
       // OAuth 리디렉션이 발생하므로 여기서는 아무것도 하지 않음
     } catch (error) {
       console.error('❌ LoginPage: Kakao login error', error);
@@ -53,7 +62,16 @@ const LoginPage: React.FC = () => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      await signInWithGoogle();
+      // URL 파라미터에서 tripId 가져오기
+      const urlParams = new URLSearchParams(window.location.search);
+      const tripId = urlParams.get('tripId');
+      
+      // tripId가 있으면 리디렉션 URL에 포함
+      const redirectTo = tripId 
+        ? `${window.location.origin}/auth/callback?tripId=${tripId}`
+        : `${window.location.origin}/auth/callback`;
+      
+      await signInWithGoogle(redirectTo);
       // OAuth 리디렉션이 발생하므로 여기서는 아무것도 하지 않음
     } catch (error) {
       console.error('❌ LoginPage: Google login error', error);

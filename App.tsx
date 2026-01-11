@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-expect-error - @vercel/analytics 타입 선언 문제 (로컬 개발 환경에서 타입 오류 발생)
 import { Analytics } from '@vercel/analytics/react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Calendar } from './components/Calendar';
 import { DateRangePicker } from './components/DateRangePicker';
 import { ModeToggle } from './components/ModeToggle';
@@ -1202,15 +1202,61 @@ const TripPage: React.FC = () => {
                 <span className="hidden sm:inline">새로운 일정 만들기</span>
                 <span className="sm:hidden">새 일정</span>
               </button>
-              <span className="hidden sm:inline-block text-sm text-gray-600 bg-orange-50/50 px-3 py-1 rounded-lg">
-                반가워요, <strong className="text-orange-700">{currentUser.name}</strong>님
-              </span>
-              <button 
-                onClick={handleExit} 
-                className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors"
-              >
-                나가기
-              </button>
+              
+              {/* 로그인한 사용자 */}
+              {authUser ? (
+                <>
+                  <span className="hidden sm:inline-block text-sm text-gray-600 bg-orange-50/50 px-3 py-1 rounded-lg">
+                    반가워요, <strong className="text-orange-700">{userProfile?.display_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || '사용자'}</strong>님
+                  </span>
+                  <button 
+                    onClick={() => navigate('/my-trips')}
+                    className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors"
+                  >
+                    <span className="hidden sm:inline">마이 페이지</span>
+                    <span className="sm:hidden">마이</span>
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await signOut();
+                        setAuthUser(null);
+                        setUserProfile(null);
+                        // 로그아웃 후 현재 페이지 유지
+                      } catch (error) {
+                        console.error('Logout failed:', error);
+                        alert('로그아웃에 실패했습니다.');
+                      }
+                    }}
+                    className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors flex items-center gap-1.5"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="hidden sm:inline">로그아웃</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="hidden sm:inline-block text-sm text-gray-600 bg-orange-50/50 px-3 py-1 rounded-lg">
+                    반가워요, <strong className="text-orange-700">{currentUser.name}</strong>님
+                  </span>
+                  <button 
+                    onClick={() => {
+                      // 현재 tripId가 있으면 URL 파라미터로 전달
+                      const tripParam = currentTripId ? `?tripId=${currentTripId}` : '';
+                      navigate(`/login${tripParam}`);
+                    }}
+                    className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
+                  >
+                    로그인
+                  </button>
+                  <button 
+                    onClick={handleExit} 
+                    className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors"
+                  >
+                    나가기
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

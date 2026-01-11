@@ -53,7 +53,13 @@ const MyTripsPage: React.FC = () => {
   };
 
   const handleTripClick = (shareCode: string) => {
-    navigate(`/?trip=${shareCode}`);
+    // 로그인 상태 확인 후 바로 캘린더로 이동
+    if (user) {
+      navigate(`/?trip=${shareCode}`);
+    } else {
+      // 로그인하지 않은 경우 로그인 페이지로 이동
+      navigate('/login');
+    }
   };
 
   const handleDeleteTrip = async (tripId: string, e: React.MouseEvent) => {
