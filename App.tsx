@@ -799,21 +799,21 @@ const App: React.FC = () => {
       <div className="min-h-screen flex flex-col bg-[#fff7ed] p-4 font-sans">
         <div className="flex-1 flex items-center justify-center">
           <div className="bg-white p-10 sm:p-12 rounded-2xl shadow-md max-w-xl w-full text-center border border-orange-100/50">
-          <div className="mb-6 flex justify-center">
+          <div className="mb-4 sm:mb-6 flex justify-center">
             <div className="bg-orange-50 p-6 rounded-xl">
               <Plane className="w-12 h-12 text-orange-600" strokeWidth={2.5} />
             </div>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 tracking-tight">언제갈래 ✈️</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-2 sm:mb-3 tracking-tight">언제갈래 ✈️</h1>
           
-          <p className="text-base sm:text-lg text-gray-500 mb-6 leading-relaxed">
+          <p className="text-base sm:text-lg text-gray-500 mb-4 sm:mb-6 leading-relaxed">
             친구들과 떠나는 설레는 여행!<br/>
             우리 언제 떠날지 여기에서 정해봐요.
           </p>
           
           {/* 서비스 통계 배너 */}
           {!isLoadingStats && tripsCount !== null && (
-            <div className="mb-5 p-3 bg-orange-50/50 border border-orange-100 rounded-xl">
+            <div className="mb-3 sm:mb-5 p-3 bg-orange-50/50 border border-orange-100 rounded-xl">
               <p className="text-sm sm:text-base text-gray-700 leading-relaxed text-center">
                 현재 <span className="font-semibold text-orange-700">언제갈래</span>를 통해{' '}
                 <span className="font-semibold text-orange-700">{tripsCount.toLocaleString('ko-KR')}개</span>의 여행 일정이 계획되고 있습니다
@@ -823,7 +823,7 @@ const App: React.FC = () => {
           
           {/* 초대 링크 접속 시 기간 표시 */}
           {currentTripId && (tripStartDate || tripEndDate) && (
-            <div className="mb-4 p-4 bg-orange-50/50 border border-orange-100 rounded-xl">
+            <div className="mb-3 sm:mb-4 p-4 bg-orange-50/50 border border-orange-100 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
                 <CalendarIcon className="w-4 h-4 text-orange-600" />
                 <span className="text-sm font-semibold text-gray-800">여행 기간</span>
@@ -843,7 +843,7 @@ const App: React.FC = () => {
           
           {/* Existing Users Selection for Re-login - 여행 기간과 닉네임 입력칸 사이로 이동 */}
           {users.length > 0 && (
-              <div className="mb-4 p-4 bg-white border border-orange-100 rounded-xl">
+              <div className="mb-3 sm:mb-4 p-4 bg-white border border-orange-100 rounded-xl">
                   {/* 다른 참가자의 링크로 접속한 경우 - 최상단에 배치 */}
                   {currentTripId && (
                     <p className="text-base font-bold text-orange-700 mb-3 text-center">
@@ -867,7 +867,7 @@ const App: React.FC = () => {
               </div>
           )}
           
-          <form onSubmit={handleLogin} className="space-y-4 mb-6">
+          <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
             <input
               type="text"
               placeholder="닉네임이 뭐에요?"
@@ -1042,11 +1042,11 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-gray-900 pb-20 font-sans">
+    <div className="min-h-screen bg-[#faf8f5] text-gray-900 pb-12 sm:pb-20 font-sans">
       {/* Navbar */}
       <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-orange-100/50">
         <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-14 sm:h-16 items-center">
+          <div className="flex justify-between h-12 sm:h-16 items-center">
             <div className="flex items-center gap-1.5 sm:gap-2">
                <div className="bg-orange-600 p-1 sm:p-1.5 rounded-lg">
                    <Plane className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="currentColor" />
@@ -1076,12 +1076,12 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-8 space-y-2 sm:space-y-4">
         
         {/* 친구 초대하기 - 가이드 아래, 캘린더 위로 이동 */}
-        <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-orange-100/50">
+        <div className="bg-white p-3 sm:p-5 rounded-xl shadow-sm border border-orange-100/50">
           <div className="flex items-center justify-between gap-3">
-             <div className="flex flex-col gap-1">
+             <div className="flex flex-col gap-0.5 sm:gap-1">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Share2 className="w-4 h-4 text-orange-500" />
                 친구 초대하기
@@ -1127,8 +1127,8 @@ const App: React.FC = () => {
         </div>
         
         {/* ModeToggle - 가능/불가 토글 (항상 표시, Sticky) */}
-        <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 shadow-sm -mx-4 sm:mx-0 px-4 sm:px-0 mb-4">
-          <div className="bg-white p-3 sm:p-4 rounded-b-[1.5rem]">
+        <div className="sticky top-12 sm:top-16 z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 shadow-sm -mx-4 sm:mx-0 px-4 sm:px-0 mb-2 sm:mb-4">
+          <div className="bg-white p-2.5 sm:p-4 rounded-b-[1.5rem]">
             <div className="flex items-center justify-between">
               <p className="text-sm font-bold text-gray-800">날짜 선택 모드</p>
               <ModeToggle mode={voteMode} setMode={setVoteMode} />
@@ -1138,9 +1138,9 @@ const App: React.FC = () => {
 
         {/* 참여자 목록 - Sticky로 변경 (캘린더 바로 위) */}
         {users.length > 1 && (
-          <div className="sticky top-[calc(4rem+80px)] z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 shadow-sm -mx-4 sm:mx-0 px-4 sm:px-0 mb-4">
-            <div className="bg-white p-3 sm:p-4 rounded-b-[1.5rem]">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="sticky top-[calc(3rem+60px)] sm:top-[calc(4rem+80px)] z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 shadow-sm -mx-4 sm:mx-0 px-4 sm:px-0 mb-2 sm:mb-4">
+            <div className="bg-white p-2.5 sm:p-4 rounded-b-[1.5rem]">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
               <UserIcon className="w-5 h-5 text-orange-500" />
               <h3 className="text-sm font-semibold text-gray-700">참여자</h3>
               <span className="text-xs text-gray-400">({users.length}명)</span>
