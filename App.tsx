@@ -1187,10 +1187,10 @@ const TripPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-gray-900 pb-12 sm:pb-20 font-sans">
+    <div className="min-h-screen bg-[#faf8f5] pb-12 sm:pb-20">
       {/* Navbar */}
       <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-orange-100/50">
-        <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-12 sm:h-16 items-center">
             <div className="flex items-center gap-1.5 sm:gap-2">
                <div className="bg-orange-600 p-1 sm:p-1.5 rounded-lg">
