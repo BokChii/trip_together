@@ -9,6 +9,8 @@ export interface Trip {
   created_at: string;
   start_date?: string | null;
   end_date?: string | null;
+  title?: string | null;
+  creator_id?: string | null;
 }
 
 // 짧은 공유 코드 생성 (6자리 대문자+숫자)
@@ -25,9 +27,11 @@ const generateShareCode = (): string => {
 export const createTrip = async (
   destination: string = '제주도',
   startDate?: string | null,
-  endDate?: string | null
+  endDate?: string | null,
+  title?: string | null,
+  creatorId?: string | null
 ): Promise<Trip> => {
-  // console.log('💾 createTrip: Creating new trip', { destination, startDate, endDate });
+  // console.log('💾 createTrip: Creating new trip', { destination, startDate, endDate, title, creatorId });
   let shareCode = generateShareCode();
   let attempts = 0;
   const maxAttempts = 10;
@@ -41,6 +45,8 @@ export const createTrip = async (
           share_code: shareCode,
           start_date: startDate || null,
           end_date: endDate || null,
+          title: title || '제주도 여행',
+          creator_id: creatorId || null,
           created_at: toLocalTimestamp() // 한국 시간대(KST) 기준으로 명시적 설정
         })
         .select()
@@ -110,8 +116,8 @@ export const getTripUsers = async (tripId: string): Promise<User[]> => {
 };
 
 // 사용자 추가
-export const addTripUser = async (tripId: string, user: User): Promise<void> => {
-  // console.log('💾 addTripUser: Saving to DB', { tripId, userId: user.id, userName: user.name });
+export const addTripUser = async (tripId: string, user: User, authUserId?: string | null): Promise<void> => {
+  // console.log('💾 addTripUser: Saving to DB', { tripId, userId: user.id, userName: user.name, authUserId });
   
   const { data, error } = await supabase
     .from('trip_users')
@@ -119,6 +125,7 @@ export const addTripUser = async (tripId: string, user: User): Promise<void> => 
       trip_id: tripId,
       user_id: user.id,
       name: user.name,
+      auth_user_id: authUserId || null,
       created_at: toLocalTimestamp() // 한국 시간대(KST) 기준으로 명시적 설정
     }, {
       onConflict: 'trip_id,user_id'
@@ -337,6 +344,89 @@ export const getTripsCount = async (): Promise<number> => {
   }
 
   return count || 0;
+};
+
+// 사용자가 생성한 여행 목록 조회
+export const getUserCreatedTrips = async (userId: string): Promise<Trip[]> => {
+  const { data, error } = await supabase
+    .from('trips')
+    .select('*')
+    .eq('creator_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('❌ getUserCreatedTrips: Error', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+// 사용자가 참여한 여행 목록 조회 (trip_users 테이블 기준)
+// 로그인 사용자는 auth_user_id로, 익명 사용자는 user_id로 조회
+export const getUserParticipatedTrips = async (userId: string): Promise<Trip[]> => {
+  // auth_user_id로 먼저 조회 시도 (로그인 사용자)
+  const { data: authData, error: authError } = await supabase
+    .from('trip_users')
+    .select(`
+      trip_id,
+      trips (
+        id,
+        destination,
+        share_code,
+        created_at,
+        start_date,
+        end_date,
+        title,
+        creator_id
+      )
+    `)
+    .eq('auth_user_id', userId);
+
+  if (authError && authError.code !== 'PGRST116') {
+    console.error('❌ getUserParticipatedTrips: Error', authError);
+    throw authError;
+  }
+
+  // 중첩된 trips 데이터 추출
+  const authTrips = (authData || [])
+    .map((item: any) => item.trips)
+    .filter((trip: Trip | null): trip is Trip => trip !== null);
+
+  // 중복 제거 (creator_id와 auth_user_id가 같은 경우)
+  const uniqueTrips = authTrips.filter((trip, index, self) =>
+    index === self.findIndex(t => t.id === trip.id)
+  );
+
+  return uniqueTrips;
+};
+
+// Trip 삭제 (생성자만 가능)
+export const deleteTrip = async (tripId: string, userId: string): Promise<void> => {
+  // 먼저 생성자인지 확인
+  const { data: trip, error: fetchError } = await supabase
+    .from('trips')
+    .select('creator_id')
+    .eq('id', tripId)
+    .single();
+
+  if (fetchError) {
+    throw fetchError;
+  }
+
+  if (trip.creator_id !== userId) {
+    throw new Error('Only the creator can delete this trip');
+  }
+
+  const { error } = await supabase
+    .from('trips')
+    .delete()
+    .eq('id', tripId);
+
+  if (error) {
+    console.error('❌ deleteTrip: Error', error);
+    throw error;
+  }
 };
 
 // 버튼 클릭 이벤트 타입

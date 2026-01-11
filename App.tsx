@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-expect-error - @vercel/analytics 타입 선언 문제 (로컬 개발 환경에서 타입 오류 발생)
 import { Analytics } from '@vercel/analytics/react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Calendar } from './components/Calendar';
 import { DateRangePicker } from './components/DateRangePicker';
 import { ModeToggle } from './components/ModeToggle';
@@ -26,11 +27,15 @@ import {
 } from './services/tripService';
 import { parseLocalDate } from './utils/dateUtils';
 import { validateDestination } from './utils/inputValidation';
+import LoginPage from './pages/LoginPage';
+import AuthCallbackPage from './pages/AuthCallbackPage';
+import MyTripsPage from './pages/MyTripsPage';
+import { getCurrentUser } from './services/authService';
 
 // Short ID generator (6 chars)
 const generateId = () => Math.random().toString(36).substring(2, 8);
 
-const App: React.FC = () => {
+const TripPage: React.FC = () => {
   // State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [nameInput, setNameInput] = useState('');
@@ -331,6 +336,9 @@ const App: React.FC = () => {
     // console.log('👤 confirmUser: Starting', { userId: user.id, userName: user.name });
     setCurrentUser(user);
 
+    // 로그인 사용자 확인
+    const authUser = await getCurrentUser();
+
     // Trip이 없으면 생성 (사용자가 로그인할 때 생성)
     if (!currentTripId) {
       // console.log('📝 confirmUser: No trip exists, creating new trip...');
@@ -339,7 +347,9 @@ const App: React.FC = () => {
         const newTrip = await createTrip(
           destination,
           startDateInput || null,
-          endDateInput || null
+          endDateInput || null,
+          undefined, // title은 나중에 추가
+          authUser?.id || null // creator_id
         );
         // console.log('✅ confirmUser: Trip created', { tripId: newTrip.id, shareCode: newTrip.share_code });
         setCurrentTripId(newTrip.id);
@@ -355,7 +365,7 @@ const App: React.FC = () => {
         
         // 사용자 추가
         // console.log('👤 confirmUser: Adding user to new trip...');
-        await addTripUser(newTrip.id, user);
+        await addTripUser(newTrip.id, user, authUser?.id || null);
         // console.log('✅ confirmUser: User added to trip successfully');
         
         // localStorage에 사용자 정보와 trip_id를 함께 저장
@@ -388,7 +398,7 @@ const App: React.FC = () => {
       // Trip이 있으면 사용자 추가
       // console.log('👤 confirmUser: Trip exists, adding user...', { tripId: currentTripId });
       try {
-        await addTripUser(currentTripId, user);
+        await addTripUser(currentTripId, user, authUser?.id || null);
         // console.log('✅ confirmUser: User added to existing trip successfully');
         
         // localStorage에 사용자 정보와 trip_id를 함께 저장
@@ -1865,4 +1875,21 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default TripPage;
+
+// 라우팅을 담당하는 메인 App 컴포넌트
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
+        <Route path="/my-trips" element={<MyTripsPage />} />
+        <Route path="/" element={<TripPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
+
+export { App };
