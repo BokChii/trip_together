@@ -163,6 +163,16 @@ const TripPage: React.FC = () => {
     };
     checkAuth();
   }, []);
+
+  // 로그인한 유저의 닉네임 자동 입력
+  useEffect(() => {
+    if (authUser && userProfile && !currentUser && !nameInput) {
+      const displayName = userProfile?.display_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0];
+      if (displayName) {
+        setNameInput(displayName);
+      }
+    }
+  }, [authUser, userProfile, currentUser, nameInput]);
   
   // 입력 중인지 추적하는 ref (구독 업데이트 방지용)
   const isTypingDestination = useRef(false);
@@ -374,7 +384,7 @@ const TripPage: React.FC = () => {
       // console.log('📝 confirmUser: No trip exists, creating new trip...');
       setIsLoadingTrip(true);
       try {
-        // 로그인한 사용자는 제목 사용, 익명 사용자는 기본값
+        // 로그인한 사용자는 제목 사용 (빈 문자열이면 기본값), 익명 사용자는 undefined
         const tripTitle = authUser 
           ? (tripTitleInput.trim() || '이름없는 여행 일정')
           : undefined;

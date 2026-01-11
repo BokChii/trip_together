@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plane, Plus, Trash2, Calendar, MapPin, Users, LogOut } from 'lucide-react';
+import { Plane, Plus, Trash2, Calendar, MapPin, Users, LogOut, Edit2, X } from 'lucide-react';
 import { Button } from '../components/Button';
 import { getCurrentUser, signOut, getUserProfile } from '../services/authService';
-import { getUserCreatedTrips, getUserParticipatedTrips, deleteTrip, Trip } from '../services/tripService';
+import { getUserCreatedTrips, getUserParticipatedTrips, deleteTrip, updateTripTitle, getTripsParticipantCounts, Trip } from '../services/tripService';
 
 const MyTripsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,6 +13,10 @@ const MyTripsPage: React.FC = () => {
   const [participatedTrips, setParticipatedTrips] = useState<Trip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [editingTripId, setEditingTripId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [participantCounts, setParticipantCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const loadData = async () => {
@@ -37,6 +41,13 @@ const MyTripsPage: React.FC = () => {
 
         setCreatedTrips(created);
         setParticipatedTrips(participated);
+
+        // 참여자 수 조회 (모든 trip ID 수집)
+        const allTripIds = [...created, ...participated].map(trip => trip.id);
+        if (allTripIds.length > 0) {
+          const counts = await getTripsParticipantCounts(allTripIds);
+          setParticipantCounts(counts);
+        }
       } catch (error) {
         console.error('❌ MyTripsPage: Error loading data', error);
         alert('데이터를 불러오는데 실패했습니다.');
@@ -77,6 +88,12 @@ const MyTripsPage: React.FC = () => {
       // 목록에서 제거
       setCreatedTrips(prev => prev.filter(t => t.id !== tripId));
       setParticipatedTrips(prev => prev.filter(t => t.id !== tripId));
+      // 참여자 수에서도 제거
+      setParticipantCounts(prev => {
+        const newCounts = { ...prev };
+        delete newCounts[tripId];
+        return newCounts;
+      });
     } catch (error: any) {
       console.error('❌ MyTripsPage: Error deleting trip', error);
       if (error.message === 'Only the creator can delete this trip') {
@@ -86,6 +103,45 @@ const MyTripsPage: React.FC = () => {
       }
     } finally {
       setIsDeleting(null);
+    }
+  };
+
+  const handleEditTrip = (trip: Trip, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingTripId(trip.id);
+    setEditTitle(trip.title || '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTripId(null);
+    setEditTitle('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingTripId || !editTitle.trim()) {
+      alert('제목을 입력해주세요.');
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      await updateTripTitle(editingTripId, editTitle.trim());
+      
+      // 목록 업데이트
+      setCreatedTrips(prev => prev.map(trip => 
+        trip.id === editingTripId ? { ...trip, title: editTitle.trim() || '이름없는 여행 일정' } : trip
+      ));
+      setParticipatedTrips(prev => prev.map(trip => 
+        trip.id === editingTripId ? { ...trip, title: editTitle.trim() || '이름없는 여행 일정' } : trip
+      ));
+      
+      setEditingTripId(null);
+      setEditTitle('');
+    } catch (error) {
+      console.error('❌ MyTripsPage: Error updating trip title', error);
+      alert('제목 수정에 실패했습니다.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -177,30 +233,46 @@ const MyTripsPage: React.FC = () => {
                     <h3 className="text-lg font-semibold text-gray-900 flex-1">
                       {trip.title || trip.destination}
                     </h3>
-                    <button
-                      onClick={(e) => handleDeleteTrip(trip.id, e)}
-                      disabled={isDeleting === trip.id}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-red-50 rounded-lg text-red-500 hover:text-red-600"
-                    >
-                      {isDeleting === trip.id ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => handleEditTrip(trip, e)}
+                        className="p-1.5 hover:bg-orange-50 rounded-lg text-orange-500 hover:text-orange-600"
+                        title="제목 수정"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteTrip(trip.id, e)}
+                        disabled={isDeleting === trip.id}
+                        className="p-1.5 hover:bg-red-50 rounded-lg text-red-500 hover:text-red-600"
+                        title="삭제"
+                      >
+                        {isDeleting === trip.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div className="space-y-2 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-orange-500" />
                       <span>{trip.destination}</span>
                     </div>
-                    {trip.start_date && (
+                    {trip.start_date && trip.end_date && (
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-orange-500" />
                         <span>
-                          {new Date(trip.start_date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
-                          {trip.end_date && ` ~ ${new Date(trip.end_date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}`}
+                          {new Date(trip.start_date).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
+                          {trip.end_date && ` ~ ${new Date(trip.end_date).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}`}
                         </span>
+                      </div>
+                    )}
+                    {participantCounts[trip.id] !== undefined && (
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-orange-500" />
+                        <span>참여자 {participantCounts[trip.id]}명</span>
                       </div>
                     )}
                   </div>
@@ -225,23 +297,38 @@ const MyTripsPage: React.FC = () => {
                 <div
                   key={trip.id}
                   onClick={() => handleTripClick(trip.share_code)}
-                  className="bg-white rounded-xl p-5 shadow-sm border border-orange-100/50 hover:shadow-md transition-all cursor-pointer"
+                  className="bg-white rounded-xl p-5 shadow-sm border border-orange-100/50 hover:shadow-md transition-all cursor-pointer group"
                 >
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    {trip.title || trip.destination}
-                  </h3>
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-gray-900 flex-1">
+                      {trip.title || trip.destination}
+                    </h3>
+                    <button
+                      onClick={(e) => handleEditTrip(trip, e)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-orange-50 rounded-lg text-orange-500 hover:text-orange-600"
+                      title="제목 수정"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                  </div>
                   <div className="space-y-2 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-orange-500" />
                       <span>{trip.destination}</span>
                     </div>
-                    {trip.start_date && (
+                    {trip.start_date && trip.end_date && (
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-orange-500" />
                         <span>
-                          {new Date(trip.start_date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
-                          {trip.end_date && ` ~ ${new Date(trip.end_date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}`}
+                          {new Date(trip.start_date).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
+                          {trip.end_date && ` ~ ${new Date(trip.end_date).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}`}
                         </span>
+                      </div>
+                    )}
+                    {participantCounts[trip.id] !== undefined && (
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-orange-500" />
+                        <span>참여자 {participantCounts[trip.id]}명</span>
                       </div>
                     )}
                   </div>
@@ -267,6 +354,63 @@ const MyTripsPage: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* 제목 수정 모달 */}
+      {editingTripId && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={handleCancelEdit}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">여행 일정 제목 수정</h3>
+              <button
+                onClick={handleCancelEdit}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="mb-4">
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="여행 일정 제목을 입력하세요"
+                className="w-full px-4 py-3 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-base font-medium placeholder:text-gray-400 text-gray-900"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSaveEdit();
+                  } else if (e.key === 'Escape') {
+                    handleCancelEdit();
+                  }
+                }}
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={handleCancelEdit}
+                variant="ghost"
+                className="flex-1"
+                disabled={isUpdating}
+              >
+                취소
+              </Button>
+              <Button
+                onClick={handleSaveEdit}
+                className="flex-1"
+                disabled={isUpdating || !editTitle.trim()}
+              >
+                {isUpdating ? '저장 중...' : '저장'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

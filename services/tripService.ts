@@ -245,6 +245,22 @@ export const updateTripDestination = async (
   if (error) throw error;
 };
 
+// Trip title 업데이트
+export const updateTripTitle = async (
+  tripId: string,
+  title: string
+): Promise<void> => {
+  const { error } = await supabase
+    .from('trips')
+    .update({ 
+      title: title.trim() || '이름없는 여행 일정',
+      updated_at: toLocalTimestamp()
+    })
+    .eq('id', tripId);
+
+  if (error) throw error;
+};
+
 // 실시간 구독: Trip 변경 감지
 export const subscribeToTrip = (
   tripId: string,
@@ -364,6 +380,7 @@ export const getUserCreatedTrips = async (userId: string): Promise<Trip[]> => {
 
 // 사용자가 참여한 여행 목록 조회 (trip_users 테이블 기준)
 // 로그인 사용자는 auth_user_id로, 익명 사용자는 user_id로 조회
+// 내가 만든 여행(creator_id가 userId와 같은 경우)은 제외
 export const getUserParticipatedTrips = async (userId: string): Promise<Trip[]> => {
   // auth_user_id로 먼저 조회 시도 (로그인 사용자)
   const { data: authData, error: authError } = await supabase
@@ -393,12 +410,43 @@ export const getUserParticipatedTrips = async (userId: string): Promise<Trip[]> 
     .map((item: any) => item.trips)
     .filter((trip: Trip | null): trip is Trip => trip !== null);
 
-  // 중복 제거 (creator_id와 auth_user_id가 같은 경우)
-  const uniqueTrips = authTrips.filter((trip, index, self) =>
-    index === self.findIndex(t => t.id === trip.id)
-  );
+  // 중복 제거 및 내가 만든 여행 제외 (creator_id가 userId와 같은 경우 필터링)
+  const uniqueTrips = authTrips
+    .filter((trip, index, self) =>
+      index === self.findIndex(t => t.id === trip.id)
+    )
+    .filter(trip => trip.creator_id !== userId); // 내가 만든 여행 제외
 
   return uniqueTrips;
+};
+
+// 여러 trip의 참여자 수를 한 번에 조회
+export const getTripsParticipantCounts = async (tripIds: string[]): Promise<Record<string, number>> => {
+  if (tripIds.length === 0) return {};
+
+  const { data, error } = await supabase
+    .from('trip_users')
+    .select('trip_id')
+    .in('trip_id', tripIds);
+
+  if (error) {
+    console.error('❌ getTripsParticipantCounts: Error', error);
+    throw error;
+  }
+
+  // trip_id별로 카운트
+  const counts: Record<string, number> = {};
+  tripIds.forEach(tripId => {
+    counts[tripId] = 0;
+  });
+
+  (data || []).forEach((item: any) => {
+    if (counts[item.trip_id] !== undefined) {
+      counts[item.trip_id]++;
+    }
+  });
+
+  return counts;
 };
 
 // 현재 참여 중인 여행의 auth_user_id 업데이트 (로그인 시 사용)
