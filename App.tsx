@@ -1086,16 +1086,17 @@ const App: React.FC = () => {
                 <Share2 className="w-4 h-4 text-orange-500" />
                 친구 초대하기
               </h3>
-              <p className="text-xs text-gray-500">링크를 복사해서 친구들에게 공유하세요</p>
+              <p className="text-xs text-gray-500">링크를 복사해 친구들에게 공유하세요</p>
              </div>
                <Button 
                   variant="secondary" 
                   size="md" 
                   onClick={handleShare} 
-              className={`gap-2 transition-all duration-300 ${isCopied ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
+              className={`gap-2 whitespace-nowrap transition-all duration-300 ${isCopied ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
                >
                   {isCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-                  {isCopied ? "복사완료!" : "초대하기"}
+                  <span className="hidden sm:inline">{isCopied ? "복사완료!" : "초대하기"}</span>
+                  <span className="sm:hidden">{isCopied ? "완료" : "초대"}</span>
                </Button>
            </div>
 
