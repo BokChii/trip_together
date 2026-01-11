@@ -45,7 +45,7 @@ export const createTrip = async (
           share_code: shareCode,
           start_date: startDate || null,
           end_date: endDate || null,
-          title: title || '제주도 여행',
+          title: title || '이름없는 여행 일정',
           creator_id: creatorId || null,
           created_at: toLocalTimestamp() // 한국 시간대(KST) 기준으로 명시적 설정
         })

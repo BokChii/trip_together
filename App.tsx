@@ -30,7 +30,7 @@ import { validateDestination } from './utils/inputValidation';
 import LoginPage from './pages/LoginPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import MyTripsPage from './pages/MyTripsPage';
-import { getCurrentUser, signInWithKakao, signInWithGoogle } from './services/authService';
+import { getCurrentUser, signInWithKakao, signInWithGoogle, signOut, getUserProfile } from './services/authService';
 
 // Short ID generator (6 chars)
 const generateId = () => Math.random().toString(36).substring(2, 8);
@@ -65,6 +65,14 @@ const TripPage: React.FC = () => {
   // Service Stats State
   const [tripsCount, setTripsCount] = useState<number | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
+
+  // Supabase 인증 사용자 상태
+  const [authUser, setAuthUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  
+  // 여행 제목 입력 state (로그인한 사용자용)
+  const [tripTitleInput, setTripTitleInput] = useState('');
 
   // 날짜 범위 선택 핸들러
   const handleDateRangeClick = (isoDate: string) => {
@@ -344,11 +352,16 @@ const TripPage: React.FC = () => {
       // console.log('📝 confirmUser: No trip exists, creating new trip...');
       setIsLoadingTrip(true);
       try {
+        // 로그인한 사용자는 제목 사용, 익명 사용자는 기본값
+        const tripTitle = authUser 
+          ? (tripTitleInput.trim() || '이름없는 여행 일정')
+          : undefined;
+        
         const newTrip = await createTrip(
           destination,
           startDateInput || null,
           endDateInput || null,
-          undefined, // title은 나중에 추가
+          tripTitle, // 제목 전달
           authUser?.id || null // creator_id
         );
         // console.log('✅ confirmUser: Trip created', { tripId: newTrip.id, shareCode: newTrip.share_code });
@@ -821,6 +834,37 @@ const TripPage: React.FC = () => {
             우리 언제 떠날지 여기에서 정해봐요.
           </p>
           
+          {/* 로그인한 사용자에게 표시할 UI */}
+          {authUser && (
+            <div className="mb-4 sm:mb-6 p-4 bg-orange-50/50 border border-orange-100 rounded-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <UserIcon className="w-5 h-5 text-orange-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {userProfile?.display_name || authUser.user_metadata?.full_name || authUser.email}님으로 로그인됨
+                  </span>
+                </div>
+                <Button
+                  onClick={async () => {
+                    try {
+                      await signOut();
+                      setAuthUser(null);
+                      setUserProfile(null);
+                    } catch (error) {
+                      console.error('Logout failed:', error);
+                      alert('로그아웃에 실패했습니다.');
+                    }
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                >
+                  로그아웃
+                </Button>
+              </div>
+            </div>
+          )}
+          
           {/* 서비스 통계 배너 */}
           {!isLoadingStats && tripsCount !== null && (
             <div className="mb-3 sm:mb-5 p-3 bg-orange-50/50 border border-orange-100 rounded-xl">
@@ -887,6 +931,17 @@ const TripPage: React.FC = () => {
               required
             />
             
+            {/* 로그인한 사용자에게만 제목 입력 필드 표시 */}
+            {authUser && (
+              <input
+                type="text"
+                placeholder="여행 일정 제목 (선택)"
+                className="w-full px-6 sm:px-8 py-4 sm:py-5 min-h-[56px] rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-center text-lg sm:text-xl font-medium placeholder:text-gray-400 text-gray-900"
+                value={tripTitleInput}
+                onChange={(e) => setTripTitleInput(e.target.value)}
+              />
+            )}
+            
             {/* 최초 유저만 기간 설정 표시 */}
             {!currentTripId && users.length === 0 && (
               <div className="pt-2 pb-1">
@@ -939,18 +994,21 @@ const TripPage: React.FC = () => {
             <Button type="submit" className="w-full text-lg sm:text-xl py-5 sm:py-6 min-h-[56px] shadow-md" size="lg">시작하기</Button>
           </form>
           
-          {/* 구분선 - OAuth 로그인 옵션 */}
-          <div className="relative my-4 sm:my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">또는</span>
-            </div>
-          </div>
+          {/* OAuth 로그인 버튼 - 로그인하지 않은 사용자에게만 표시 */}
+          {!authUser && (
+            <>
+              {/* 구분선 - OAuth 로그인 옵션 */}
+              <div className="relative my-4 sm:my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-white px-2 text-gray-500">또는</span>
+                </div>
+              </div>
 
-          {/* OAuth 로그인 버튼 */}
-          <div className="space-y-3 mb-4 sm:mb-6">
+              {/* OAuth 로그인 버튼 */}
+              <div className="space-y-3 mb-4 sm:mb-6">
             <Button
               onClick={async () => {
                 try {
@@ -988,7 +1046,9 @@ const TripPage: React.FC = () => {
               </svg>
               구글로 로그인
             </Button>
-          </div>
+              </div>
+            </>
+          )}
 
           {/* 사용법 보기 버튼 */}
           <button
