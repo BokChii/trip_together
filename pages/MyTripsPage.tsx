@@ -181,7 +181,7 @@ const MyTripsPage: React.FC = () => {
               <span className="font-bold text-xl sm:text-2xl text-gray-900 tracking-tight">언제갈래</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="hidden sm:inline-block text-sm text-gray-600 bg-orange-50/50 px-3 py-1 rounded-lg">
+              <span className="inline-block text-xs sm:text-sm text-gray-600 bg-orange-50/50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg">
                 반가워요, <strong className="text-orange-700">{displayName}</strong>님
               </span>
               <button 
