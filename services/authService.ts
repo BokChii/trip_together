@@ -29,11 +29,22 @@ export const getSession = async () => {
 };
 
 // 카카오톡 로그인
-export const signInWithKakao = async () => {
+// 주의: 현재는 profile_nickname만 요청합니다.
+// 나중에 이메일이나 프로필 이미지가 필요하면:
+// 1. 카카오 개발자 콘솔에서 동의항목 활성화 (account_email, profile_image)
+// 2. 아래 queryParams의 scope에 추가: 'profile_nickname,account_email,profile_image'
+// 3. handleAuthCallback 함수의 주석 처리된 이메일/프로필 이미지 코드 주석 해제
+export const signInWithKakao = async (redirectTo?: string | null) => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`
+      redirectTo: redirectTo || `${window.location.origin}/auth/callback`,
+      queryParams: {
+        // 카카오 로그인에서 닉네임만 요청 (이메일, 프로필 이미지 제외)
+        // 나중에 이메일/프로필 이미지가 필요하면 scope에 추가:
+        // scope: 'profile_nickname,account_email,profile_image'
+        scope: 'profile_nickname'
+      }
     }
   });
   
@@ -46,11 +57,11 @@ export const signInWithKakao = async () => {
 };
 
 // 구글 로그인
-export const signInWithGoogle = async () => {
+export const signInWithGoogle = async (redirectTo?: string | null) => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`
+      redirectTo: redirectTo || `${window.location.origin}/auth/callback`
     }
   });
   
@@ -92,13 +103,16 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
 };
 
 // 사용자 프로필 생성 또는 업데이트
+// TODO: 나중에 프로필 이미지 기능 추가 시 avatarUrl 파라미터와 관련 코드 주석 해제
 export const upsertUserProfile = async (userId: string, displayName: string, avatarUrl?: string | null): Promise<UserProfile> => {
   const { data, error } = await supabase
     .from('user_profiles')
     .upsert({
       id: userId,
       display_name: displayName,
-      avatar_url: avatarUrl || null,
+      // TODO: 나중에 프로필 이미지 기능 추가 시 주석 해제
+      // avatar_url: avatarUrl || null,
+      avatar_url: null, // 현재는 프로필 이미지 미사용
       updated_at: new Date().toISOString()
     }, {
       onConflict: 'id'
@@ -131,15 +145,22 @@ export const handleAuthCallback = async () => {
   const existingProfile = await getUserProfile(session.user.id);
   if (!existingProfile) {
     // OAuth 제공자에서 이름 가져오기
+    // TODO: 나중에 이메일 기능 추가 시 주석 해제하고 카카오 로그인 scope에 account_email 추가
+    // const displayName = session.user.user_metadata?.full_name 
+    //   || session.user.user_metadata?.name 
+    //   || session.user.user_metadata?.nickname
+    //   || session.user.email?.split('@')[0] 
+    //   || '사용자';
     const displayName = session.user.user_metadata?.full_name 
       || session.user.user_metadata?.name 
       || session.user.user_metadata?.nickname
-      || session.user.email?.split('@')[0] 
       || '사용자';
     
-    const avatarUrl = session.user.user_metadata?.avatar_url 
-      || session.user.user_metadata?.picture
-      || null;
+    // TODO: 나중에 프로필 이미지 기능 추가 시 주석 해제하고 카카오 로그인 scope에 profile_image 추가
+    // const avatarUrl = session.user.user_metadata?.avatar_url 
+    //   || session.user.user_metadata?.picture
+    //   || null;
+    const avatarUrl = null; // 현재는 프로필 이미지 미사용
     
     try {
       await upsertUserProfile(session.user.id, displayName, avatarUrl);

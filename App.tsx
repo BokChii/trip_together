@@ -1052,7 +1052,10 @@ const TripPage: React.FC = () => {
               provider="kakao"
               onClick={async () => {
                 try {
-                  await signInWithKakao();
+                  // 현재 tripId가 있으면 URL 파라미터로 전달
+                  const tripParam = currentTripId ? `?tripId=${currentTripId}` : '';
+                  const redirectTo = `${window.location.origin}/auth/callback${tripParam}`;
+                  await signInWithKakao(redirectTo);
                 } catch (error) {
                   console.error('Kakao login failed:', error);
                   alert('카카오 로그인에 실패했습니다.');
