@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { handleAuthCallback } from '../services/authService';
+import { getUserProfile, upsertUserProfile } from '../services/authService';
 import { updateAllTripUsersAuthId, getTripByShareCode } from '../services/tripService';
 import { supabase } from '../supabase/client';
 
@@ -11,8 +11,48 @@ const AuthCallbackPage: React.FC = () => {
   useEffect(() => {
     const processCallback = async () => {
       try {
-        const session = await handleAuthCallback();
+        // URL에서 code 파라미터 확인
+        const code = searchParams.get('code');
+        let session = null;
+
+        // code가 있으면 세션 교환 (OAuth 콜백 처리)
+        if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            console.error('❌ AuthCallbackPage: Error exchanging code for session', error);
+            navigate('/login', { replace: true });
+            return;
+          }
+          session = data?.session;
+        } else {
+          // code가 없으면 기존 세션 확인 (이미 로그인된 경우)
+          const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+          if (error) {
+            console.error('❌ AuthCallbackPage: Error getting session', error);
+            navigate('/login', { replace: true });
+            return;
+          }
+          session = existingSession;
+        }
+
         if (session && session.user) {
+          // 프로필 생성 (없는 경우에만)
+          const existingProfile = await getUserProfile(session.user.id);
+          if (!existingProfile) {
+            const displayName = session.user.user_metadata?.full_name 
+              || session.user.user_metadata?.name 
+              || session.user.user_metadata?.nickname
+              || '사용자';
+            
+            const avatarUrl = null; // 현재는 프로필 이미지 미사용
+            
+            try {
+              await upsertUserProfile(session.user.id, displayName, avatarUrl);
+            } catch (error) {
+              console.error('❌ AuthCallbackPage: Error creating profile', error);
+            }
+          }
+
           const authUserId = session.user.id;
           
           // 현재 참여 중인 모든 여행의 auth_user_id 업데이트

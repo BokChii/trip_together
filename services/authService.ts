@@ -129,12 +129,30 @@ export const upsertUserProfile = async (userId: string, displayName: string, ava
 };
 
 // OAuth 콜백 처리 (인증 후 자동으로 프로필 생성)
+// 주의: 이 함수는 다른 곳에서도 사용될 수 있으므로, code 파라미터가 있으면 처리하고 없으면 기존 세션을 확인합니다.
 export const handleAuthCallback = async () => {
-  const { data: { session }, error } = await supabase.auth.getSession();
+  // URL에서 code 파라미터 확인
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get('code');
   
-  if (error) {
-    console.error('❌ handleAuthCallback: Error getting session', error);
-    return null;
+  let session = null;
+
+  // code가 있으면 세션 교환 (OAuth 콜백 처리)
+  if (code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      console.error('❌ handleAuthCallback: Error exchanging code for session', error);
+      return null;
+    }
+    session = data?.session;
+  } else {
+    // code가 없으면 기존 세션 확인 (이미 로그인된 경우)
+    const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('❌ handleAuthCallback: Error getting session', error);
+      return null;
+    }
+    session = existingSession;
   }
   
   if (!session?.user) {
