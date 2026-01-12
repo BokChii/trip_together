@@ -899,10 +899,10 @@ const TripPage: React.FC = () => {
           
           {/* 서비스 통계 배너 */}
           {!isLoadingStats && tripsCount !== null && (
-            <div className="mb-3 sm:mb-5 p-3 bg-orange-100 border border-orange-100 rounded-xl">
-              <p className="text-sm sm:text-base text-gray-700 leading-relaxed text-center">
-                현재 <span className="font-semibold text-orange-700">언제갈래</span>를 통해{' '}
-                <span className="font-semibold text-orange-700">{tripsCount.toLocaleString('ko-KR')}개</span>의 여행 일정이 계획되고 있습니다
+            <div className="mb-3 sm:mb-5 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed text-center">
+                현재 <span className="font-semibold text-gray-800">언제갈래</span>를 통해{' '}
+                <span className="font-semibold text-orange-600">{tripsCount.toLocaleString('ko-KR')}개</span>의 여행 일정이 계획되고 있습니다
               </p>
             </div>
           )}
@@ -1030,8 +1030,8 @@ const TripPage: React.FC = () => {
           {!authUser && (
             <>
               {/* 로그인 유도 텍스트 */}
-              <div className="mb-3 sm:mb-4 p-3 bg-gradient-to-r from-orange-100 to-amber-100 border border-orange-200/50 rounded-xl">
-                <p className="text-xs sm:text-sm text-gray-700 text-center leading-relaxed">
+              <div className="mb-3 sm:mb-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                <p className="text-xs sm:text-sm text-gray-600 text-center leading-relaxed">
                   <span className="font-semibold text-orange-600">로그인</span>해서 내 여행 일정을 관리하고 여러 여행을 저장하세요 ✈️
                 </p>
               </div>
@@ -1048,8 +1048,8 @@ const TripPage: React.FC = () => {
 
               {/* OAuth 로그인 버튼 */}
               <div className="space-y-3 mb-4 sm:mb-6 relative">
-                {/* 말풍선 안내 문구 */}
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-10">
+                {/* 말풍선 안내 문구 - 깜빡임 애니메이션 */}
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-10 animate-pulse">
                   <div className="bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg">
                     SNS로 3초만에 로그인
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
