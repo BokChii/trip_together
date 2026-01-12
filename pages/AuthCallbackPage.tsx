@@ -24,6 +24,16 @@ const AuthCallbackPage: React.FC = () => {
             return;
           }
           session = data?.session;
+          
+          // 세션이 완전히 저장될 때까지 잠시 대기
+          if (session) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            // 세션이 제대로 저장되었는지 다시 확인
+            const { data: { session: verifiedSession } } = await supabase.auth.getSession();
+            if (verifiedSession) {
+              session = verifiedSession;
+            }
+          }
         } else {
           // code가 없으면 기존 세션 확인 (이미 로그인된 경우)
           const { data: { session: existingSession }, error } = await supabase.auth.getSession();

@@ -10,12 +10,16 @@ export interface UserProfile {
 
 // 현재 로그인한 사용자 정보 가져오기
 export const getCurrentUser = async () => {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) {
-    console.error('❌ getCurrentUser: Error getting user', error);
+  // 먼저 세션 확인
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    // 세션이 없으면 null 반환 (오류 발생하지 않음)
     return null;
   }
-  return user;
+  
+  // 세션이 있으면 세션의 사용자 정보 반환
+  return session.user;
 };
 
 // 세션 확인
