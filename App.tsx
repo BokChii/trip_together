@@ -899,7 +899,7 @@ const TripPage: React.FC = () => {
           
           {/* 서비스 통계 배너 */}
           {!isLoadingStats && tripsCount !== null && (
-            <div className="mb-3 sm:mb-5 p-3 bg-orange-50/50 border border-orange-100 rounded-xl">
+            <div className="mb-3 sm:mb-5 p-3 bg-orange-100 border border-orange-100 rounded-xl">
               <p className="text-sm sm:text-base text-gray-700 leading-relaxed text-center">
                 현재 <span className="font-semibold text-orange-700">언제갈래</span>를 통해{' '}
                 <span className="font-semibold text-orange-700">{tripsCount.toLocaleString('ko-KR')}개</span>의 여행 일정이 계획되고 있습니다
@@ -977,7 +977,7 @@ const TripPage: React.FC = () => {
             {/* 최초 유저만 기간 설정 표시 */}
             {!currentTripId && users.length === 0 && (
               <div className="pt-2 pb-1">
-                <div className="bg-orange-50/50 border border-orange-100 rounded-xl p-5 sm:p-6">
+                <div className="bg-white border-2 border-gray-200 rounded-xl p-5 sm:p-6 hover:border-orange-300 transition-colors">
                   <button
                     type="button"
                     onClick={() => setShowDateRangePicker(!showDateRangePicker)}
@@ -996,7 +996,7 @@ const TripPage: React.FC = () => {
                   
                   {/* 선택된 날짜 범위 표시 */}
                   {(dateRangeStart || dateRangeEnd) && (
-                    <div className="mb-4 p-3 bg-white rounded-lg border border-orange-100">
+                    <div className="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
                       <div className="flex items-center justify-center gap-2 text-sm">
                         <span className="font-semibold text-orange-700">
                           {dateRangeStart ? new Date(dateRangeStart).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '시작일'}
@@ -1030,7 +1030,7 @@ const TripPage: React.FC = () => {
           {!authUser && (
             <>
               {/* 로그인 유도 텍스트 */}
-              <div className="mb-3 sm:mb-4 p-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/50 rounded-xl">
+              <div className="mb-3 sm:mb-4 p-3 bg-gradient-to-r from-orange-100 to-amber-100 border border-orange-200/50 rounded-xl">
                 <p className="text-xs sm:text-sm text-gray-700 text-center leading-relaxed">
                   <span className="font-semibold text-orange-600">로그인</span>해서 내 여행 일정을 관리하고 여러 여행을 저장하세요 ✈️
                 </p>
@@ -1047,32 +1047,42 @@ const TripPage: React.FC = () => {
               </div>
 
               {/* OAuth 로그인 버튼 */}
-              <div className="space-y-3 mb-4 sm:mb-6">
-            <SocialLoginButton
-              provider="kakao"
-              onClick={async () => {
-                try {
-                  // 현재 tripId가 있으면 URL 파라미터로 전달
-                  const tripParam = currentTripId ? `?tripId=${currentTripId}` : '';
-                  const redirectTo = `${window.location.origin}/auth/callback${tripParam}`;
-                  await signInWithKakao(redirectTo);
-                } catch (error) {
-                  console.error('Kakao login failed:', error);
-                  alert('카카오 로그인에 실패했습니다.');
-                }
-              }}
-            />
-            <SocialLoginButton
-              provider="google"
-              onClick={async () => {
-                try {
-                  await signInWithGoogle();
-                } catch (error) {
-                  console.error('Google login failed:', error);
-                  alert('구글 로그인에 실패했습니다.');
-                }
-              }}
-            />
+              <div className="space-y-3 mb-4 sm:mb-6 relative">
+                {/* 말풍선 안내 문구 */}
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-10">
+                  <div className="bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg">
+                    SNS로 3초만에 로그인
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
+                      <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <SocialLoginButton
+                  provider="kakao"
+                  onClick={async () => {
+                    try {
+                      // 현재 tripId가 있으면 URL 파라미터로 전달
+                      const tripParam = currentTripId ? `?tripId=${currentTripId}` : '';
+                      const redirectTo = `${window.location.origin}/auth/callback${tripParam}`;
+                      await signInWithKakao(redirectTo);
+                    } catch (error) {
+                      console.error('Kakao login failed:', error);
+                      alert('카카오 로그인에 실패했습니다.');
+                    }
+                  }}
+                />
+                <SocialLoginButton
+                  provider="google"
+                  onClick={async () => {
+                    try {
+                      await signInWithGoogle();
+                    } catch (error) {
+                      console.error('Google login failed:', error);
+                      alert('구글 로그인에 실패했습니다.');
+                    }
+                  }}
+                />
               </div>
             </>
           )}
