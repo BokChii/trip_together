@@ -200,7 +200,7 @@ const MyTripsPage: React.FC = () => {
         {/* 헤더 */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">내 여행 일정</h1>
-          <p className="text-gray-600">생성한 여행과 참여한 여행을 관리하세요</p>
+          <p className="text-gray-600">내가 생성한 여행과 참여한 여행을 관리하세요</p>
         </div>
 
         {/* 새 여행 만들기 버튼 */}
@@ -233,7 +233,7 @@ const MyTripsPage: React.FC = () => {
                     <h3 className="text-lg font-semibold text-gray-900 flex-1">
                       {trip.title || trip.destination}
                     </h3>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => handleEditTrip(trip, e)}
                         className="p-1.5 hover:bg-orange-50 rounded-lg text-orange-500 hover:text-orange-600"
@@ -305,7 +305,7 @@ const MyTripsPage: React.FC = () => {
                     </h3>
                     <button
                       onClick={(e) => handleEditTrip(trip, e)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-orange-50 rounded-lg text-orange-500 hover:text-orange-600"
+                      className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1.5 hover:bg-orange-50 rounded-lg text-orange-500 hover:text-orange-600"
                       title="제목 수정"
                     >
                       <Edit2 className="w-4 h-4" />

@@ -346,10 +346,17 @@ export const Calendar: React.FC<CalendarProps> = ({
   }, [isDragging, dragStart, dragEnd, dragMode]);
 
   const isDateInRange = (isoDate: string): boolean => {
-    if (!startDate && !endDate) return true; // 기간 제한이 없으면 모두 허용
-    
     // 로컬 타임존 기준으로 날짜 비교 (한국 시간대)
     const date = parseLocalDate(isoDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // 여행 기간이 설정되지 않았을 때: 오늘 이전 날짜는 제외
+    if (!startDate && !endDate) {
+      return date >= today;
+    }
+    
+    // 여행 기간이 설정된 경우: 기존 로직 유지
     const start = startDate ? parseLocalDate(startDate) : null;
     const end = endDate ? parseLocalDate(endDate) : null;
     
@@ -366,6 +373,18 @@ export const Calendar: React.FC<CalendarProps> = ({
   const getCellStyles = (isoDate: string, isCurrentMonth: boolean) => {
     // 기간 제한 체크
     const isInRange = isDateInRange(isoDate);
+    
+    // 로컬 타임존 기준으로 날짜 비교 (한국 시간대)
+    const date = parseLocalDate(isoDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isPast = date < today;
+    
+    // 여행 기간이 설정되지 않았고 과거 날짜인 경우
+    if (!startDate && !endDate && isPast) {
+      return "bg-gray-100 text-gray-300 cursor-not-allowed opacity-60";
+    }
+    
     if (!isInRange) {
       // 기간 제한 밖이면 다른 달이든 현재 달이든 비활성화
       return "bg-gray-50/50 text-gray-300 cursor-not-allowed opacity-50";

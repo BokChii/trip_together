@@ -75,6 +75,18 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const changeMonth = (delta: number) => {
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() + delta);
+    
+    // 현재 달 이전으로 가는 것을 막기
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const newMonthStart = new Date(newDate.getFullYear(), newDate.getMonth(), 1);
+    const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // 현재 달 이전으로 가려고 하면 무시
+    if (newMonthStart < currentMonthStart) {
+      return;
+    }
+    
     setCurrentDate(newDate);
   };
 
@@ -152,9 +164,30 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         <button
           type="button"
           onClick={() => changeMonth(-1)}
-          className="p-2 hover:bg-orange-100 rounded-lg transition-colors"
+          disabled={(() => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const prevMonth = new Date(currentDate);
+            prevMonth.setMonth(prevMonth.getMonth() - 1);
+            const prevMonthStart = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
+            return prevMonthStart < currentMonthStart;
+          })()}
+          className={`p-2 rounded-lg transition-colors ${
+            (() => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+              const prevMonth = new Date(currentDate);
+              prevMonth.setMonth(prevMonth.getMonth() - 1);
+              const prevMonthStart = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
+              return prevMonthStart < currentMonthStart;
+            })()
+              ? 'text-gray-300 cursor-not-allowed opacity-50'
+              : 'hover:bg-orange-100 text-orange-600'
+          }`}
         >
-          <ChevronLeft className="w-5 h-5 text-orange-600" />
+          <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
           <CalendarIcon className="w-5 h-5 text-orange-500" />
