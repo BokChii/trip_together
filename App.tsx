@@ -1600,7 +1600,8 @@ const TripPage: React.FC = () => {
                     <Button 
                         onClick={handleGenerateItinerary} 
                         isLoading={isGenerating}
-                        className="bg-white !text-orange-600 hover:bg-orange-600 !hover:text-white border-none shadow-md px-8 py-3.5"
+                        variant="secondary"
+                        className="bg-white text-orange-600 hover:bg-orange-600 hover:text-white border-none shadow-md px-8 py-3.5"
                     >
                         추천받기
                     </Button>
