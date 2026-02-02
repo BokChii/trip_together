@@ -857,10 +857,21 @@ const TripPage: React.FC = () => {
       let departureDate = isoDates[0]; // 첫 번째 날짜를 출발일로
       let returnDate = isoDates.length > 1 ? isoDates[isoDates.length - 1] : undefined;
 
+      // 디버깅: 원본 날짜 로그
+      console.log('🔍 원본 날짜:', { departureDate, returnDate });
+
       // 날짜 유효성 검사 및 조정 (3개월 이내로 제한)
       const originalDeparture = departureDate.split('T')[0];
       const adjustedDeparture = adjustDateToValidRange(departureDate);
       const adjustedReturn = returnDate ? adjustDateToValidRange(returnDate) : undefined;
+      
+      // 디버깅: 조정된 날짜 로그
+      console.log('🔍 조정된 날짜:', { 
+        original: originalDeparture, 
+        adjusted: adjustedDeparture,
+        returnOriginal: returnDate?.split('T')[0],
+        returnAdjusted: adjustedReturn
+      });
       
       // 날짜가 조정되었는지 확인하고 사용자에게 알림
       if (adjustedDeparture !== originalDeparture) {

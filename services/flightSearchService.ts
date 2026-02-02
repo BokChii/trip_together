@@ -95,6 +95,12 @@ export const searchFlight = async (
     const formattedDepartureDate = departureDate.split('T')[0];
     const formattedReturnDate = returnDate ? returnDate.split('T')[0] : undefined;
 
+    // 디버깅: API 요청 날짜 로그
+    console.log(`🔍 API 요청 날짜: ${origin} -> ${destination}`, {
+      departure: formattedDepartureDate,
+      return: formattedReturnDate
+    });
+
     const url = new URL('https://test.api.amadeus.com/v2/shopping/flight-offers');
     url.searchParams.append('originLocationCode', origin.toUpperCase());
     url.searchParams.append('destinationLocationCode', destination.toUpperCase());
@@ -252,11 +258,19 @@ export const searchCheapestFlights = async (
   const searchDestinations = destinations || POPULAR_DESTINATIONS.map(d => d.code);
 
   // 날짜 유효성 검사 및 조정 (3개월 이내로 제한)
+  console.log('🔍 searchCheapestFlights - 원본 날짜:', { departureDate, returnDate });
   const adjustedDepartureDate = adjustDateToValidRange(departureDate);
   const adjustedReturnDate = returnDate ? adjustDateToValidRange(returnDate) : undefined;
   
   // 날짜가 조정되었는지 확인
   const originalDeparture = departureDate.split('T')[0];
+  console.log('🔍 searchCheapestFlights - 조정된 날짜:', {
+    original: originalDeparture,
+    adjusted: adjustedDepartureDate,
+    returnOriginal: returnDate?.split('T')[0],
+    returnAdjusted: adjustedReturnDate
+  });
+  
   if (adjustedDepartureDate !== originalDeparture) {
     console.log(`📅 날짜 조정: ${originalDeparture} → ${adjustedDepartureDate} (3개월 이내로 제한)`);
   }
