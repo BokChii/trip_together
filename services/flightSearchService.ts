@@ -1,4 +1,5 @@
 import { POPULAR_DESTINATIONS, findDestination, Destination } from '../utils/popularDestinations';
+import { toLocalISOString } from '../utils/dateUtils';
 
 export interface FlightResult {
   destination: string;   // "제주도"
@@ -232,14 +233,14 @@ const adjustDateToValidRange = (dateString: string): string => {
   
   // 과거 날짜면 오늘로
   if (inputDate < today) {
-    const adjusted = today.toISOString().split('T')[0];
+    const adjusted = toLocalISOString(today);
     console.log(`📅 날짜 조정 (과거): ${dateOnly} → ${adjusted}`);
     return adjusted;
   }
   
   // 3개월을 넘으면 3개월 후로
   if (inputDate > maxDate) {
-    const adjusted = maxDate.toISOString().split('T')[0];
+    const adjusted = toLocalISOString(maxDate);
     console.log(`📅 날짜 조정 (미래): ${dateOnly} → ${adjusted} (3개월 이내로 제한)`);
     return adjusted;
   }
