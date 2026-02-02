@@ -810,26 +810,35 @@ const TripPage: React.FC = () => {
 
   // 날짜를 유효한 범위로 조정 (오늘부터 3개월 이내)
   const adjustDateToValidRange = (dateString: string): string => {
+    // ISO 형식에서 날짜 부분만 추출 (YYYY-MM-DD)
+    const dateOnly = dateString.split('T')[0];
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     const maxDate = new Date(today);
     maxDate.setMonth(today.getMonth() + 3); // 3개월 후
     
-    const inputDate = new Date(dateString);
+    // 날짜 파싱 (YYYY-MM-DD 형식)
+    const [year, month, day] = dateOnly.split('-').map(Number);
+    const inputDate = new Date(year, month - 1, day);
     inputDate.setHours(0, 0, 0, 0);
     
     // 과거 날짜면 오늘로
     if (inputDate < today) {
-      return today.toISOString().split('T')[0];
+      const adjusted = today.toISOString().split('T')[0];
+      console.log(`📅 날짜 조정 (과거): ${dateOnly} → ${adjusted}`);
+      return adjusted;
     }
     
     // 3개월을 넘으면 3개월 후로
     if (inputDate > maxDate) {
-      return maxDate.toISOString().split('T')[0];
+      const adjusted = maxDate.toISOString().split('T')[0];
+      console.log(`📅 날짜 조정 (미래): ${dateOnly} → ${adjusted} (3개월 이내로 제한)`);
+      return adjusted;
     }
     
-    return dateString.split('T')[0];
+    return dateOnly;
   };
 
   // 항공권 검색 핸들러

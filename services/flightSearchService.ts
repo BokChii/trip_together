@@ -134,7 +134,10 @@ export const searchFlight = async (
       
       if (response.status === 429) {
         console.warn(`⚠️ Rate limit exceeded for ${origin} -> ${destination}`);
-        throw new Error('API 호출 제한에 걸렸습니다. 잠시 후 다시 시도해주세요.');
+        // 429 에러는 즉시 throw하여 상위에서 처리
+        const rateLimitError = new Error('API 호출 제한에 걸렸습니다. 잠시 후 다시 시도해주세요.');
+        (rateLimitError as any).isRateLimit = true;
+        throw rateLimitError;
       }
       
       throw new Error(`Flight search failed: ${errorMessage}`);
@@ -195,7 +198,11 @@ export const searchFlight = async (
       duration,
       bookingUrl: `https://www.google.com/travel/flights?q=Flights%20${origin}%20to%20${destination}%20on%20${formattedDepartureDate}`, // Google Flights 링크
     };
-  } catch (error) {
+  } catch (error: any) {
+    // Rate limit 에러는 다시 throw
+    if (error?.isRateLimit) {
+      throw error;
+    }
     console.error(`❌ Error searching flight ${origin} -> ${destination}:`, error);
     return null;
   }
@@ -203,26 +210,35 @@ export const searchFlight = async (
 
 // 날짜를 유효한 범위로 조정 (오늘부터 3개월 이내)
 const adjustDateToValidRange = (dateString: string): string => {
+  // ISO 형식에서 날짜 부분만 추출 (YYYY-MM-DD)
+  const dateOnly = dateString.split('T')[0];
+  
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
   const maxDate = new Date(today);
   maxDate.setMonth(today.getMonth() + 3); // 3개월 후
   
-  const inputDate = new Date(dateString);
+  // 날짜 파싱 (YYYY-MM-DD 형식)
+  const [year, month, day] = dateOnly.split('-').map(Number);
+  const inputDate = new Date(year, month - 1, day);
   inputDate.setHours(0, 0, 0, 0);
   
   // 과거 날짜면 오늘로
   if (inputDate < today) {
-    return today.toISOString().split('T')[0];
+    const adjusted = today.toISOString().split('T')[0];
+    console.log(`📅 날짜 조정 (과거): ${dateOnly} → ${adjusted}`);
+    return adjusted;
   }
   
   // 3개월을 넘으면 3개월 후로
   if (inputDate > maxDate) {
-    return maxDate.toISOString().split('T')[0];
+    const adjusted = maxDate.toISOString().split('T')[0];
+    console.log(`📅 날짜 조정 (미래): ${dateOnly} → ${adjusted} (3개월 이내로 제한)`);
+    return adjusted;
   }
   
-  return dateString.split('T')[0];
+  return dateOnly;
 };
 
 // 여러 목적지에 대해 병렬 검색 후 최저가 순 정렬
@@ -245,23 +261,42 @@ export const searchCheapestFlights = async (
     console.log(`📅 날짜 조정: ${originalDeparture} → ${adjustedDepartureDate} (3개월 이내로 제한)`);
   }
 
-  // 배치 처리: 3개씩 나누어서 검색 (API 제한 방지)
-  const BATCH_SIZE = 3;
+  // 배치 처리: 2개씩 나누어서 검색 (API 제한 방지)
+  const BATCH_SIZE = 2;
   const batches: string[][] = [];
   for (let i = 0; i < searchDestinations.length; i += BATCH_SIZE) {
     batches.push(searchDestinations.slice(i, i + BATCH_SIZE));
   }
 
   const allFlights: FlightResult[] = [];
+  let rateLimitHit = false;
 
   // 배치별로 순차 처리
   for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+    // Rate limit에 걸렸으면 중단
+    if (rateLimitHit) {
+      console.warn('⚠️ Rate limit에 걸려 검색을 중단합니다.');
+      break;
+    }
+
     const batch = batches[batchIndex];
     const batchPromises = batch.map(dest =>
       searchFlight(origin, dest, adjustedDepartureDate, adjustedReturnDate)
     );
 
     const batchResults = await Promise.allSettled(batchPromises);
+    
+    // 429 에러 확인
+    const hasRateLimit = batchResults.some(r => 
+      r.status === 'rejected' && 
+      (r.reason as any)?.isRateLimit === true
+    );
+    
+    if (hasRateLimit) {
+      rateLimitHit = true;
+      console.warn('⚠️ Rate limit 감지 - 검색 중단');
+      break;
+    }
     
     const flights: FlightResult[] = batchResults
       .filter((r): r is PromiseFulfilledResult<FlightResult | null> => 
@@ -272,9 +307,13 @@ export const searchCheapestFlights = async (
     allFlights.push(...flights);
 
     // 마지막 배치가 아니면 딜레이 추가 (API 제한 방지)
-    if (batchIndex < batches.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
+    if (batchIndex < batches.length - 1 && !rateLimitHit) {
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 대기 (더 긴 딜레이)
     }
+  }
+  
+  if (rateLimitHit && allFlights.length === 0) {
+    throw new Error('API 호출 제한에 걸렸습니다. 잠시 후 다시 시도해주세요.');
   }
 
   // 가격 오름차순 정렬
