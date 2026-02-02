@@ -10,6 +10,8 @@ import { SocialLoginButton } from './components/SocialLoginButton';
 import { DateVote, User, VoteType } from './types';
 import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronRight, ChevronLeft, ChevronDown, LogOut } from 'lucide-react';
 import { generateItinerary } from './services/geminiService';
+import { searchCheapestFlights, searchFlight, FlightResult } from './services/flightSearchService';
+import { findDestination } from './utils/popularDestinations';
 import {
   createTrip,
   getTripByShareCode,
@@ -126,6 +128,12 @@ const TripPage: React.FC = () => {
   const [destination, setDestination] = useState('제주도');
   const [itinerary, setItinerary] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Flight Search State
+  const [originInput, setOriginInput] = useState('ICN');
+  const [destinationInput, setDestinationInput] = useState('');
+  const [flightResults, setFlightResults] = useState<FlightResult[]>([]);
+  const [isSearchingFlights, setIsSearchingFlights] = useState(false);
 
   // Modal State
   const [showNewTripModal, setShowNewTripModal] = useState(false);
@@ -682,7 +690,7 @@ const TripPage: React.FC = () => {
   };
 
   // 날짜를 연속된 그룹으로 묶고 포맷팅하는 함수
-  const formatBestDates = (): { dates: string; participants: string } => {
+  const formatBestDates = (): { dates: string; participants: string; isoDates: string[] } => {
     const voteCounts: Record<string, number> = {};
     votes.forEach(v => {
       if (v.type === 'available') {
@@ -692,7 +700,7 @@ const TripPage: React.FC = () => {
 
     const maxVotes = Math.max(...Object.values(voteCounts), 0);
     if (maxVotes === 0) {
-      return { dates: '', participants: '' };
+      return { dates: '', participants: '', isoDates: [] };
     }
 
     // 가장 많이 선택된 날짜들만 필터링 (ISO 문자열 그대로 사용)
@@ -701,7 +709,7 @@ const TripPage: React.FC = () => {
       .sort();
 
     if (bestDates.length === 0) {
-      return { dates: '', participants: '' };
+      return { dates: '', participants: '', isoDates: [] };
     }
 
     // 연속된 날짜 그룹으로 묶기 (ISO 문자열 직접 파싱)
@@ -766,7 +774,8 @@ const TripPage: React.FC = () => {
 
     return {
       dates: datesText,
-      participants: participantNames
+      participants: participantNames,
+      isoDates: bestDates // ISO 날짜 배열 반환
     };
   };
 
@@ -797,6 +806,60 @@ const TripPage: React.FC = () => {
 
   const handleNewTrip = () => {
     setShowNewTripModal(true);
+  };
+
+  // 항공권 검색 핸들러
+  const handleSearchFlights = async () => {
+    const { isoDates } = formatBestDates();
+    
+    if (isoDates.length === 0) {
+      alert('먼저 날짜를 선택해주세요.');
+      return;
+    }
+
+    setIsSearchingFlights(true);
+    setFlightResults([]);
+
+    try {
+      const departureDate = isoDates[0]; // 첫 번째 날짜를 출발일로
+      const returnDate = isoDates.length > 1 ? isoDates[isoDates.length - 1] : undefined;
+
+      // 출발지 코드 변환 (ICN 또는 사용자 입력)
+      let originCode = originInput.toUpperCase().trim();
+      if (originCode === '인천' || originCode === 'INCHEON') {
+        originCode = 'ICN';
+      }
+
+      // 목적지 입력이 있으면 해당 목적지만 검색
+      if (destinationInput.trim()) {
+        const dest = findDestination(destinationInput.trim());
+        if (!dest) {
+          alert('목적지를 찾을 수 없습니다. 공항 코드(예: CJU, NRT) 또는 도시명을 입력해주세요.');
+          setIsSearchingFlights(false);
+          return;
+        }
+
+        const result = await searchFlight(originCode, dest.code, departureDate, returnDate);
+        if (result) {
+          setFlightResults([result]);
+        } else {
+          alert('해당 날짜와 목적지에 대한 항공권을 찾을 수 없습니다.');
+        }
+      } else {
+        // 목적지 입력이 없으면 인기 여행지 전체 검색
+        const results = await searchCheapestFlights(departureDate, returnDate, originCode);
+        if (results.length === 0) {
+          alert('해당 날짜에 대한 항공권을 찾을 수 없습니다.');
+        } else {
+          setFlightResults(results);
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Error searching flights:', error);
+      alert('항공권 검색 중 오류가 발생했습니다. ' + (error.message || ''));
+    } finally {
+      setIsSearchingFlights(false);
+    }
   };
 
   const confirmNewTrip = () => {
@@ -1478,6 +1541,116 @@ const TripPage: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        {/* Flight Search Section */}
+        {formatBestDates().isoDates.length > 0 && (
+          <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-orange-100/50 mt-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Plane className="w-5 h-5 text-orange-500" />
+              <h3 className="text-base font-semibold text-gray-800">
+                ✈️ 최저가 항공권 검색
+              </h3>
+            </div>
+            
+            <div className="space-y-3 mb-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    출발지
+                  </label>
+                  <input
+                    type="text"
+                    value={originInput}
+                    onChange={(e) => setOriginInput(e.target.value)}
+                    placeholder="ICN 또는 인천"
+                    className="w-full px-4 py-2.5 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-sm text-gray-900"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    목적지 <span className="text-gray-400 font-normal">(선택)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={destinationInput}
+                    onChange={(e) => setDestinationInput(e.target.value)}
+                    placeholder="예: 제주도, CJU, 도쿄, NRT..."
+                    className="w-full px-4 py-2.5 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-sm text-gray-900"
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={handleSearchFlights}
+                isLoading={isSearchingFlights}
+                disabled={isSearchingFlights}
+                className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                {isSearchingFlights ? '검색 중...' : '항공권 검색'}
+              </Button>
+            </div>
+
+            {/* 검색 결과 */}
+            {flightResults.length > 0 && (
+              <div className="mt-4 space-y-3">
+                <p className="text-sm font-medium text-gray-700">
+                  검색 결과 ({flightResults.length}개)
+                </p>
+                <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
+                  {flightResults.map((flight, idx) => (
+                    <div
+                      key={idx}
+                      className="border border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors bg-gray-50/50"
+                    >
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-bold text-lg text-orange-600">
+                              {flight.price.toLocaleString('ko-KR')} {flight.currency}
+                            </span>
+                            {idx === 0 && (
+                              <span className="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-medium">
+                                최저가
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-800 font-medium mb-1">
+                            {flight.destination} ({flight.destinationCode})
+                          </p>
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
+                            <span>{flight.airline}</span>
+                            <span>•</span>
+                            <span>{flight.duration}</span>
+                            <span>•</span>
+                            <span>
+                              {new Date(flight.departure).toLocaleString('ko-KR', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        <a
+                          href={flight.bookingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
+                          onClick={() => {
+                            // 클릭 추적 (선택적)
+                            trackButtonClick('flight_booking_click', currentTripId || undefined, currentUser?.id);
+                          }}
+                        >
+                          예약하기
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 사용법 가이드 (접을 수 있는 형태) */}
         <div className="bg-white rounded-xl shadow-sm border border-orange-100/50 overflow-hidden">

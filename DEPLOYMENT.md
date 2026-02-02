@@ -45,6 +45,8 @@ Vercel 대시보드에서 다음 환경 변수를 추가:
 | `VITE_SUPABASE_URL` | Supabase 프로젝트 URL | `https://rntujltzhubjbpmdolbc.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | Supabase Anon Key | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
 | `GEMINI_API_KEY` | Gemini API Key | `AIzaSyDhGOz84NTEr4jaUEXr8j5BSD_E70Xhk` |
+| `VITE_AMADEUS_API_KEY` | Amadeus API Key | `your_amadeus_api_key` |
+| `VITE_AMADEUS_API_SECRET` | Amadeus API Secret | `your_amadeus_api_secret` |
 
 **참고**: `GEMINI_API_KEY`는 `vite.config.ts`에서 `process.env.GEMINI_API_KEY`로 사용되므로 `VITE_` 접두사가 없어도 됩니다.
 
