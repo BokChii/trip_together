@@ -1611,6 +1611,9 @@ const TripPage: React.FC = () => {
               <h3 className="text-base font-semibold text-gray-800">
                 ✈️ 최저가 항공권 검색
               </h3>
+              <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full font-medium">
+                준비 중
+              </span>
             </div>
             
             <div className="space-y-3 mb-4">
@@ -1624,7 +1627,8 @@ const TripPage: React.FC = () => {
                     value={originInput}
                     onChange={(e) => setOriginInput(e.target.value)}
                     placeholder="ICN 또는 인천"
-                    className="w-full px-4 py-2.5 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-sm text-gray-900"
+                    disabled={true}
+                    className="w-full px-4 py-2.5 rounded-lg bg-gray-100 border-2 border-gray-200 text-gray-500 cursor-not-allowed outline-none transition-all text-sm"
                   />
                 </div>
                 <div className="flex-1">
@@ -1636,17 +1640,18 @@ const TripPage: React.FC = () => {
                     value={destinationInput}
                     onChange={(e) => setDestinationInput(e.target.value)}
                     placeholder="예: 제주도, CJU, 도쿄, NRT..."
-                    className="w-full px-4 py-2.5 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-sm text-gray-900"
+                    disabled={true}
+                    className="w-full px-4 py-2.5 rounded-lg bg-gray-100 border-2 border-gray-200 text-gray-500 cursor-not-allowed outline-none transition-all text-sm"
                   />
                 </div>
               </div>
               <Button
                 onClick={handleSearchFlights}
                 isLoading={isSearchingFlights}
-                disabled={isSearchingFlights}
-                className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white"
+                disabled={true}
+                className="w-full sm:w-auto bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed"
               >
-                {isSearchingFlights ? '검색 중...' : '항공권 검색'}
+                항공권 검색 (준비 중)
               </Button>
             </div>
 
