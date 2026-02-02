@@ -113,11 +113,31 @@ export const searchFlight = async (
     });
 
     if (!response.ok) {
+      // 에러 응답 본문 읽기
+      let errorMessage = response.statusText;
+      let errorDetails: any = null;
+      try {
+        const errorData = await response.json();
+        errorDetails = errorData;
+        errorMessage = errorData.errors?.[0]?.detail || errorData.error_description || response.statusText;
+        if (response.status === 400) {
+          console.warn(`⚠️ Invalid request for ${origin} -> ${destination} on ${formattedDepartureDate}:`, errorMessage, errorData);
+        }
+      } catch (e) {
+        // JSON 파싱 실패 시 기본 메시지 사용
+      }
+
       if (response.status === 404 || response.status === 400) {
         // 해당 날짜/목적지에 항공편이 없는 경우
         return null;
       }
-      throw new Error(`Flight search failed: ${response.statusText}`);
+      
+      if (response.status === 429) {
+        console.warn(`⚠️ Rate limit exceeded for ${origin} -> ${destination}`);
+        throw new Error('API 호출 제한에 걸렸습니다. 잠시 후 다시 시도해주세요.');
+      }
+      
+      throw new Error(`Flight search failed: ${errorMessage}`);
     }
 
     const data = await response.json();
@@ -181,6 +201,30 @@ export const searchFlight = async (
   }
 };
 
+// 날짜를 유효한 범위로 조정 (오늘부터 3개월 이내)
+const adjustDateToValidRange = (dateString: string): string => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const maxDate = new Date(today);
+  maxDate.setMonth(today.getMonth() + 3); // 3개월 후
+  
+  const inputDate = new Date(dateString);
+  inputDate.setHours(0, 0, 0, 0);
+  
+  // 과거 날짜면 오늘로
+  if (inputDate < today) {
+    return today.toISOString().split('T')[0];
+  }
+  
+  // 3개월을 넘으면 3개월 후로
+  if (inputDate > maxDate) {
+    return maxDate.toISOString().split('T')[0];
+  }
+  
+  return dateString.split('T')[0];
+};
+
 // 여러 목적지에 대해 병렬 검색 후 최저가 순 정렬
 export const searchCheapestFlights = async (
   departureDate: string,
@@ -191,20 +235,48 @@ export const searchCheapestFlights = async (
   // 목적지가 지정되지 않으면 인기 여행지 전체 사용
   const searchDestinations = destinations || POPULAR_DESTINATIONS.map(d => d.code);
 
-  // 병렬 검색 (Promise.allSettled 사용하여 일부 실패해도 계속 진행)
-  const searchPromises = searchDestinations.map(dest =>
-    searchFlight(origin, dest, departureDate, returnDate)
-  );
+  // 날짜 유효성 검사 및 조정 (3개월 이내로 제한)
+  const adjustedDepartureDate = adjustDateToValidRange(departureDate);
+  const adjustedReturnDate = returnDate ? adjustDateToValidRange(returnDate) : undefined;
+  
+  // 날짜가 조정되었는지 확인
+  const originalDeparture = departureDate.split('T')[0];
+  if (adjustedDepartureDate !== originalDeparture) {
+    console.log(`📅 날짜 조정: ${originalDeparture} → ${adjustedDepartureDate} (3개월 이내로 제한)`);
+  }
 
-  const results = await Promise.allSettled(searchPromises);
+  // 배치 처리: 3개씩 나누어서 검색 (API 제한 방지)
+  const BATCH_SIZE = 3;
+  const batches: string[][] = [];
+  for (let i = 0; i < searchDestinations.length; i += BATCH_SIZE) {
+    batches.push(searchDestinations.slice(i, i + BATCH_SIZE));
+  }
 
-  // 성공한 결과만 필터링하고 null 제거
-  const flights: FlightResult[] = results
-    .filter((r): r is PromiseFulfilledResult<FlightResult | null> => 
-      r.status === 'fulfilled' && r.value !== null
-    )
-    .map(r => r.value as FlightResult)
-    .sort((a, b) => a.price - b.price); // 가격 오름차순 정렬
+  const allFlights: FlightResult[] = [];
 
-  return flights;
+  // 배치별로 순차 처리
+  for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+    const batch = batches[batchIndex];
+    const batchPromises = batch.map(dest =>
+      searchFlight(origin, dest, adjustedDepartureDate, adjustedReturnDate)
+    );
+
+    const batchResults = await Promise.allSettled(batchPromises);
+    
+    const flights: FlightResult[] = batchResults
+      .filter((r): r is PromiseFulfilledResult<FlightResult | null> => 
+        r.status === 'fulfilled' && r.value !== null
+      )
+      .map(r => r.value as FlightResult);
+    
+    allFlights.push(...flights);
+
+    // 마지막 배치가 아니면 딜레이 추가 (API 제한 방지)
+    if (batchIndex < batches.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
+    }
+  }
+
+  // 가격 오름차순 정렬
+  return allFlights.sort((a, b) => a.price - b.price);
 };

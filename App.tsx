@@ -808,6 +808,30 @@ const TripPage: React.FC = () => {
     setShowNewTripModal(true);
   };
 
+  // 날짜를 유효한 범위로 조정 (오늘부터 3개월 이내)
+  const adjustDateToValidRange = (dateString: string): string => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const maxDate = new Date(today);
+    maxDate.setMonth(today.getMonth() + 3); // 3개월 후
+    
+    const inputDate = new Date(dateString);
+    inputDate.setHours(0, 0, 0, 0);
+    
+    // 과거 날짜면 오늘로
+    if (inputDate < today) {
+      return today.toISOString().split('T')[0];
+    }
+    
+    // 3개월을 넘으면 3개월 후로
+    if (inputDate > maxDate) {
+      return maxDate.toISOString().split('T')[0];
+    }
+    
+    return dateString.split('T')[0];
+  };
+
   // 항공권 검색 핸들러
   const handleSearchFlights = async () => {
     const { isoDates } = formatBestDates();
@@ -821,8 +845,21 @@ const TripPage: React.FC = () => {
     setFlightResults([]);
 
     try {
-      const departureDate = isoDates[0]; // 첫 번째 날짜를 출발일로
-      const returnDate = isoDates.length > 1 ? isoDates[isoDates.length - 1] : undefined;
+      let departureDate = isoDates[0]; // 첫 번째 날짜를 출발일로
+      let returnDate = isoDates.length > 1 ? isoDates[isoDates.length - 1] : undefined;
+
+      // 날짜 유효성 검사 및 조정 (3개월 이내로 제한)
+      const originalDeparture = departureDate.split('T')[0];
+      const adjustedDeparture = adjustDateToValidRange(departureDate);
+      const adjustedReturn = returnDate ? adjustDateToValidRange(returnDate) : undefined;
+      
+      // 날짜가 조정되었는지 확인하고 사용자에게 알림
+      if (adjustedDeparture !== originalDeparture) {
+        console.log(`📅 날짜 조정: ${originalDeparture} → ${adjustedDeparture} (3개월 이내로 제한)`);
+      }
+
+      departureDate = adjustedDeparture;
+      returnDate = adjustedReturn;
 
       // 출발지 코드 변환 (ICN 또는 사용자 입력)
       let originCode = originInput.toUpperCase().trim();
@@ -843,20 +880,24 @@ const TripPage: React.FC = () => {
         if (result) {
           setFlightResults([result]);
         } else {
-          alert('해당 날짜와 목적지에 대한 항공권을 찾을 수 없습니다.');
+          alert('해당 날짜와 목적지에 대한 항공권을 찾을 수 없습니다. 날짜가 3개월 이내로 조정되었을 수 있습니다.');
         }
       } else {
         // 목적지 입력이 없으면 인기 여행지 전체 검색
         const results = await searchCheapestFlights(departureDate, returnDate, originCode);
         if (results.length === 0) {
-          alert('해당 날짜에 대한 항공권을 찾을 수 없습니다.');
+          alert('해당 날짜에 대한 항공권을 찾을 수 없습니다. 날짜가 3개월 이내로 조정되었을 수 있습니다.');
         } else {
           setFlightResults(results);
         }
       }
     } catch (error: any) {
       console.error('❌ Error searching flights:', error);
-      alert('항공권 검색 중 오류가 발생했습니다. ' + (error.message || ''));
+      if (error.message?.includes('Rate limit')) {
+        alert('API 호출 제한에 걸렸습니다. 잠시 후 다시 시도해주세요.');
+      } else {
+        alert('항공권 검색 중 오류가 발생했습니다. ' + (error.message || ''));
+      }
     } finally {
       setIsSearchingFlights(false);
     }
