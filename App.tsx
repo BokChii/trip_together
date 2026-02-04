@@ -28,7 +28,7 @@ import {
   getTripsCount,
   trackButtonClick
 } from './services/tripService';
-import { parseLocalDate, toLocalISOString } from './utils/dateUtils';
+import { parseLocalDate } from './utils/dateUtils';
 import { validateDestination } from './utils/inputValidation';
 import LoginPage from './pages/LoginPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
@@ -808,39 +808,6 @@ const TripPage: React.FC = () => {
     setShowNewTripModal(true);
   };
 
-  // 날짜를 유효한 범위로 조정 (오늘부터 3개월 이내)
-  const adjustDateToValidRange = (dateString: string): string => {
-    // ISO 형식에서 날짜 부분만 추출 (YYYY-MM-DD)
-    const dateOnly = dateString.split('T')[0];
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const maxDate = new Date(today);
-    maxDate.setMonth(today.getMonth() + 3); // 3개월 후
-    
-    // 날짜 파싱 (YYYY-MM-DD 형식)
-    const [year, month, day] = dateOnly.split('-').map(Number);
-    const inputDate = new Date(year, month - 1, day);
-    inputDate.setHours(0, 0, 0, 0);
-    
-    // 과거 날짜면 오늘로
-    if (inputDate < today) {
-      const adjusted = toLocalISOString(today);
-      console.log(`📅 날짜 조정 (과거): ${dateOnly} → ${adjusted}`);
-      return adjusted;
-    }
-    
-    // 3개월을 넘으면 3개월 후로
-    if (inputDate > maxDate) {
-      const adjusted = toLocalISOString(maxDate);
-      console.log(`📅 날짜 조정 (미래): ${dateOnly} → ${adjusted} (3개월 이내로 제한)`);
-      return adjusted;
-    }
-    
-    return dateOnly;
-  };
-
   // 항공권 검색 핸들러
   const handleSearchFlights = async () => {
     const { isoDates } = formatBestDates();
@@ -854,35 +821,14 @@ const TripPage: React.FC = () => {
     setFlightResults([]);
 
     try {
-      let departureDate = isoDates[0]; // 첫 번째 날짜를 출발일로
-      let returnDate = isoDates.length > 1 ? isoDates[isoDates.length - 1] : undefined;
-
-      // 디버깅: 원본 날짜 로그
-      console.log('🔍 원본 날짜:', { departureDate, returnDate });
-
-      // 날짜 유효성 검사 및 조정 (3개월 이내로 제한)
-      const originalDeparture = departureDate.split('T')[0];
-      const adjustedDeparture = adjustDateToValidRange(departureDate);
-      const adjustedReturn = returnDate ? adjustDateToValidRange(returnDate) : undefined;
-      
-      // 디버깅: 조정된 날짜 로그
-      console.log('🔍 조정된 날짜:', { 
-        original: originalDeparture, 
-        adjusted: adjustedDeparture,
-        returnOriginal: returnDate?.split('T')[0],
-        returnAdjusted: adjustedReturn
-      });
-      
-      // 날짜가 조정되었는지 확인하고 사용자에게 알림
-      if (adjustedDeparture !== originalDeparture) {
-        console.log(`📅 날짜 조정: ${originalDeparture} → ${adjustedDeparture} (3개월 이내로 제한)`);
-      }
-
-      departureDate = adjustedDeparture;
-      returnDate = adjustedReturn;
+      // 사용자가 선택한 날짜를 그대로 사용 (YYYY-MM-DD 형식으로 변환)
+      const departureDate = isoDates[0].split('T')[0];
+      const returnDate = isoDates.length > 1 
+        ? isoDates[isoDates.length - 1].split('T')[0] 
+        : undefined;
 
       // 출발지 코드 변환 (ICN 또는 사용자 입력)
-      let originCode = originInput.toUpperCase().trim();
+      let originCode = originInput.toUpperCase().trim() || 'ICN';
       if (originCode === '인천' || originCode === 'INCHEON') {
         originCode = 'ICN';
       }
@@ -900,13 +846,13 @@ const TripPage: React.FC = () => {
         if (result) {
           setFlightResults([result]);
         } else {
-          alert('해당 날짜와 목적지에 대한 항공권을 찾을 수 없습니다. 날짜가 3개월 이내로 조정되었을 수 있습니다.');
+          alert('해당 날짜와 목적지에 대한 항공권을 찾을 수 없습니다.');
         }
       } else {
         // 목적지 입력이 없으면 인기 여행지 전체 검색
         const results = await searchCheapestFlights(departureDate, returnDate, originCode);
         if (results.length === 0) {
-          alert('해당 날짜에 대한 항공권을 찾을 수 없습니다. 날짜가 3개월 이내로 조정되었을 수 있습니다.');
+          alert('해당 날짜에 대한 항공권을 찾을 수 없습니다.');
         } else {
           setFlightResults(results);
         }

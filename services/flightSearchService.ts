@@ -1,5 +1,4 @@
 import { POPULAR_DESTINATIONS, findDestination, Destination } from '../utils/popularDestinations';
-import { toLocalISOString } from '../utils/dateUtils';
 
 export interface FlightResult {
   destination: string;   // "제주도"
@@ -95,12 +94,6 @@ export const searchFlight = async (
     // 날짜 형식 변환 (YYYY-MM-DD)
     const formattedDepartureDate = departureDate.split('T')[0];
     const formattedReturnDate = returnDate ? returnDate.split('T')[0] : undefined;
-
-    // 디버깅: API 요청 날짜 로그
-    console.log(`🔍 API 요청 날짜: ${origin} -> ${destination}`, {
-      departure: formattedDepartureDate,
-      return: formattedReturnDate
-    });
 
     const url = new URL('https://test.api.amadeus.com/v2/shopping/flight-offers');
     url.searchParams.append('originLocationCode', origin.toUpperCase());
@@ -215,39 +208,6 @@ export const searchFlight = async (
   }
 };
 
-// 날짜를 유효한 범위로 조정 (오늘부터 3개월 이내)
-const adjustDateToValidRange = (dateString: string): string => {
-  // ISO 형식에서 날짜 부분만 추출 (YYYY-MM-DD)
-  const dateOnly = dateString.split('T')[0];
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const maxDate = new Date(today);
-  maxDate.setMonth(today.getMonth() + 3); // 3개월 후
-  
-  // 날짜 파싱 (YYYY-MM-DD 형식)
-  const [year, month, day] = dateOnly.split('-').map(Number);
-  const inputDate = new Date(year, month - 1, day);
-  inputDate.setHours(0, 0, 0, 0);
-  
-  // 과거 날짜면 오늘로
-  if (inputDate < today) {
-    const adjusted = toLocalISOString(today);
-    console.log(`📅 날짜 조정 (과거): ${dateOnly} → ${adjusted}`);
-    return adjusted;
-  }
-  
-  // 3개월을 넘으면 3개월 후로
-  if (inputDate > maxDate) {
-    const adjusted = toLocalISOString(maxDate);
-    console.log(`📅 날짜 조정 (미래): ${dateOnly} → ${adjusted} (3개월 이내로 제한)`);
-    return adjusted;
-  }
-  
-  return dateOnly;
-};
-
 // 여러 목적지에 대해 병렬 검색 후 최저가 순 정렬
 export const searchCheapestFlights = async (
   departureDate: string,
@@ -258,23 +218,8 @@ export const searchCheapestFlights = async (
   // 목적지가 지정되지 않으면 인기 여행지 전체 사용
   const searchDestinations = destinations || POPULAR_DESTINATIONS.map(d => d.code);
 
-  // 날짜 유효성 검사 및 조정 (3개월 이내로 제한)
-  console.log('🔍 searchCheapestFlights - 원본 날짜:', { departureDate, returnDate });
-  const adjustedDepartureDate = adjustDateToValidRange(departureDate);
-  const adjustedReturnDate = returnDate ? adjustDateToValidRange(returnDate) : undefined;
-  
-  // 날짜가 조정되었는지 확인
-  const originalDeparture = departureDate.split('T')[0];
-  console.log('🔍 searchCheapestFlights - 조정된 날짜:', {
-    original: originalDeparture,
-    adjusted: adjustedDepartureDate,
-    returnOriginal: returnDate?.split('T')[0],
-    returnAdjusted: adjustedReturnDate
-  });
-  
-  if (adjustedDepartureDate !== originalDeparture) {
-    console.log(`📅 날짜 조정: ${originalDeparture} → ${adjustedDepartureDate} (3개월 이내로 제한)`);
-  }
+  // 사용자가 선택한 날짜를 그대로 사용 (날짜 조정 로직 제거)
+  // API가 날짜 범위를 제한한다면, API가 에러를 반환할 것이고 그때 처리하면 됨
 
   // 배치 처리: 2개씩 나누어서 검색 (API 제한 방지)
   const BATCH_SIZE = 2;
@@ -296,7 +241,7 @@ export const searchCheapestFlights = async (
 
     const batch = batches[batchIndex];
     const batchPromises = batch.map(dest =>
-      searchFlight(origin, dest, adjustedDepartureDate, adjustedReturnDate)
+      searchFlight(origin, dest, departureDate, returnDate)
     );
 
     const batchResults = await Promise.allSettled(batchPromises);
