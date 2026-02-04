@@ -197,8 +197,14 @@ export const searchFlight = async (
     const duration = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
     // Google Flights 링크 생성 (왕복일 경우 귀국일 포함)
-    const returnParam = formattedReturnDate ? `%20returning%20${formattedReturnDate}` : '';
-    const bookingUrl = `https://www.google.com/travel/flights?q=Flights%20${origin}%20to%20${destination}%20on%20${formattedDepartureDate}${returnParam}`;
+    let bookingUrl: string;
+    if (formattedReturnDate) {
+      // 왕복: "Flights ICN to KIX 2026-02-15 to 2026-02-19"
+      bookingUrl = `https://www.google.com/travel/flights?q=Flights%20${origin}%20to%20${destination}%20${formattedDepartureDate}%20to%20${formattedReturnDate}`;
+    } else {
+      // 편도: "Flights ICN to KIX on 2026-02-15"
+      bookingUrl = `https://www.google.com/travel/flights?q=Flights%20${origin}%20to%20${destination}%20on%20${formattedDepartureDate}`;
+    }
 
     return {
       destination: destinationName,
