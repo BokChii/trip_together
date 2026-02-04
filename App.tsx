@@ -162,6 +162,17 @@ const TripPage: React.FC = () => {
           setAuthUser(user);
           const profile = await getUserProfile(user.id);
           setUserProfile(profile);
+          
+          // URL에 trip 파라미터가 없으면 my-trips로 리다이렉트
+          const params = new URLSearchParams(window.location.search);
+          const tripCode = params.get('trip');
+          
+          if (!tripCode) {
+            // 로그인된 사용자가 루트 경로에 접근하고 trip 파라미터가 없으면
+            // my-trips 페이지로 리다이렉트
+            navigate('/my-trips', { replace: true });
+            return;
+          }
         }
       } catch (error) {
         console.error('❌ Error checking auth:', error);
@@ -170,7 +181,7 @@ const TripPage: React.FC = () => {
       }
     };
     checkAuth();
-  }, []);
+  }, [navigate]);
 
   // 로그인한 유저의 닉네임 자동 입력
   useEffect(() => {
@@ -1557,9 +1568,6 @@ const TripPage: React.FC = () => {
               <h3 className="text-base font-semibold text-gray-800">
                 ✈️ 최저가 항공권 검색
               </h3>
-              <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full font-medium">
-                준비 중
-              </span>
             </div>
             
             <div className="space-y-3 mb-4">
@@ -1573,8 +1581,7 @@ const TripPage: React.FC = () => {
                     value={originInput}
                     onChange={(e) => setOriginInput(e.target.value)}
                     placeholder="ICN 또는 인천"
-                    disabled={true}
-                    className="w-full px-4 py-2.5 rounded-lg bg-gray-100 border-2 border-gray-200 text-gray-500 cursor-not-allowed outline-none transition-all text-sm"
+                    className="w-full px-4 py-2.5 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-sm text-gray-900"
                   />
                 </div>
                 <div className="flex-1">
@@ -1586,18 +1593,17 @@ const TripPage: React.FC = () => {
                     value={destinationInput}
                     onChange={(e) => setDestinationInput(e.target.value)}
                     placeholder="예: 제주도, CJU, 도쿄, NRT..."
-                    disabled={true}
-                    className="w-full px-4 py-2.5 rounded-lg bg-gray-100 border-2 border-gray-200 text-gray-500 cursor-not-allowed outline-none transition-all text-sm"
+                    className="w-full px-4 py-2.5 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-sm text-gray-900"
                   />
                 </div>
               </div>
               <Button
                 onClick={handleSearchFlights}
                 isLoading={isSearchingFlights}
-                disabled={true}
-                className="w-full sm:w-auto bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed"
+                disabled={isSearchingFlights}
+                className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white"
               >
-                항공권 검색 (준비 중)
+                {isSearchingFlights ? '검색 중...' : '항공권 검색'}
               </Button>
             </div>
 
