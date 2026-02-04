@@ -197,14 +197,8 @@ export const searchFlight = async (
     const duration = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
     // Google Flights 링크 생성 (왕복일 경우 귀국일 포함)
-    let bookingUrl: string;
-    if (formattedReturnDate) {
-      // 왕복: "from ICN to CJU on 2026-02-15 returning 2026-02-19"
-      bookingUrl = `https://www.google.com/travel/flights?q=Flights%20from%20${origin}%20to%20${destination}%20on%20${formattedDepartureDate}%20returning%20${formattedReturnDate}`;
-    } else {
-      // 편도: "from ICN to CJU on 2026-02-15"
-      bookingUrl = `https://www.google.com/travel/flights?q=Flights%20from%20${origin}%20to%20${destination}%20on%20${formattedDepartureDate}`;
-    }
+    const returnParam = formattedReturnDate ? `%20returning%20${formattedReturnDate}` : '';
+    const bookingUrl = `https://www.google.com/travel/flights?q=Flights%20${origin}%20to%20${destination}%20on%20${formattedDepartureDate}${returnParam}`;
 
     return {
       destination: destinationName,
