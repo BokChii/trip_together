@@ -1568,8 +1568,8 @@ const TripPage: React.FC = () => {
               <h3 className="text-base font-semibold text-gray-800">
                 ✈️ 최저가 항공권 검색
               </h3>
-              <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full font-medium">
-                테스트 단계
+              <span className="text-xs text-white bg-orange-600 px-2 py-1 rounded-full font-medium">
+                테스트 단계입니다
               </span>
             </div>
             
@@ -1667,7 +1667,7 @@ const TripPage: React.FC = () => {
                             trackButtonClick('flight_booking_click', currentTripId || undefined, currentUser?.id);
                           }}
                         >
-                          예약하기
+                          확인하기
                         </a>
                       </div>
                     </div>
