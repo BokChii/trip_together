@@ -179,6 +179,15 @@ export const searchFlight = async (
     const price = parseFloat(offer.price.total);
     const currency = offer.price.currency;
 
+    // EUR를 KRW로 변환 (환율: 대략 1 EUR = 1,400 KRW)
+    let finalPrice = price;
+    let finalCurrency = currency;
+    if (currency === 'EUR') {
+      const EUR_TO_KRW_RATE = 1400; // 예시 환율 (실제로는 동적 환율 사용 권장)
+      finalPrice = Math.round(price * EUR_TO_KRW_RATE);
+      finalCurrency = 'KRW';
+    }
+
     // 시간 계산
     const departureTime = new Date(firstSegment.departure.at);
     const arrivalTime = new Date(firstSegment.arrival.at);
@@ -187,16 +196,22 @@ export const searchFlight = async (
     const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
     const duration = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
+    // Google Flights 링크 생성 (왕복일 경우 귀국일 포함)
+    let bookingUrl = `https://www.google.com/travel/flights?q=Flights%20${origin}%20to%20${destination}%20on%20${formattedDepartureDate}`;
+    if (formattedReturnDate) {
+      bookingUrl = `https://www.google.com/travel/flights?q=Flights%20${origin}%20to%20${destination}%20on%20${formattedDepartureDate}%20returning%20${formattedReturnDate}`;
+    }
+
     return {
       destination: destinationName,
       destinationCode: destination,
-      price,
-      currency,
+      price: finalPrice,
+      currency: finalCurrency,
       airline,
       departure: firstSegment.departure.at,
       arrival: firstSegment.arrival.at,
       duration,
-      bookingUrl: `https://www.google.com/travel/flights?q=Flights%20${origin}%20to%20${destination}%20on%20${formattedDepartureDate}`, // Google Flights 링크
+      bookingUrl,
     };
   } catch (error: any) {
     // Rate limit 에러는 다시 throw

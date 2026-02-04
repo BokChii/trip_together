@@ -1568,6 +1568,9 @@ const TripPage: React.FC = () => {
               <h3 className="text-base font-semibold text-gray-800">
                 ✈️ 최저가 항공권 검색
               </h3>
+              <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full font-medium">
+                테스트 단계
+              </span>
             </div>
             
             <div className="space-y-3 mb-4">
@@ -1610,6 +1613,11 @@ const TripPage: React.FC = () => {
             {/* 검색 결과 */}
             {flightResults.length > 0 && (
               <div className="mt-4 space-y-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs text-blue-700">
+                    ⚠️ 표시된 가격은 Amadeus API 기준 참고용 가격입니다. 실제 예약 시 Google Flights에서 확인되는 가격과 다를 수 있습니다.
+                  </p>
+                </div>
                 <p className="text-sm font-medium text-gray-700">
                   검색 결과 ({flightResults.length}개)
                 </p>
