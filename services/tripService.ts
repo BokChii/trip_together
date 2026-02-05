@@ -514,7 +514,7 @@ export const deleteTrip = async (tripId: string, userId: string): Promise<void> 
 };
 
 // 버튼 클릭 이벤트 타입
-export type ButtonClickEvent = 'share' | 'copy_dates' | 'generate_itinerary';
+export type ButtonClickEvent = 'share' | 'copy_dates' | 'generate_itinerary' | 'flight_search' | 'flight_booking_click';
 
 // 버튼 클릭 추적 (비동기, 실패해도 서비스 동작에는 영향 없음)
 export const trackButtonClick = async (

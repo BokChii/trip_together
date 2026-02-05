@@ -821,6 +821,9 @@ const TripPage: React.FC = () => {
 
   // 항공권 검색 핸들러
   const handleSearchFlights = async () => {
+    // 클릭 추적 추가
+    trackButtonClick('flight_search', currentTripId || undefined, currentUser?.id);
+    
     const { isoDates } = formatBestDates();
     
     if (isoDates.length === 0) {
