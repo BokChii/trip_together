@@ -166,8 +166,9 @@ const TripPage: React.FC = () => {
           // URL에 trip 파라미터가 없으면 my-trips로 리다이렉트
           const params = new URLSearchParams(window.location.search);
           const tripCode = params.get('trip');
+          const isNewTrip = params.get('new') === 'true';
           
-          if (!tripCode) {
+          if (!tripCode && !isNewTrip) {
             // 로그인된 사용자가 루트 경로에 접근하고 trip 파라미터가 없으면
             // my-trips 페이지로 리다이렉트
             navigate('/my-trips', { replace: true });

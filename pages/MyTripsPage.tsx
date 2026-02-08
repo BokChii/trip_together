@@ -60,7 +60,7 @@ const MyTripsPage: React.FC = () => {
   }, [navigate]);
 
   const handleCreateTrip = () => {
-    navigate('/');
+    navigate('/?new=true');
   };
 
   const handleTripClick = (shareCode: string) => {
