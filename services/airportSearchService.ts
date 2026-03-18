@@ -14,6 +14,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5분
 
 /**
  * Supabase airports 테이블에서 검색 (한글/영문 모두 지원)
+ * 로컬 인기 목적지 우선 검색 → Supabase → 결과 없으면 로컬 폴백
  */
 export const searchAirports = async (keyword: string): Promise<AirportOption[]> => {
   const trimmed = keyword.trim();
@@ -23,6 +24,13 @@ export const searchAirports = async (keyword: string): Promise<AirportOption[]> 
   const cached = searchCache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
     return cached.data;
+  }
+
+  // 로컬 인기 목적지 우선 검색 (오사카, 인천 등 항상 동작)
+  const localResults = searchAirportsFallback(trimmed);
+  if (localResults.length > 0) {
+    searchCache.set(cacheKey, { data: localResults, ts: Date.now() });
+    return localResults;
   }
 
   const pattern = `%${trimmed}%`;
@@ -44,6 +52,11 @@ export const searchAirports = async (keyword: string): Promise<AirportOption[]> 
     city: row.city_ko || row.city_en,
     country: row.country_code,
   }));
+
+  // 결과가 없으면 로컬 폴백 (인기 목적지)
+  if (options.length === 0) {
+    return searchAirportsFallback(trimmed);
+  }
 
   searchCache.set(cacheKey, { data: options, ts: Date.now() });
   return options;
