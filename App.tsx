@@ -10,7 +10,6 @@ import { SocialLoginButton } from './components/SocialLoginButton';
 import { DateVote, User, VoteType } from './types';
 import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronRight, ChevronLeft, ChevronDown, LogOut } from 'lucide-react';
 import { generateItinerary as generateItineraryGemini } from './services/geminiService';
-import { generateItinerary as generateItineraryOpenAI } from './services/openaiService';
 import { searchCheapestFlights, searchFlight, FlightResult } from './services/flightSearchService';
 import { AirportOption } from './services/airportSearchService';
 import { findDestination } from './utils/popularDestinations';
@@ -83,7 +82,6 @@ const TripPage: React.FC = () => {
   const [tripTitleInput, setTripTitleInput] = useState('');
 
   // AI 모델 선택 state
-  const [selectedAiModel, setSelectedAiModel] = useState<'gemini' | 'openai'>('gemini');
 
   // 날짜 범위 선택 핸들러
   const handleDateRangeClick = (isoDate: string) => {
@@ -694,17 +692,11 @@ const TripPage: React.FC = () => {
     if (!startDate) return;
 
     setIsGenerating(true);
-    const plan = selectedAiModel === 'gemini'
-      ? await generateItineraryGemini({
-          destination,
-          startDate,
-          endDate: endDate || startDate
-        })
-      : await generateItineraryOpenAI({
-          destination,
-          startDate,
-          endDate: endDate || startDate
-        });
+    const plan = await generateItineraryGemini({
+      destination,
+      startDate,
+      endDate: endDate || startDate
+    });
     setItinerary(plan);
     setIsGenerating(false);
     
@@ -1797,35 +1789,8 @@ const TripPage: React.FC = () => {
                 </h3>
                 <p className="text-white/90 max-w-md">
                     날짜가 정해졌나요? 여행지만 알려주세요.<br/>
-                    {selectedAiModel === 'gemini' ? 'Gemini' : 'GPT'}가 <strong>딱 맞는 일정</strong>을 추천해드릴게요! 🏝️
+                    <strong>Gemini</strong>가 <strong>딱 맞는 일정</strong>을 추천해드릴게요! 🏝️
                 </p>
-                
-                {/* AI 모델 선택 토글 */}
-                <div className="flex items-center gap-3 mt-4">
-                  <span className="text-white/80 text-sm font-medium">AI 모델:</span>
-                  <div className="flex bg-white/20 border border-white/30 p-1 rounded-full shadow-sm backdrop-blur-sm">
-                    <button
-                      onClick={() => setSelectedAiModel('gemini')}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
-                        selectedAiModel === 'gemini'
-                          ? 'bg-white text-orange-600 shadow-md transform scale-105'
-                          : 'text-white/70 hover:text-white hover:bg-white/10'
-                      }`}
-                    >
-                      <span>Gemini</span>
-                    </button>
-                    <button
-                      onClick={() => setSelectedAiModel('openai')}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
-                        selectedAiModel === 'openai'
-                          ? 'bg-white text-orange-600 shadow-md transform scale-105'
-                          : 'text-white/70 hover:text-white hover:bg-white/10'
-                      }`}
-                    >
-                      <span>GPT</span>
-                    </button>
-                  </div>
-                </div>
                 
                 <div className="flex flex-col sm:flex-row gap-2 max-w-md mt-6">
                     <div className="relative flex-grow">
