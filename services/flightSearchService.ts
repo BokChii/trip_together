@@ -50,7 +50,7 @@ const getAmadeusAccessToken = async (): Promise<string> => {
   }
 
   try {
-    const response = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
+    const response = await fetch('https://api.amadeus.com/v1/security/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -95,7 +95,7 @@ export const searchFlight = async (
     const formattedDepartureDate = departureDate.split('T')[0];
     const formattedReturnDate = returnDate ? returnDate.split('T')[0] : undefined;
 
-    const url = new URL('https://test.api.amadeus.com/v2/shopping/flight-offers');
+    const url = new URL('https://api.amadeus.com/v2/shopping/flight-offers');
     url.searchParams.append('originLocationCode', origin.toUpperCase());
     url.searchParams.append('destinationLocationCode', destination.toUpperCase());
     url.searchParams.append('departureDate', formattedDepartureDate);
