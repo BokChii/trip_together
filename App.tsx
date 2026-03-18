@@ -9,9 +9,12 @@ import { Button } from './components/Button';
 import { SocialLoginButton } from './components/SocialLoginButton';
 import { DateVote, User, VoteType } from './types';
 import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronRight, ChevronLeft, ChevronDown, LogOut } from 'lucide-react';
-import { generateItinerary } from './services/geminiService';
+import { generateItinerary as generateItineraryGemini } from './services/geminiService';
+import { generateItinerary as generateItineraryOpenAI } from './services/openaiService';
 import { searchCheapestFlights, searchFlight, FlightResult } from './services/flightSearchService';
+import { AirportOption } from './services/airportSearchService';
 import { findDestination } from './utils/popularDestinations';
+import { AirportAutocompleteInput } from './components/AirportAutocompleteInput';
 import {
   createTrip,
   getTripByShareCode,
@@ -79,6 +82,9 @@ const TripPage: React.FC = () => {
   // 여행 제목 입력 state (로그인한 사용자용)
   const [tripTitleInput, setTripTitleInput] = useState('');
 
+  // AI 모델 선택 state
+  const [selectedAiModel, setSelectedAiModel] = useState<'gemini' | 'openai'>('gemini');
+
   // 날짜 범위 선택 핸들러
   const handleDateRangeClick = (isoDate: string) => {
     if (!dateRangeStart) {
@@ -130,8 +136,9 @@ const TripPage: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Flight Search State
-  const [originInput, setOriginInput] = useState('ICN');
-  const [destinationInput, setDestinationInput] = useState('');
+  const defaultOrigin: AirportOption = { code: 'ICN', name: 'Incheon International', city: 'Seoul', country: 'South Korea' };
+  const [flightOrigin, setFlightOrigin] = useState<AirportOption | null>(defaultOrigin);
+  const [flightDestination, setFlightDestination] = useState<AirportOption | null>(null);
   const [flightResults, setFlightResults] = useState<FlightResult[]>([]);
   const [isSearchingFlights, setIsSearchingFlights] = useState(false);
 
@@ -687,11 +694,17 @@ const TripPage: React.FC = () => {
     if (!startDate) return;
 
     setIsGenerating(true);
-    const plan = await generateItinerary({
-        destination,
-        startDate,
-        endDate: endDate || startDate
-    });
+    const plan = selectedAiModel === 'gemini'
+      ? await generateItineraryGemini({
+          destination,
+          startDate,
+          endDate: endDate || startDate
+        })
+      : await generateItineraryOpenAI({
+          destination,
+          startDate,
+          endDate: endDate || startDate
+        });
     setItinerary(plan);
     setIsGenerating(false);
     
@@ -842,22 +855,20 @@ const TripPage: React.FC = () => {
         ? isoDates[isoDates.length - 1].split('T')[0] 
         : undefined;
 
-      // 출발지 코드 변환 (ICN 또는 사용자 입력)
-      let originCode = originInput.toUpperCase().trim() || 'ICN';
-      if (originCode === '인천' || originCode === 'INCHEON') {
-        originCode = 'ICN';
+      // 출발일 과거 여부 검증
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (parseLocalDate(departureDate) < today) {
+        alert('출발일은 오늘 이후 날짜를 선택해주세요.');
+        setIsSearchingFlights(false);
+        return;
       }
 
-      // 목적지 입력이 있으면 해당 목적지만 검색
-      if (destinationInput.trim()) {
-        const dest = findDestination(destinationInput.trim());
-        if (!dest) {
-          alert('목적지를 찾을 수 없습니다. 공항 코드(예: CJU, NRT) 또는 도시명을 입력해주세요.');
-          setIsSearchingFlights(false);
-          return;
-        }
+      const originCode = flightOrigin?.code || 'ICN';
 
-        const result = await searchFlight(originCode, dest.code, departureDate, returnDate);
+      // 목적지가 선택되었으면 해당 목적지만 검색
+      if (flightDestination) {
+        const result = await searchFlight(originCode, flightDestination.code, departureDate, returnDate);
         if (result) {
           setFlightResults([result]);
         } else {
@@ -902,6 +913,8 @@ const TripPage: React.FC = () => {
     setIsCopied(false);
     setItinerary(null);
     setNameInput('');
+    setFlightOrigin(defaultOrigin);
+    setFlightDestination(null);
     
     // 초기화 ref 리셋
     hasInitialized.current = false;
@@ -1583,24 +1596,22 @@ const TripPage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     출발지
                   </label>
-                  <input
-                    type="text"
-                    value={originInput}
-                    onChange={(e) => setOriginInput(e.target.value)}
-                    placeholder="ICN 또는 인천"
-                    className="w-full px-4 py-2.5 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-sm text-gray-900"
+                  <AirportAutocompleteInput
+                    value={flightOrigin}
+                    onChange={setFlightOrigin}
+                    placeholder="ICN, 인천, Seoul..."
+                    aria-label="출발 공항 검색"
                   />
                 </div>
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    목적지 <span className="text-gray-400 font-normal">(선택)</span>
+                    목적지 <span className="text-gray-400 font-normal">(선택, 비우면 인기 목적지 전체)</span>
                   </label>
-                  <input
-                    type="text"
-                    value={destinationInput}
-                    onChange={(e) => setDestinationInput(e.target.value)}
-                    placeholder="예: 제주도, CJU, 도쿄, NRT..."
-                    className="w-full px-4 py-2.5 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-sm text-gray-900"
+                  <AirportAutocompleteInput
+                    value={flightDestination}
+                    onChange={setFlightDestination}
+                    placeholder="제주, CJU, Tokyo, NRT..."
+                    aria-label="목적지 공항 검색"
                   />
                 </div>
               </div>
@@ -1786,8 +1797,35 @@ const TripPage: React.FC = () => {
                 </h3>
                 <p className="text-white/90 max-w-md">
                     날짜가 정해졌나요? 여행지만 알려주세요.<br/>
-                    Gemini가 <strong>딱 맞는 일정</strong>을 추천해드릴게요! 🏝️
+                    {selectedAiModel === 'gemini' ? 'Gemini' : 'GPT'}가 <strong>딱 맞는 일정</strong>을 추천해드릴게요! 🏝️
                 </p>
+                
+                {/* AI 모델 선택 토글 */}
+                <div className="flex items-center gap-3 mt-4">
+                  <span className="text-white/80 text-sm font-medium">AI 모델:</span>
+                  <div className="flex bg-white/20 border border-white/30 p-1 rounded-full shadow-sm backdrop-blur-sm">
+                    <button
+                      onClick={() => setSelectedAiModel('gemini')}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+                        selectedAiModel === 'gemini'
+                          ? 'bg-white text-orange-600 shadow-md transform scale-105'
+                          : 'text-white/70 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <span>Gemini</span>
+                    </button>
+                    <button
+                      onClick={() => setSelectedAiModel('openai')}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+                        selectedAiModel === 'openai'
+                          ? 'bg-white text-orange-600 shadow-md transform scale-105'
+                          : 'text-white/70 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <span>GPT</span>
+                    </button>
+                  </div>
+                </div>
                 
                 <div className="flex flex-col sm:flex-row gap-2 max-w-md mt-6">
                     <div className="relative flex-grow">

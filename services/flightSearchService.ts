@@ -1,4 +1,5 @@
-import { POPULAR_DESTINATIONS, findDestination, Destination } from '../utils/popularDestinations';
+import { getAmadeusAccessToken } from './amadeusAuth';
+import { POPULAR_DESTINATIONS, findDestination } from '../utils/popularDestinations';
 
 export interface FlightResult {
   destination: string;   // "제주도"
@@ -32,54 +33,6 @@ interface AmadeusFlightOffer {
     }>;
   }>;
 }
-
-// Amadeus API Access Token 발급
-let cachedToken: { token: string; expiresAt: number } | null = null;
-
-const getAmadeusAccessToken = async (): Promise<string> => {
-  const apiKey = import.meta.env.VITE_AMADEUS_API_KEY;
-  const apiSecret = import.meta.env.VITE_AMADEUS_API_SECRET;
-
-  if (!apiKey || !apiSecret) {
-    throw new Error('Amadeus API credentials are not configured');
-  }
-
-  // 캐시된 토큰이 유효하면 재사용
-  if (cachedToken && cachedToken.expiresAt > Date.now()) {
-    return cachedToken.token;
-  }
-
-  try {
-    const response = await fetch('https://api.amadeus.com/v1/security/oauth2/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: apiKey,
-        client_secret: apiSecret,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to get access token: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const expiresIn = data.expires_in || 1799; // 기본값 30분 - 1초
-    
-    cachedToken = {
-      token: data.access_token,
-      expiresAt: Date.now() + (expiresIn * 1000),
-    };
-
-    return cachedToken.token;
-  } catch (error) {
-    console.error('❌ Error getting Amadeus access token:', error);
-    throw error;
-  }
-};
 
 // 단일 목적지 항공권 검색
 export const searchFlight = async (
@@ -128,6 +81,10 @@ export const searchFlight = async (
       }
 
       if (response.status === 404 || response.status === 400) {
+        const msgLower = (errorMessage || '').toLowerCase();
+        if (msgLower.includes('past') || msgLower.includes('in the past')) {
+          throw new Error('선택한 출발일이 이미 지났습니다. 미래 날짜를 선택해주세요.');
+        }
         // 해당 날짜/목적지에 항공편이 없는 경우
         return null;
       }
