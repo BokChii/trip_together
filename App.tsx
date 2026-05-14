@@ -35,6 +35,7 @@ import { validateDestination } from './utils/inputValidation';
 import LoginPage from './pages/LoginPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import MyTripsPage from './pages/MyTripsPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 import { getCurrentUser, signInWithKakao, signInWithGoogle, signOut, getUserProfile } from './services/authService';
 
 // Short ID generator (6 chars)
@@ -2293,6 +2294,7 @@ const App: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/my-trips" element={<MyTripsPage />} />
+        <Route path="/admin" element={<AdminDashboardPage />} />
         <Route path="/" element={<TripPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

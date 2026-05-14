@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plane, Plus, Trash2, Calendar, MapPin, Users, LogOut, Edit2, X } from 'lucide-react';
+import { Plane, Plus, Trash2, Calendar, MapPin, Users, LogOut, Edit2, X, ShieldCheck } from 'lucide-react';
 import { Button } from '../components/Button';
 import { getCurrentUser, signOut, getUserProfile } from '../services/authService';
 import { getUserCreatedTrips, getUserParticipatedTrips, deleteTrip, updateTripTitle, getTripsParticipantCounts, Trip } from '../services/tripService';
+import { isAdmin as checkIsAdmin } from '../services/adminService';
 
 const MyTripsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const MyTripsPage: React.FC = () => {
   const [editTitle, setEditTitle] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [participantCounts, setParticipantCounts] = useState<Record<string, number>>({});
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -32,6 +34,14 @@ const MyTripsPage: React.FC = () => {
         // 프로필 로드
         const profile = await getUserProfile(currentUser.id);
         setUserProfile(profile);
+
+        // 관리자 여부 확인 (실패해도 무시)
+        try {
+          const adminFlag = await checkIsAdmin(currentUser.id);
+          setIsAdminUser(adminFlag);
+        } catch (adminErr) {
+          console.error('❌ MyTripsPage: admin check error', adminErr);
+        }
 
         // 여행 목록 로드
         const [created, participated] = await Promise.all([
@@ -184,6 +194,16 @@ const MyTripsPage: React.FC = () => {
               <span className="inline-block text-xs sm:text-sm text-gray-600 bg-orange-50/50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg">
                 반가워요, <strong className="text-orange-700">{displayName}</strong>님
               </span>
+              {isAdminUser && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="min-h-[44px] px-2 sm:px-3 text-xs font-semibold text-orange-700 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors flex items-center gap-1.5"
+                  title="관리자 대시보드"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span className="hidden sm:inline">Admin</span>
+                </button>
+              )}
               <button 
                 onClick={handleLogout}
                 className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors flex items-center gap-1.5"

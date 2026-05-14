@@ -11,7 +11,7 @@ export const SocialLoginButton: React.FC<SocialLoginButtonProps> = ({
   onClick,
   disabled = false,
 }) => {
-  const isKakao = provider === 'kakao';
+  const isKakao = provider === 'kakao'; 
   const isKakaoDisabled = disabled;
 
   const baseClasses = "inline-flex items-center justify-center rounded-lg font-semibold transition-all transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed w-full text-lg sm:text-xl py-5 sm:py-6 min-h-[56px] shadow-md flex items-center justify-center gap-3";
