@@ -7,8 +7,10 @@ import { ModeToggle } from './components/ModeToggle';
 import { Button } from './components/Button';
 import { SocialLoginButton } from './components/SocialLoginButton';
 import { Footer } from './components/Footer';
+import { TutorialModal } from './components/TutorialModal';
+import { useAppDialog } from './hooks/useAppDialog';
 import { DateVote, User, VoteType } from './types';
-import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronRight, ChevronLeft, ChevronDown, LogOut } from 'lucide-react';
+import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronDown, LogOut } from 'lucide-react';
 import { generateItinerary as generateItineraryGemini } from './services/geminiService';
 import { searchCheapestFlights, searchFlight, FlightResult } from './services/flightSearchService';
 import { AirportOption } from './services/airportSearchService';
@@ -24,6 +26,7 @@ import {
   upsertDateVotesBatch,
   deleteDateVotes,
   updateTripDestination,
+  updateTripItinerary,
   subscribeToTrip,
   subscribeToTripUsers,
   subscribeToDateVotes,
@@ -44,7 +47,15 @@ const generateId = () => crypto.randomUUID().slice(0, 8);
 
 const TripPage: React.FC = () => {
   const navigate = useNavigate();
-  
+  const { alert, DialogHost } = useAppDialog();
+
+  const closeTutorial = (dontShowAgain: boolean) => {
+    if (dontShowAgain) {
+      localStorage.setItem('tripsync_seen_tutorial', 'true');
+    }
+    setShowTutorial(false);
+  };
+
   // State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [nameInput, setNameInput] = useState('');
@@ -154,12 +165,10 @@ const TripPage: React.FC = () => {
   
   // User Guide State
   const [showTutorial, setShowTutorial] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(0);
-  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   // 중복 실행 방지를 위한 ref
   const hasInitialized = useRef(false);
+  const isSavingItinerary = useRef(false);
   
   // 컴포넌트 마운트 시 인증 상태 확인
   useEffect(() => {
@@ -238,6 +247,9 @@ const TripPage: React.FC = () => {
             setTripTitle(trip.title || null);
             setTripStartDate(trip.start_date || null);
             setTripEndDate(trip.end_date || null);
+            if (trip.itinerary) {
+              setItinerary(trip.itinerary);
+            }
 
             // tripStartDate가 있으면 해당 월로 달력 이동
             if (trip.start_date) {
@@ -276,7 +288,7 @@ const TripPage: React.FC = () => {
             }
           } else {
             // console.warn('⚠️ initTrip: Trip not found');
-            alert("존재하지 않는 여행 일정입니다.");
+            void alert("존재하지 않는 여행 일정입니다.");
           }
         } else {
           // URL에 trip 코드가 없으면 Trip 생성하지 않음
@@ -285,7 +297,7 @@ const TripPage: React.FC = () => {
         }
       } catch (error) {
         // console.error("❌ initTrip: Failed to initialize trip", error);
-        alert("일정을 불러오는데 실패했습니다.");
+        void alert("일정을 불러오는데 실패했습니다.");
         hasInitialized.current = false; // 에러 시 재시도 가능하도록
       } finally {
         setIsLoadingTrip(false);
@@ -314,6 +326,9 @@ const TripPage: React.FC = () => {
       }
       setTripStartDate(trip.start_date || null);
       setTripEndDate(trip.end_date || null);
+      if (!isSavingItinerary.current && trip.itinerary !== undefined) {
+        setItinerary(trip.itinerary);
+      }
     });
 
     // Subscribe to user changes
@@ -464,7 +479,7 @@ const TripPage: React.FC = () => {
         }
       } catch (error) {
         // console.error("❌ confirmUser: Failed to create trip and add user", error);
-        alert("일정 생성에 실패했습니다. 다시 시도해주세요.");
+        void alert("일정 생성에 실패했습니다. 다시 시도해주세요.");
         setCurrentUser(null); // 실패 시 로그인 상태 리셋
       } finally {
         setIsLoadingTrip(false);
@@ -501,7 +516,7 @@ const TripPage: React.FC = () => {
         // console.log('✅ confirmUser: Latest data loaded after adding user', { usersCount: tripUsers.length, votesCount: tripVotes.length });
       } catch (error) {
         // console.error("❌ confirmUser: Failed to add user", error);
-        alert("사용자 추가에 실패했습니다.");
+        void alert("사용자 추가에 실패했습니다.");
       }
     }
   };
@@ -514,12 +529,12 @@ const TripPage: React.FC = () => {
   const handleVote = async (dateIsoOrList: string | string[], shouldRemove?: boolean) => {
     if (!currentUser) {
       // console.warn("⚠️ handleVote: currentUser is null");
-      alert("먼저 로그인해주세요.");
+      void alert("먼저 로그인해주세요.");
       return;
     }
     if (!currentTripId) {
       // console.warn("⚠️ handleVote: currentTripId is null");
-      alert("일정을 불러오는 중입니다. 잠시만 기다려주세요.");
+      void alert("일정을 불러오는 중입니다. 잠시만 기다려주세요.");
       return;
     }
 
@@ -604,14 +619,14 @@ const TripPage: React.FC = () => {
       } catch (reloadError) {
         // console.error("❌ handleVote: Failed to reload votes", reloadError);
         }
-      alert("투표 저장에 실패했습니다.");
+      void alert("투표 저장에 실패했습니다.");
     }
   };
 
 
   const handleShare = async () => {
     if (!shareCode) {
-      alert("일정을 불러오는 중입니다. 잠시만 기다려주세요.");
+      void alert("일정을 불러오는 중입니다. 잠시만 기다려주세요.");
       return;
     }
 
@@ -633,7 +648,7 @@ const TripPage: React.FC = () => {
       }
     } catch (e) {
       // console.error("Failed to generate URL", e);
-      alert("링크 생성에 실패했습니다.");
+      void alert("링크 생성에 실패했습니다.");
     }
   };
 
@@ -673,7 +688,7 @@ const TripPage: React.FC = () => {
     // 입력 검증 (프롬프트 인젝션 방지)
     const validation = validateDestination(destination);
     if (!validation.valid) {
-      alert(validation.error || '올바른 여행지를 입력해주세요.');
+      void alert(validation.error || '올바른 여행지를 입력해주세요.');
       return;
     }
 
@@ -694,6 +709,20 @@ const TripPage: React.FC = () => {
     });
     setItinerary(plan);
     setIsGenerating(false);
+
+    if (plan && currentTripId) {
+      isSavingItinerary.current = true;
+      try {
+        await updateTripItinerary(currentTripId, plan);
+      } catch (error) {
+        console.error('Failed to save itinerary', error);
+        void alert('일정은 생성됐지만 저장에 실패했습니다. 다시 시도해주세요.');
+      } finally {
+        setTimeout(() => {
+          isSavingItinerary.current = false;
+        }, 500);
+      }
+    }
     
     // 클릭 추적 추가 (성공적으로 일정 생성된 경우만)
     if (plan && !plan.includes('죄송')) {
@@ -766,7 +795,7 @@ const TripPage: React.FC = () => {
       // 클릭 추적 추가
       trackButtonClick('copy_dates', currentTripId || undefined, currentUser?.id);
     } catch (error) {
-      alert('복사에 실패했습니다.');
+      void alert('복사에 실패했습니다.');
     }
   };
 
@@ -783,7 +812,7 @@ const TripPage: React.FC = () => {
     const range = getLongestContiguousRange(bestDates);
     
     if (!range) {
-      alert('먼저 날짜를 선택해주세요.');
+      void alert('먼저 날짜를 선택해주세요.');
       return;
     }
 
@@ -798,7 +827,7 @@ const TripPage: React.FC = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (parseLocalDate(departureDate) < today) {
-        alert('출발일은 오늘 이후 날짜를 선택해주세요.');
+        void alert('출발일은 오늘 이후 날짜를 선택해주세요.');
         setIsSearchingFlights(false);
         return;
       }
@@ -811,13 +840,13 @@ const TripPage: React.FC = () => {
         if (result) {
           setFlightResults([result]);
         } else {
-          alert('해당 날짜와 목적지에 대한 항공권을 찾을 수 없습니다.');
+          void alert('해당 날짜와 목적지에 대한 항공권을 찾을 수 없습니다.');
         }
       } else {
         // 목적지 입력이 없으면 인기 여행지 전체 검색
         const results = await searchCheapestFlights(departureDate, returnDate, originCode);
         if (results.length === 0) {
-          alert('해당 날짜에 대한 항공권을 찾을 수 없습니다.');
+          void alert('해당 날짜에 대한 항공권을 찾을 수 없습니다.');
         } else {
           setFlightResults(results);
         }
@@ -825,9 +854,9 @@ const TripPage: React.FC = () => {
     } catch (error: any) {
       console.error('❌ Error searching flights:', error);
       if (error.message?.includes('Rate limit')) {
-        alert('API 호출 제한에 걸렸습니다. 잠시 후 다시 시도해주세요.');
+        void alert('API 호출 제한에 걸렸습니다. 잠시 후 다시 시도해주세요.');
       } else {
-        alert('항공권 검색 중 오류가 발생했습니다. ' + (error.message || ''));
+        void alert('항공권 검색 중 오류가 발생했습니다. ' + (error.message || ''));
       }
     } finally {
       setIsSearchingFlights(false);
@@ -922,7 +951,7 @@ const TripPage: React.FC = () => {
                       setUserProfile(null);
                     } catch (error) {
                       console.error('Logout failed:', error);
-                      alert('로그아웃에 실패했습니다.');
+                      void alert('로그아웃에 실패했습니다.');
                     }
                   }}
                   variant="ghost"
@@ -1110,7 +1139,7 @@ const TripPage: React.FC = () => {
                       await signInWithKakao(redirectTo);
                     } catch (error) {
                       console.error('Kakao login failed:', error);
-                      alert('카카오 로그인에 실패했습니다.');
+                      void alert('카카오 로그인에 실패했습니다.');
                     }
                   }}
                 />
@@ -1121,7 +1150,7 @@ const TripPage: React.FC = () => {
                       await signInWithGoogle();
                     } catch (error) {
                       console.error('Google login failed:', error);
-                      alert('구글 로그인에 실패했습니다.');
+                      void alert('구글 로그인에 실패했습니다.');
                     }
                   }}
                 />
@@ -1142,76 +1171,9 @@ const TripPage: React.FC = () => {
         
         {/* 푸터 */}
         <Footer className="mt-auto pt-6 pb-4 bg-transparent" />
-        
-        {/* 로그인 화면용 튜토리얼 모달 */}
-        {showTutorial && (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
-            onClick={() => {
-              if (dontShowAgain) {
-                localStorage.setItem('tripsync_seen_tutorial', 'true');
-              }
-              setShowTutorial(false);
-              setTutorialStep(0);
-            }}
-          >
-            <div 
-              className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* 튜토리얼 단계별 내용 - 로그인 화면용 간단 버전 */}
-              {tutorialStep === 0 && (
-                <>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="bg-orange-50 p-2 rounded-lg">
-                      <Plane className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-800">언제갈래? 시작하기</h3>
-                  </div>
-                  <div className="mb-6">
-                    <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">
-                      <strong className="text-orange-600">언제갈래?</strong>는 친구들과 함께 여행 일정을 조율하는 서비스입니다. 
-                      각자 가능한 날짜를 선택하면 모두가 가능한 날짜를 한눈에 확인할 수 있어요! ✈️
-                    </p>
-                    <div className="bg-orange-50/50 p-4 rounded-lg border border-orange-100">
-                      <p className="text-xs text-gray-700 leading-relaxed">
-                        💡 <strong>핵심 기능:</strong> 캘린더에서 드래그로 여러 날짜를 한 번에 선택하고, 
-                        "가능해요" 또는 "안돼요"로 투표하세요. 모든 참여자가 가능한 날짜는 👑 표시로 보여집니다!
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <input
-                      type="checkbox"
-                      id="dontShowAgainLogin"
-                      checked={dontShowAgain}
-                      onChange={(e) => setDontShowAgain(e.target.checked)}
-                      className="w-4 h-4 text-orange-500 rounded"
-                    />
-                    <label htmlFor="dontShowAgainLogin" className="text-xs text-gray-600 cursor-pointer">
-                      다시 보지 않기
-                    </label>
-                  </div>
-                  <div className="flex gap-3">
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        if (dontShowAgain) {
-                          localStorage.setItem('tripsync_seen_tutorial', 'true');
-                        }
-                        setShowTutorial(false);
-                        setTutorialStep(0);
-                      }}
-                      className="flex-1 min-h-[48px]"
-                    >
-                      닫기
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
+
+        <TutorialModal open={showTutorial} onClose={closeTutorial} />
+        <DialogHost />
       </div>
     );
   }
@@ -1260,7 +1222,7 @@ const TripPage: React.FC = () => {
                         // 로그아웃 후 현재 페이지 유지
                       } catch (error) {
                         console.error('Logout failed:', error);
-                        alert('로그아웃에 실패했습니다.');
+                        void alert('로그아웃에 실패했습니다.');
                       }
                     }}
                     className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors flex items-center gap-1.5"
@@ -1612,91 +1574,23 @@ const TripPage: React.FC = () => {
           </div>
         )}
 
-        {/* 사용법 가이드 (접을 수 있는 형태) */}
-        <div className="bg-white rounded-xl shadow-sm border border-orange-100/50 overflow-hidden">
+        {/* 사용법 보기 */}
+        <div className="bg-white rounded-xl shadow-sm border border-orange-100/50 p-4">
           <button
-            onClick={() => setShowGuide(!showGuide)}
-            className="w-full flex items-center justify-between p-4 hover:bg-orange-50 transition-colors"
+            onClick={() => setShowTutorial(true)}
+            className="w-full flex items-center justify-between hover:bg-orange-50 transition-colors rounded-lg p-2 -m-2"
           >
             <div className="flex items-center gap-3">
               <div className="bg-orange-50 p-2 rounded-lg">
                 <BookOpen className="w-5 h-5 text-orange-600" />
-             </div>
+              </div>
               <div className="text-left">
-                <h3 className="text-sm font-bold text-gray-800">사용법 가이드</h3>
+                <h3 className="text-sm font-bold text-gray-800">사용법 보기</h3>
                 <p className="text-xs text-gray-500">언제갈래? 서비스 이용 방법</p>
               </div>
             </div>
-            {showGuide ? (
-              <ChevronLeft className="w-5 h-5 text-gray-400 rotate-90" />
-            ) : (
-              <ChevronRight className="w-5 h-5 text-gray-400 rotate-90" />
-            )}
+            <ChevronDown className="w-5 h-5 text-gray-400 -rotate-90" />
           </button>
-          
-          {showGuide && (
-            <div className="px-4 pb-4 space-y-4">
-              <div className="pt-2 pb-3 border-t border-orange-100">
-                <p className="text-xs text-gray-600 mb-4 leading-relaxed">
-                  <strong className="text-orange-600">언제갈래?</strong>는 친구들과 함께 여행 일정을 조율하는 서비스입니다. 
-                  각자 가능한 날짜를 선택하면 모두가 가능한 날짜를 한눈에 확인할 수 있어요! ✈️
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex gap-3">
-                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                    <CalendarHeart className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">📅 날짜 선택</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      • 단일 클릭/탭: 날짜 선택 또는 해제<br/>
-                      • 드래그: 여러 날짜를 한 번에 선택 (모바일에서도 가능!)
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                    <Check className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">✅ 투표 모드</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      • <strong>"가능해요"</strong>: 선택한 날짜에 가능 표시<br/>
-                      • <strong>"안돼요"</strong>: 선택한 날짜에 불가능 표시
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                    <UserIcon className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">👥 참여자 확인</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      • 참여자 이름 클릭: 해당 참여자만 보기<br/>
-                      • <strong>"가장 많이 가능"</strong> 클릭: 가장 많은 참여자가 가능한 날짜만 보기
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                    <Share2 className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">🔗 공유하기</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      • <strong>"초대하기"</strong> 버튼으로 링크 복사 후 친구들에게 공유하세요!
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* AI Itinerary Section */}
@@ -1744,10 +1638,11 @@ const TripPage: React.FC = () => {
              {/* Itinerary Result */}
              {itinerary && (
                  <div className="flex-1 w-full bg-white/90 backdrop-blur-md rounded-xl p-6 text-gray-800 shadow-md border border-white/50">
-                    <h4 className="font-bold text-lg mb-4 flex items-center gap-2 text-orange-600">
+                    <h4 className="font-bold text-lg mb-1 flex items-center gap-2 text-orange-600">
                         <Plane className="w-5 h-5" />
                         {destination} 추천 코스
                     </h4>
+                    <p className="text-xs text-gray-500 mb-4">참여자 모두와 공유되는 일정입니다</p>
                     <div className="prose prose-sm prose-orange max-h-80 overflow-y-auto custom-scrollbar pr-2">
                         <div className="whitespace-pre-wrap leading-relaxed text-sm text-gray-600">
                            {itinerary}
@@ -1762,279 +1657,8 @@ const TripPage: React.FC = () => {
       {/* 푸터 */}
       <Footer className="bg-white/80 backdrop-blur-md mt-8" />
 
-      {/* 튜토리얼 모달 */}
-      {showTutorial && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
-          onClick={() => {
-            if (dontShowAgain) {
-              localStorage.setItem('tripsync_seen_tutorial', 'true');
-            }
-            setShowTutorial(false);
-            setTutorialStep(0);
-          }}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* 튜토리얼 단계별 내용 */}
-            {tutorialStep === 0 && (
-              <>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-orange-50 p-2 rounded-lg">
-                    <Plane className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-800">언제갈래? 시작하기</h3>
-                </div>
-                <div className="mb-6">
-                  <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">
-                    <strong className="text-orange-600">언제갈래?</strong>는 친구들과 함께 여행 일정을 조율하는 서비스입니다. 
-                    각자 가능한 날짜를 선택하면 모두가 가능한 날짜를 한눈에 확인할 수 있어요! ✈️
-                  </p>
-                  <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                    <p className="text-xs text-orange-800 leading-relaxed">
-                      💡 <strong>핵심 기능:</strong> 캘린더에서 드래그로 여러 날짜를 한 번에 선택하고, 
-                      "가능해요" 또는 "안돼요"로 투표하세요. 모든 참여자가 가능한 날짜는 👑 표시로 보여집니다!
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mb-4">
-                  <input
-                    type="checkbox"
-                    id="dontShowAgain"
-                    checked={dontShowAgain}
-                    onChange={(e) => setDontShowAgain(e.target.checked)}
-                    className="w-4 h-4 text-orange-500 rounded"
-                  />
-                  <label htmlFor="dontShowAgain" className="text-xs text-gray-600 cursor-pointer">
-                    다시 보지 않기
-                  </label>
-                </div>
-                {/* 페이지 넘버링 */}
-                <div className="flex justify-center gap-1.5 mb-4">
-                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      if (dontShowAgain) {
-                        localStorage.setItem('tripsync_seen_tutorial', 'true');
-                      }
-                      setShowTutorial(false);
-                      setTutorialStep(0);
-                    }}
-                    className="flex-1 min-h-[48px]"
-                  >
-                    건너뛰기
-                  </Button>
-                  <Button
-                    onClick={() => setTutorialStep(1)}
-                    className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
-                  >
-                    다음
-                  </Button>
-                </div>
-              </>
-            )}
-            
-            {tutorialStep === 1 && (
-              <>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-orange-50 p-2 rounded-lg">
-                    <CalendarHeart className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-800">날짜 선택하기</h3>
-                </div>
-                <div className="mb-6 space-y-3">
-                  <div className="flex gap-3">
-                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                      <Check className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-gray-800 mb-1">단일 선택</h4>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        날짜를 클릭하거나 탭하면 선택/해제됩니다.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                      <Share2 className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-gray-800 mb-1">드래그 선택</h4>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        날짜를 드래그하면 여러 날짜를 한 번에 선택할 수 있습니다. 모바일에서도 가능해요!
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                      <Crown className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-gray-800 mb-1">가장 많이 가능한 날짜</h4>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        👑 표시가 있는 날짜는 가장 많은 참여자가 가능한 날짜입니다!
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                {/* 페이지 넘버링 */}
-                <div className="flex justify-center gap-1.5 mb-4">
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setTutorialStep(0)}
-                    className="flex-1 min-h-[48px]"
-                  >
-                    이전
-                  </Button>
-                  <Button
-                    onClick={() => setTutorialStep(2)}
-                    className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
-                  >
-                    다음
-                  </Button>
-                </div>
-              </>
-            )}
-            
-            {tutorialStep === 2 && (
-              <>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-orange-50 p-2 rounded-lg">
-                    <UserIcon className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-800">참여자 필터</h3>
-                </div>
-                <div className="mb-6 space-y-3">
-                  <div className="flex gap-3">
-                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                      <UserIcon className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-gray-800 mb-1">개별 참여자 보기</h4>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        참여자 이름을 클릭하면 해당 참여자가 선택한 날짜만 볼 수 있습니다.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                      <Crown className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-gray-800 mb-1">"가장 많이 가능" 필터</h4>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        참여자 리스트 맨 앞의 <strong>"가장 많이 가능"</strong> 버튼을 클릭하면 
-                        가장 많은 참여자가 가능한 날짜만 표시됩니다.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                {/* 페이지 넘버링 */}
-                <div className="flex justify-center gap-1.5 mb-4">
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setTutorialStep(1)}
-                    className="flex-1 min-h-[48px]"
-                  >
-                    이전
-                  </Button>
-                  <Button
-                    onClick={() => setTutorialStep(3)}
-                    className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
-                  >
-                    다음
-                  </Button>
-                </div>
-              </>
-            )}
-            
-            {/* 새로 추가: step 3 - 링크 공유 */}
-            {tutorialStep === 3 && (
-              <>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-orange-50 p-2 rounded-lg">
-                    <Share2 className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-800">친구 초대하기</h3>
-                </div>
-                <div className="mb-6 space-y-3">
-                  <div className="flex gap-3">
-                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                      <Share2 className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-gray-800 mb-1">초대하기 버튼</h4>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        캘린더 화면 상단의 <strong>"초대하기"</strong> 버튼을 클릭하면 공유 링크가 생성됩니다.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">
-                      <Copy className="w-4 h-4 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-gray-800 mb-1">링크 복사</h4>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        생성된 링크를 복사하여 친구들에게 공유하세요. 친구들이 링크로 접속하면 
-                        같은 일정에 참여할 수 있습니다!
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                {/* 페이지 넘버링 */}
-                <div className="flex justify-center gap-1.5 mb-4">
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-200"></div>
-                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setTutorialStep(2)}
-                    className="flex-1 min-h-[48px]"
-                  >
-                    이전
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      if (dontShowAgain) {
-                        localStorage.setItem('tripsync_seen_tutorial', 'true');
-                      }
-                      setShowTutorial(false);
-                      setTutorialStep(0);
-                    }}
-                    className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
-                  >
-                    완료
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <TutorialModal open={showTutorial} onClose={closeTutorial} />
+      <DialogHost />
 
       {/* 새로운 일정 만들기 모달 */}
       {showNewTripModal && (

@@ -49,6 +49,7 @@ import {
   TimeRange,
   TimeBucket,
 } from '../services/adminService';
+import { useAppDialog } from '../hooks/useAppDialog';
 
 type PeriodKey = 1 | 7 | 30;
 
@@ -173,6 +174,7 @@ const EmptyState: React.FC<{ message: string }> = ({ message }) => (
 
 const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
+  const { alert, DialogHost } = useAppDialog();
 
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [authUser, setAuthUser] = useState<any>(null);
@@ -206,7 +208,7 @@ const AdminDashboardPage: React.FC = () => {
         }
         const adminCheck = await isAdmin(user.id);
         if (!adminCheck) {
-          alert('관리자 권한이 없습니다.');
+          void alert('관리자 권한이 없습니다.');
           navigate('/', { replace: true });
           return;
         }
@@ -220,7 +222,7 @@ const AdminDashboardPage: React.FC = () => {
         );
       } catch (error) {
         console.error('❌ AdminDashboardPage: auth guard error', error);
-        alert('인증 중 오류가 발생했습니다.');
+        void alert('인증 중 오류가 발생했습니다.');
         navigate('/login', { replace: true });
       } finally {
         setIsCheckingAuth(false);
@@ -296,7 +298,7 @@ const AdminDashboardPage: React.FC = () => {
       navigate('/login');
     } catch (error) {
       console.error('❌ AdminDashboardPage: logout error', error);
-      alert('로그아웃에 실패했습니다.');
+      void alert('로그아웃에 실패했습니다.');
     }
   };
 
@@ -744,6 +746,7 @@ const AdminDashboardPage: React.FC = () => {
           </div>
         </section>
       </main>
+      <DialogHost />
     </div>
   );
 };

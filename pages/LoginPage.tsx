@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Plane } from 'lucide-react';
 import { Button } from '../components/Button';
 import { SocialLoginButton } from '../components/SocialLoginButton';
+import { useAppDialog } from '../hooks/useAppDialog';
 import { signInWithKakao, signInWithGoogle, getCurrentUser, handleAuthCallback } from '../services/authService';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { alert, DialogHost } = useAppDialog();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ const LoginPage: React.FC = () => {
             }
           } catch (error) {
             console.error('❌ LoginPage: Auth callback error', error);
-            alert('로그인 중 오류가 발생했습니다.');
+            void alert('로그인 중 오류가 발생했습니다.');
           } finally {
             setIsLoading(false);
           }
@@ -55,7 +57,7 @@ const LoginPage: React.FC = () => {
       // OAuth 리디렉션이 발생하므로 여기서는 아무것도 하지 않음
     } catch (error) {
       console.error('❌ LoginPage: Kakao login error', error);
-      alert('카카오톡 로그인 중 오류가 발생했습니다.');
+      void alert('카카오톡 로그인 중 오류가 발생했습니다.');
       setIsLoading(false);
     }
   };
@@ -76,7 +78,7 @@ const LoginPage: React.FC = () => {
       // OAuth 리디렉션이 발생하므로 여기서는 아무것도 하지 않음
     } catch (error) {
       console.error('❌ LoginPage: Google login error', error);
-      alert('구글 로그인 중 오류가 발생했습니다.');
+      void alert('구글 로그인 중 오류가 발생했습니다.');
       setIsLoading(false);
     }
   };
@@ -146,6 +148,7 @@ const LoginPage: React.FC = () => {
           </p>
         </div>
       </div>
+      <DialogHost />
     </div>
   );
 };

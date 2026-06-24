@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plane, Plus, Trash2, Calendar, MapPin, Users, LogOut, Edit2, X, ShieldCheck } from 'lucide-react';
 import { Button } from '../components/Button';
+import { useAppDialog } from '../hooks/useAppDialog';
 import { getCurrentUser, signOut, getUserProfile } from '../services/authService';
 import { getUserCreatedTrips, getUserParticipatedTrips, deleteTrip, updateTripTitle, getTripsParticipantCounts, Trip } from '../services/tripService';
 import { isAdmin as checkIsAdmin } from '../services/adminService';
 
 const MyTripsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { alert, confirm, DialogHost } = useAppDialog();
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [createdTrips, setCreatedTrips] = useState<Trip[]>([]);
@@ -60,7 +62,7 @@ const MyTripsPage: React.FC = () => {
         }
       } catch (error) {
         console.error('❌ MyTripsPage: Error loading data', error);
-        alert('데이터를 불러오는데 실패했습니다.');
+        void alert('데이터를 불러오는데 실패했습니다.');
       } finally {
         setIsLoading(false);
       }
@@ -88,7 +90,7 @@ const MyTripsPage: React.FC = () => {
     
     if (!user) return;
     
-    if (!confirm('정말 이 여행 일정을 삭제하시겠어요?')) {
+    if (!(await confirm('정말 이 여행 일정을 삭제하시겠어요?'))) {
       return;
     }
 
@@ -107,9 +109,9 @@ const MyTripsPage: React.FC = () => {
     } catch (error: any) {
       console.error('❌ MyTripsPage: Error deleting trip', error);
       if (error.message === 'Only the creator can delete this trip') {
-        alert('여행 일정을 삭제할 권한이 없습니다.');
+        void alert('여행 일정을 삭제할 권한이 없습니다.');
       } else {
-        alert('여행 일정 삭제에 실패했습니다.');
+        void alert('여행 일정 삭제에 실패했습니다.');
       }
     } finally {
       setIsDeleting(null);
@@ -129,7 +131,7 @@ const MyTripsPage: React.FC = () => {
 
   const handleSaveEdit = async () => {
     if (!editingTripId || !editTitle.trim()) {
-      alert('제목을 입력해주세요.');
+      void alert('제목을 입력해주세요.');
       return;
     }
 
@@ -149,7 +151,7 @@ const MyTripsPage: React.FC = () => {
       setEditTitle('');
     } catch (error) {
       console.error('❌ MyTripsPage: Error updating trip title', error);
-      alert('제목 수정에 실패했습니다.');
+      void alert('제목 수정에 실패했습니다.');
     } finally {
       setIsUpdating(false);
     }
@@ -161,7 +163,7 @@ const MyTripsPage: React.FC = () => {
       navigate('/login');
     } catch (error) {
       console.error('❌ MyTripsPage: Error signing out', error);
-      alert('로그아웃에 실패했습니다.');
+      void alert('로그아웃에 실패했습니다.');
     }
   };
 
@@ -431,6 +433,7 @@ const MyTripsPage: React.FC = () => {
           </div>
         </div>
       )}
+      <DialogHost />
     </div>
   );
 };

@@ -11,6 +11,7 @@ export interface Trip {
   end_date?: string | null;
   title?: string | null;
   creator_id?: string | null;
+  itinerary?: string | null;
 }
 
 // 짧은 공유 코드 생성 (6자리 대문자+숫자)
@@ -255,6 +256,22 @@ export const updateTripTitle = async (
     .update({ 
       title: title.trim() || '이름없는 여행 일정',
       updated_at: toLocalTimestamp()
+    })
+    .eq('id', tripId);
+
+  if (error) throw error;
+};
+
+// Trip AI 일정 업데이트
+export const updateTripItinerary = async (
+  tripId: string,
+  itinerary: string | null
+): Promise<void> => {
+  const { error } = await supabase
+    .from('trips')
+    .update({
+      itinerary,
+      updated_at: toLocalTimestamp(),
     })
     .eq('id', tripId);
 
