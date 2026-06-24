@@ -370,6 +370,34 @@ export const Calendar: React.FC<CalendarProps> = ({
     return true;
   };
 
+  const hasTripPeriod = !!(startDate || endDate);
+
+  const formatTripPeriodLabel = (): string | null => {
+    if (!startDate && !endDate) return null;
+    const fmt = (iso: string) =>
+      parseLocalDate(iso).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+    if (startDate && endDate) return `${fmt(startDate)} ~ ${fmt(endDate)}`;
+    if (startDate) return `${fmt(startDate)}부터`;
+    if (endDate) return `${fmt(endDate)}까지`;
+    return null;
+  };
+
+  const tripPeriodLabel = formatTripPeriodLabel();
+
+  const isPeriodBoundary = (isoDate: string): boolean => {
+    if (!hasTripPeriod) return false;
+    return isoDate === startDate || isoDate === endDate;
+  };
+
+  const getSelectablePeriodStyles = (isoDate: string, hasVotes: boolean): string => {
+    if (!hasTripPeriod || hasVotes) return '';
+    const boundary = isPeriodBoundary(isoDate);
+    if (boundary) {
+      return 'bg-orange-100 ring-2 ring-inset ring-orange-500 hover:bg-orange-200 ';
+    }
+    return 'bg-orange-50 ring-1 ring-inset ring-orange-200/80 hover:bg-orange-100 ';
+  };
+
   const getCellStyles = (isoDate: string, isCurrentMonth: boolean) => {
     // 기간 제한 체크
     const isInRange = isDateInRange(isoDate);
@@ -386,11 +414,12 @@ export const Calendar: React.FC<CalendarProps> = ({
     }
     
     if (!isInRange) {
-      // 기간 제한 밖이면 다른 달이든 현재 달이든 비활성화
-      return "bg-gray-50/50 text-gray-300 cursor-not-allowed opacity-50";
+      return "bg-gray-100 text-gray-300 cursor-not-allowed opacity-35 grayscale-[0.25]";
     }
 
     const { availableCount, unavailableCount, myVote } = getDayStats(isoDate);
+    const hasVotes = availableCount > 0 || unavailableCount > 0;
+    const periodStyles = getSelectablePeriodStyles(isoDate, hasVotes);
     // selectedUserId가 'all'이면 전체 참여자, 특정 유저면 1, 없으면 전체 참여자 수
     const totalUsers = selectedUserId === 'all' ? users.length : (selectedUserId ? 1 : users.length);
     const isPerfectMatch = totalUsers > 0 && availableCount === totalUsers;
@@ -430,7 +459,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     
     // 다른 달 날짜는 기본적으로 회색 배경 (투표가 없을 때)
     if (!isCurrentMonth && availableCount === 0 && unavailableCount === 0) {
-      classes += "bg-gray-50/50 text-gray-400 hover:bg-gray-100 " + opacityClass + " ";
+      classes += (periodStyles || "bg-gray-50/50 text-gray-400 hover:bg-gray-100 ") + opacityClass + " ";
     } else {
 
       // My Vote Highlight (모바일에서는 더 가늘게)
@@ -456,7 +485,10 @@ export const Calendar: React.FC<CalendarProps> = ({
       } else if (availableCount === 0 && unavailableCount > 0) {
          classes += "bg-gray-100 text-gray-400 hover:bg-gray-200 rounded-lg " + opacityClass + " " + myVoteBorder;
       } else {
-        classes += (isCurrentMonth ? "bg-white hover:bg-orange-50" : "bg-gray-50/50 hover:bg-gray-100") + " text-gray-700 rounded-lg " + opacityClass + " " + myVoteBorder;
+        const defaultEmpty = isCurrentMonth
+          ? "bg-white hover:bg-orange-50"
+          : "bg-gray-50/50 hover:bg-gray-100";
+        classes += (periodStyles || defaultEmpty + " ") + " text-gray-700 rounded-lg " + opacityClass + " " + myVoteBorder;
       }
     }
     
@@ -490,6 +522,16 @@ export const Calendar: React.FC<CalendarProps> = ({
           </h2>
           <p className="text-xs sm:text-sm text-gray-500 pl-1">드래그해서 여러 날짜를 쓱- 선택해보세요.</p>
         </div>
+
+        {tripPeriodLabel && (
+          <div className="mb-4 flex items-center gap-2 px-3 py-2.5 bg-orange-100/60 border border-orange-200 rounded-xl">
+            <CalendarHeart className="w-4 h-4 text-orange-600 flex-shrink-0" />
+            <p className="text-xs sm:text-sm text-orange-800">
+              <span className="font-semibold">{tripPeriodLabel}</span>
+              <span className="text-orange-700/90"> 중에서 날짜를 선택해주세요</span>
+            </p>
+          </div>
+        )}
         
         {/* Calendar Navigation */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
@@ -633,7 +675,19 @@ export const Calendar: React.FC<CalendarProps> = ({
       </div>
       
       {/* Legend */}
-      <div className="p-5 bg-white flex flex-wrap gap-6 text-xs text-gray-500 justify-center border-t border-orange-100 font-medium">
+      <div className="p-5 bg-white flex flex-wrap gap-x-6 gap-y-3 text-xs text-gray-500 justify-center border-t border-orange-100 font-medium">
+        {hasTripPeriod && (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 bg-orange-50 ring-1 ring-inset ring-orange-200 rounded-lg"></div>
+              <span>선택 가능</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 bg-gray-100 opacity-40 rounded-lg"></div>
+              <span>선택 불가</span>
+            </div>
+          </>
+        )}
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 bg-white border-2 border-orange-100 rounded-lg"></div>
           <span>선택안함</span>
