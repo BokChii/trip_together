@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Button } from '../components/Button';
+import { Modal, ModalFooter, ModalHeader } from '../components/Modal';
 
 type DialogState =
   | { type: 'alert'; title: string; message: string }
@@ -31,39 +32,36 @@ export function useAppDialog() {
   const DialogHost = () => {
     if (!dialog) return null;
 
+    const titleId = 'app-dialog-title';
+    const isConfirm = dialog.type === 'confirm';
+
     return (
-      <div
-        className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
-        onClick={() => dialog.type === 'alert' && close(true)}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="app-dialog-title"
+      <Modal
+        open
+        onClose={() => close(isConfirm ? false : true)}
+        titleId={titleId}
+        zIndex={60}
+        closeOnBackdrop={!isConfirm}
+        closeOnEscape
       >
-        <div
-          className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full p-5 sm:p-6"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <h3 id="app-dialog-title" className="text-lg font-bold text-gray-800 mb-3">
-            {dialog.title}
-          </h3>
-          <p className="text-sm text-gray-600 mb-6 leading-relaxed whitespace-pre-line">
-            {dialog.message}
-          </p>
-          <div className="flex gap-3">
-            {dialog.type === 'confirm' && (
-              <Button variant="ghost" onClick={() => close(false)} className="flex-1 min-h-[48px]">
-                취소
-              </Button>
-            )}
-            <Button
-              onClick={() => close(true)}
-              className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              확인
+        <ModalHeader title={dialog.title} titleId={titleId} />
+        <p className="text-sm text-gray-600 mb-6 leading-relaxed whitespace-pre-line">
+          {dialog.message}
+        </p>
+        <ModalFooter>
+          {isConfirm && (
+            <Button variant="ghost" onClick={() => close(false)} className="flex-1 min-h-[48px]">
+              취소
             </Button>
-          </div>
-        </div>
-      </div>
+          )}
+          <Button
+            onClick={() => close(true)}
+            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            확인
+          </Button>
+        </ModalFooter>
+      </Modal>
     );
   };
 

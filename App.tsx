@@ -8,6 +8,7 @@ import { Button } from './components/Button';
 import { SocialLoginButton } from './components/SocialLoginButton';
 import { Footer } from './components/Footer';
 import { TutorialModal } from './components/TutorialModal';
+import { Modal, ModalFooter, ModalHeader } from './components/Modal';
 import { useAppDialog } from './hooks/useAppDialog';
 import { DateVote, User, VoteType } from './types';
 import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronDown, LogOut } from 'lucide-react';
@@ -1661,145 +1662,93 @@ const TripPage: React.FC = () => {
       <DialogHost />
 
       {/* 새로운 일정 만들기 모달 */}
-      {showNewTripModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowNewTripModal(false)}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
-            onClick={(e) => e.stopPropagation()}
+      <Modal open={showNewTripModal} onClose={() => setShowNewTripModal(false)} titleId="new-trip-title">
+        <ModalHeader icon={PlusCircle} title="새로운 일정 만들기" titleId="new-trip-title" />
+        <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
+          새로운 여행 일정을 만들면 현재 일정에서 나가게 됩니다.<br />
+          새로운 일정을 만들까요?
+        </p>
+        <ModalFooter>
+          <Button
+            variant="ghost"
+            onClick={() => setShowNewTripModal(false)}
+            className="flex-1 min-h-[48px]"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-orange-50 p-2 rounded-lg">
-                <PlusCircle className="w-5 h-5 text-orange-600" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-800">새로운 일정 만들기</h3>
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-              새로운 여행 일정을 만들면 현재 일정에서 나가게 됩니다.<br/>
-              새로운 일정을 만들까요?
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="ghost"
-                onClick={() => setShowNewTripModal(false)}
-                className="flex-1 min-h-[48px]"
-              >
-                취소
-              </Button>
-              <Button
-                onClick={confirmNewTrip}
-                className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                만들기
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            취소
+          </Button>
+          <Button
+            onClick={confirmNewTrip}
+            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            만들기
+          </Button>
+        </ModalFooter>
+      </Modal>
 
       {/* 나가기 모달 */}
-      {showExitModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowExitModal(false)}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
-            onClick={(e) => e.stopPropagation()}
+      <Modal open={showExitModal} onClose={() => setShowExitModal(false)} titleId="exit-title">
+        <ModalHeader icon={X} title="나가기" titleId="exit-title" />
+        <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">정말 나가시겠어요?</p>
+        <ModalFooter>
+          <Button
+            variant="ghost"
+            onClick={() => setShowExitModal(false)}
+            className="flex-1 min-h-[48px]"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-orange-50 p-2 rounded-lg">
-                <X className="w-5 h-5 text-orange-600" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-800">나가기</h3>
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-              정말 나가시겠어요?<br/>
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="ghost"
-                onClick={() => setShowExitModal(false)}
-                className="flex-1 min-h-[48px]"
-              >
-                취소
-              </Button>
-              <Button
-                onClick={confirmExit}
-                className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                나가기
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            취소
+          </Button>
+          <Button
+            onClick={confirmExit}
+            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            나가기
+          </Button>
+        </ModalFooter>
+      </Modal>
 
       {/* 날짜 미선택 알림 모달 */}
-      {showNoDateModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowNoDateModal(false)}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
-            onClick={(e) => e.stopPropagation()}
+      <Modal open={showNoDateModal} onClose={() => setShowNoDateModal(false)} titleId="no-date-title">
+        <ModalHeader icon={CalendarHeart} title="날짜를 선택해주세요" titleId="no-date-title" />
+        <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
+          AI 여행 일정을 추천받으려면<br />
+          먼저 캘린더에서 <strong className="text-orange-600">가능한 날짜를 선택</strong>해주세요! 📅
+        </p>
+        <ModalFooter>
+          <Button
+            onClick={() => setShowNoDateModal(false)}
+            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-orange-50 p-2 rounded-lg">
-                <CalendarHeart className="w-5 h-5 text-orange-600" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-800">날짜를 선택해주세요</h3>
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-              AI 여행 일정을 추천받으려면<br/>
-              먼저 캘린더에서 <strong className="text-orange-600">가능한 날짜를 선택</strong>해주세요! 📅
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={() => setShowNoDateModal(false)}
-                className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                확인
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            확인
+          </Button>
+        </ModalFooter>
+      </Modal>
 
       {/* 복사 성공 모달 */}
-      {showCopySuccessModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowCopySuccessModal(false)}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full sm:max-w-lg p-5 sm:p-6"
-            onClick={(e) => e.stopPropagation()}
+      <Modal
+        open={showCopySuccessModal}
+        onClose={() => setShowCopySuccessModal(false)}
+        titleId="copy-success-title"
+      >
+        <ModalHeader
+          icon={Check}
+          title="복사 완료!"
+          titleId="copy-success-title"
+          iconWrapperClassName="bg-green-100 p-2 rounded-full"
+          iconClassName="w-5 h-5 text-green-600"
+        />
+        <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
+          가장 많이 가능한 일정이 클립보드에 복사되었습니다!<br />
+          친구들에게 공유해보세요! 📋✨
+        </p>
+        <ModalFooter>
+          <Button
+            onClick={() => setShowCopySuccessModal(false)}
+            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-green-100 p-2 rounded-full">
-                <Check className="w-5 h-5 text-green-600" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-800">복사 완료!</h3>
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-              가장 많이 가능한 일정이 클립보드에 복사되었습니다!<br/>
-              친구들에게 공유해보세요! 📋✨
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={() => setShowCopySuccessModal(false)}
-                className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                확인
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            확인
+          </Button>
+        </ModalFooter>
+      </Modal>
       {/* Analytics는 프로덕션 환경에서만 활성화 (로컬 개발 환경 타입 오류 방지) */}
       {/* @ts-ignore - import.meta.env.PROD는 Vite에서 제공하는 환경 변수 */}
       {import.meta.env.PROD && <Analytics />}

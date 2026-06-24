@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plane, Plus, Trash2, Calendar, MapPin, Users, LogOut, Edit2, X, ShieldCheck } from 'lucide-react';
+import { Plane, Plus, Trash2, Calendar, MapPin, Users, LogOut, Edit2, ShieldCheck } from 'lucide-react';
 import { Button } from '../components/Button';
+import { Modal, ModalFooter, ModalHeader } from '../components/Modal';
 import { useAppDialog } from '../hooks/useAppDialog';
 import { getCurrentUser, signOut, getUserProfile } from '../services/authService';
 import { getUserCreatedTrips, getUserParticipatedTrips, deleteTrip, updateTripTitle, getTripsParticipantCounts, Trip } from '../services/tripService';
@@ -378,61 +379,52 @@ const MyTripsPage: React.FC = () => {
       </main>
 
       {/* 제목 수정 모달 */}
-      {editingTripId && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-          onClick={handleCancelEdit}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">여행 일정 제목 수정</h3>
-              <button
-                onClick={handleCancelEdit}
-                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-            <div className="mb-4">
-              <input
-                type="text"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                placeholder="여행 일정 제목을 입력하세요"
-                className="w-full px-4 py-3 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-base font-medium placeholder:text-gray-400 text-gray-900"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSaveEdit();
-                  } else if (e.key === 'Escape') {
-                    handleCancelEdit();
-                  }
-                }}
-              />
-            </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={handleCancelEdit}
-                variant="ghost"
-                className="flex-1"
-                disabled={isUpdating}
-              >
-                취소
-              </Button>
-              <Button
-                onClick={handleSaveEdit}
-                className="flex-1"
-                disabled={isUpdating || !editTitle.trim()}
-              >
-                {isUpdating ? '저장 중...' : '저장'}
-              </Button>
-            </div>
-          </div>
+      <Modal
+        open={!!editingTripId}
+        onClose={handleCancelEdit}
+        titleId="edit-trip-title"
+      >
+        <ModalHeader
+          title="여행 일정 제목 수정"
+          titleId="edit-trip-title"
+          showClose
+          onClose={handleCancelEdit}
+        />
+        <div className="mb-4">
+          <input
+            type="text"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            placeholder="여행 일정 제목을 입력하세요"
+            className="w-full px-4 py-3 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-base font-medium placeholder:text-gray-400 text-gray-900"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSaveEdit();
+              } else if (e.key === 'Escape') {
+                handleCancelEdit();
+              }
+            }}
+          />
         </div>
-      )}
+        <ModalFooter>
+          <Button
+            onClick={handleCancelEdit}
+            variant="ghost"
+            className="flex-1"
+            disabled={isUpdating}
+          >
+            취소
+          </Button>
+          <Button
+            onClick={handleSaveEdit}
+            className="flex-1"
+            disabled={isUpdating || !editTitle.trim()}
+          >
+            {isUpdating ? '저장 중...' : '저장'}
+          </Button>
+        </ModalFooter>
+      </Modal>
       <DialogHost />
     </div>
   );
