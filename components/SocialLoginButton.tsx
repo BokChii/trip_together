@@ -19,12 +19,14 @@ export const SocialLoginButton: React.FC<SocialLoginButtonProps> = ({
   const kakaoClasses = isKakaoDisabled 
     ? `${baseClasses} bg-gray-300 text-gray-500 cursor-not-allowed`
     : `${baseClasses} bg-[#FEE500] hover:bg-[#FDD835] text-[#000000]`;
-  const googleClasses = `${baseClasses} bg-white hover:bg-gray-50 text-gray-700 border border-gray-300`;
+  const googleClasses = disabled
+    ? `${baseClasses} bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed`
+    : `${baseClasses} bg-white hover:bg-gray-50 text-gray-700 border border-gray-300`;
 
   return (
     <button
       onClick={onClick}
-      disabled={isKakaoDisabled}
+      disabled={disabled}
       className={isKakao ? kakaoClasses : googleClasses}
     >
       {isKakao ? (

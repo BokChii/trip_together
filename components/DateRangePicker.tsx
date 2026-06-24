@@ -108,7 +108,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   };
 
   const getCellStyles = (isoDate: string, isCurrentMonth: boolean) => {
-    // 로컬 타임존 기준으로 날짜 비교 (한국 시간대)
     const date = parseLocalDate(isoDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -221,7 +220,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       {/* Grid Body */}
       <div className="grid grid-cols-7 p-2 gap-1 bg-orange-50/30">
         {daysInMonth.map((day, idx) => {
-          const date = new Date(day.isoString);
+          const date = parseLocalDate(day.isoString);
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           const isPast = date < today;

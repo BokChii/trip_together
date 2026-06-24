@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-// @ts-expect-error - @vercel/analytics 타입 선언 문제 (로컬 개발 환경에서 타입 오류 발생)
 import { Analytics } from '@vercel/analytics/react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Calendar } from './components/Calendar';
@@ -7,6 +6,7 @@ import { DateRangePicker } from './components/DateRangePicker';
 import { ModeToggle } from './components/ModeToggle';
 import { Button } from './components/Button';
 import { SocialLoginButton } from './components/SocialLoginButton';
+import { Footer } from './components/Footer';
 import { DateVote, User, VoteType } from './types';
 import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronRight, ChevronLeft, ChevronDown, LogOut } from 'lucide-react';
 import { generateItinerary as generateItineraryGemini } from './services/geminiService';
@@ -32,14 +32,15 @@ import {
 } from './services/tripService';
 import { parseLocalDate } from './utils/dateUtils';
 import { validateDestination } from './utils/inputValidation';
+import { getBestDates, groupContiguousDates, getLongestContiguousRange } from './utils/bestDateRange';
 import LoginPage from './pages/LoginPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import MyTripsPage from './pages/MyTripsPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import { getCurrentUser, signInWithKakao, signInWithGoogle, signOut, getUserProfile } from './services/authService';
 
-// Short ID generator (6 chars)
-const generateId = () => Math.random().toString(36).substring(2, 8);
+// Short ID generator
+const generateId = () => crypto.randomUUID().slice(0, 8);
 
 const TripPage: React.FC = () => {
   const navigate = useNavigate();
@@ -58,6 +59,7 @@ const TripPage: React.FC = () => {
   const [isLoadingTrip, setIsLoadingTrip] = useState(false);
   const [tripStartDate, setTripStartDate] = useState<string | null>(null);
   const [tripEndDate, setTripEndDate] = useState<string | null>(null);
+  const [tripTitle, setTripTitle] = useState<string | null>(null);
   
   // 기간 설정 State (최초 유저용)
   const [startDateInput, setStartDateInput] = useState('');
@@ -233,6 +235,7 @@ const TripPage: React.FC = () => {
             setCurrentTripId(trip.id);
             setShareCode(trip.share_code);
             setDestination(trip.destination);
+            setTripTitle(trip.title || null);
             setTripStartDate(trip.start_date || null);
             setTripEndDate(trip.end_date || null);
 
@@ -352,7 +355,7 @@ const TripPage: React.FC = () => {
         // 에러 발생 시에도 앱이 계속 작동하도록 조용히 처리
         // console.error('❌ Periodic sync: Error fetching votes:', error);
         }
-    }, 3000); // 3초마다 동기화 (서버 부하 최소화)
+    }, 10000); // 10초마다 동기화 (서버 부하 완화)
 
     // console.log('✅ Subscriptions: All subscriptions active');
 
@@ -425,6 +428,7 @@ const TripPage: React.FC = () => {
         // console.log('✅ confirmUser: Trip created', { tripId: newTrip.id, shareCode: newTrip.share_code });
         setCurrentTripId(newTrip.id);
         setShareCode(newTrip.share_code);
+        setTripTitle(newTrip.title || tripTitle || '이름없는 여행 일정');
         setTripStartDate(newTrip.start_date || null);
         setTripEndDate(newTrip.end_date || null);
         
@@ -673,30 +677,20 @@ const TripPage: React.FC = () => {
       return;
     }
 
-    const voteCounts: Record<string, number> = {};
-    votes.forEach(v => {
-        if (v.type === 'available') {
-            voteCounts[v.date] = (voteCounts[v.date] || 0) + 1;
-        }
-    });
-
-    const maxVotes = Math.max(...Object.values(voteCounts), 0);
-    if (maxVotes === 0) {
+    const bestDates = getBestDates(votes);
+    if (bestDates.length === 0) {
         setShowNoDateModal(true);
         return;
     }
 
-    const bestDates = Object.keys(voteCounts).filter(d => voteCounts[d] === maxVotes).sort();
-    const startDate = bestDates[0];
-    const endDate = bestDates[bestDates.length - 1];
-
-    if (!startDate) return;
+    const range = getLongestContiguousRange(bestDates);
+    if (!range) return;
 
     setIsGenerating(true);
     const plan = await generateItineraryGemini({
       destination,
-      startDate,
-      endDate: endDate || startDate
+      startDate: range.startDate,
+      endDate: range.endDate
     });
     setItinerary(plan);
     setIsGenerating(false);
@@ -709,75 +703,29 @@ const TripPage: React.FC = () => {
 
   // 날짜를 연속된 그룹으로 묶고 포맷팅하는 함수
   const formatBestDates = (): { dates: string; participants: string; isoDates: string[] } => {
-    const voteCounts: Record<string, number> = {};
-    votes.forEach(v => {
-      if (v.type === 'available') {
-        voteCounts[v.date] = (voteCounts[v.date] || 0) + 1;
-      }
-    });
-
-    const maxVotes = Math.max(...Object.values(voteCounts), 0);
-    if (maxVotes === 0) {
-      return { dates: '', participants: '', isoDates: [] };
-    }
-
-    // 가장 많이 선택된 날짜들만 필터링 (ISO 문자열 그대로 사용)
-    const bestDates = Object.keys(voteCounts)
-      .filter(d => voteCounts[d] === maxVotes)
-      .sort();
-
+    const bestDates = getBestDates(votes);
     if (bestDates.length === 0) {
       return { dates: '', participants: '', isoDates: [] };
     }
 
-    // 연속된 날짜 그룹으로 묶기 (ISO 문자열 직접 파싱)
-    const groups: string[][] = [];
-    let currentGroup: string[] = [bestDates[0]];
+    const groups = groupContiguousDates(bestDates);
 
-    for (let i = 1; i < bestDates.length; i++) {
-      const prevDate = bestDates[i - 1];
-      const currentDate = bestDates[i];
-      
-      // ISO 문자열을 직접 파싱하여 날짜 차이 계산 (타임존 문제 해결)
-      const [prevYear, prevMonth, prevDay] = prevDate.split('-').map(Number);
-      const [currYear, currMonth, currDay] = currentDate.split('-').map(Number);
-      
-      // 날짜 차이 계산 (로컬 타임존 기준)
-      const prevDateObj = new Date(prevYear, prevMonth - 1, prevDay);
-      const currDateObj = new Date(currYear, currMonth - 1, currDay);
-      const daysDiff = (currDateObj.getTime() - prevDateObj.getTime()) / (1000 * 60 * 60 * 24);
-
-      if (daysDiff === 1) {
-        // 연속된 날짜
-        currentGroup.push(currentDate);
-      } else {
-        // 연속되지 않은 날짜 - 새 그룹 시작
-        groups.push(currentGroup);
-        currentGroup = [currentDate];
-      }
-    }
-    groups.push(currentGroup);
-
-    // 그룹을 문자열로 포맷팅 (ISO 문자열에서 직접 추출)
     const formatGroup = (group: string[]): string => {
       if (group.length === 1) {
-        const [year, month, day] = group[0].split('-').map(Number);
+        const [, month, day] = group[0].split('-').map(Number);
         return `${month}월 ${day}일`;
-      } else {
-        const [startYear, startMonth, startDay] = group[0].split('-').map(Number);
-        const [endYear, endMonth, endDay] = group[group.length - 1].split('-').map(Number);
-        
-        if (startMonth === endMonth) {
-          return `${startMonth}월 ${startDay}~${endDay}일`;
-        } else {
-          return `${startMonth}월 ${startDay}일~${endMonth}월 ${endDay}일`;
-        }
       }
+      const [, startMonth, startDay] = group[0].split('-').map(Number);
+      const [, endMonth, endDay] = group[group.length - 1].split('-').map(Number);
+
+      if (startMonth === endMonth) {
+        return `${startMonth}월 ${startDay}~${endDay}일`;
+      }
+      return `${startMonth}월 ${startDay}일~${endMonth}월 ${endDay}일`;
     };
 
     const datesText = groups.map(formatGroup).join(', ');
 
-    // 일자 선택에 참여한 참가자 명단 추출
     const participantIds = new Set<string>();
     votes.forEach(v => {
       if (v.type === 'available') {
@@ -793,7 +741,7 @@ const TripPage: React.FC = () => {
     return {
       dates: datesText,
       participants: participantNames,
-      isoDates: bestDates // ISO 날짜 배열 반환
+      isoDates: bestDates,
     };
   };
 
@@ -831,9 +779,10 @@ const TripPage: React.FC = () => {
     // 클릭 추적 추가
     trackButtonClick('flight_search', currentTripId || undefined, currentUser?.id);
     
-    const { isoDates } = formatBestDates();
+    const bestDates = getBestDates(votes);
+    const range = getLongestContiguousRange(bestDates);
     
-    if (isoDates.length === 0) {
+    if (!range) {
       alert('먼저 날짜를 선택해주세요.');
       return;
     }
@@ -842,11 +791,8 @@ const TripPage: React.FC = () => {
     setFlightResults([]);
 
     try {
-      // 사용자가 선택한 날짜를 그대로 사용 (YYYY-MM-DD 형식으로 변환)
-      const departureDate = isoDates[0].split('T')[0];
-      const returnDate = isoDates.length > 1 
-        ? isoDates[isoDates.length - 1].split('T')[0] 
-        : undefined;
+      const departureDate = range.startDate;
+      const returnDate = range.endDate !== range.startDate ? range.endDate : undefined;
 
       // 출발일 과거 여부 검증
       const today = new Date();
@@ -896,6 +842,7 @@ const TripPage: React.FC = () => {
     setUsers([]);
     setVotes([]);
     setDestination('제주도');
+    setTripTitle(null);
     setTripStartDate(null);
     setTripEndDate(null);
     setStartDateInput('');
@@ -1024,7 +971,11 @@ const TripPage: React.FC = () => {
                   {/* 다른 참가자의 링크로 접속한 경우 - 최상단에 배치 */}
                   {currentTripId && (
                     <p className="text-base font-bold text-orange-700 mb-3 text-center">
-                      {users[0].name}님의 여행일정 입니다 ✈️
+                      {tripTitle && tripTitle !== '이름없는 여행 일정'
+                        ? `"${tripTitle}" 여행일정입니다 ✈️`
+                        : users.length > 0
+                          ? `${users[0].name}님의 여행일정입니다 ✈️`
+                          : '친구의 여행일정입니다 ✈️'}
                     </p>
                   )}
                   <p className="text-sm text-gray-500 mb-3 font-medium text-center">이미 참여하고 있나요? 이름을 클릭하세요 👇</p>
@@ -1190,32 +1141,7 @@ const TripPage: React.FC = () => {
         </div>
         
         {/* 푸터 */}
-        <footer className="mt-auto pt-6 pb-4 border-t border-orange-100">
-          <div className="text-center space-y-2">
-            <p className="text-xs text-gray-400">
-              © 2025 언제갈래? All rights reserved.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-400">
-              <span>기획: Jay, Shin</span>
-              <span className="hidden sm:inline">•</span>
-              <a 
-                href="mailto:kdshin@freshmilk.kr" 
-                className="hover:text-orange-500 transition-colors"
-              >
-                kdshin@freshmilk.kr
-              </a>
-              <span className="hidden sm:inline">•</span>
-              <a 
-                href="https://forms.gle/MiUa2TrigEMbtbAN8" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-orange-500 hover:text-orange-600 transition-colors underline"
-              >
-                💬 피드백 보내기
-              </a>
-            </div>
-          </div>
-        </footer>
+        <Footer className="mt-auto pt-6 pb-4 bg-transparent" />
         
         {/* 로그인 화면용 튜토리얼 모달 */}
         {showTutorial && (
@@ -1834,34 +1760,7 @@ const TripPage: React.FC = () => {
       </main>
 
       {/* 푸터 */}
-      <footer className="bg-white/80 backdrop-blur-md border-t border-orange-100/50 py-4 sm:py-6 mt-8">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-2">
-            <p className="text-xs text-gray-400">
-              © 2025 언제갈래? All rights reserved.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-400">
-              <span>기획: Jay, Shin</span>
-              <span className="hidden sm:inline">•</span>
-              <a 
-                href="mailto:kdshin@freshmilk.kr" 
-                className="hover:text-orange-500 transition-colors"
-              >
-                kdshin@freshmilk.kr
-              </a>
-              <span className="hidden sm:inline">•</span>
-              <a 
-                href="https://forms.gle/MiUa2TrigEMbtbAN8" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-orange-500 hover:text-orange-600 transition-colors underline"
-              >
-                💬 피드백 보내기
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer className="bg-white/80 backdrop-blur-md mt-8" />
 
       {/* 튜토리얼 모달 */}
       {showTutorial && (
