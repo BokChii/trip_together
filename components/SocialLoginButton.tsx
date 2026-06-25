@@ -14,7 +14,7 @@ export const SocialLoginButton: React.FC<SocialLoginButtonProps> = ({
   const isKakao = provider === 'kakao'; 
   const isKakaoDisabled = disabled;
 
-  const baseClasses = "inline-flex items-center justify-center rounded-lg font-semibold transition-all transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed w-full text-lg sm:text-xl py-5 sm:py-6 min-h-[56px] shadow-md flex items-center justify-center gap-3";
+  const baseClasses = "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed w-full text-base py-4 min-h-[52px] flex items-center justify-center gap-3";
   
   const kakaoClasses = isKakaoDisabled 
     ? `${baseClasses} bg-gray-300 text-gray-500 cursor-not-allowed`

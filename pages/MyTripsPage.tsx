@@ -170,7 +170,7 @@ const MyTripsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#faf8f5]">
+      <div className="min-h-screen flex items-center justify-center bg-surface">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
           <p className="text-gray-600">로딩 중...</p>
@@ -182,20 +182,20 @@ const MyTripsPage: React.FC = () => {
   const displayName = userProfile?.display_name || user?.email?.split('@')[0] || '사용자';
 
   return (
-    <div className="min-h-screen bg-[#faf8f5]">
+    <div className="min-h-screen bg-surface">
       {/* Navbar */}
-      <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-orange-100/50">
+      <nav className="bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-stone-200/80">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-12 sm:h-16 items-center">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <div className="bg-orange-600 p-1 sm:p-1.5 rounded-lg">
                 <Plane className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="currentColor" />
               </div>
-              <span className="font-bold text-xl sm:text-2xl text-gray-900 tracking-tight">언제갈래</span>
+              <span className="font-semibold text-xl sm:text-2xl text-stone-900 tracking-tight">언제갈래</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="inline-block text-xs sm:text-sm text-gray-600 bg-orange-50/50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg">
-                반가워요, <strong className="text-orange-700">{displayName}</strong>님
+              <span className="inline-block text-xs sm:text-sm text-stone-600 bg-stone-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg">
+                <span className="text-stone-800">{displayName}</span>님
               </span>
               {isAdminUser && (
                 <button
@@ -209,7 +209,7 @@ const MyTripsPage: React.FC = () => {
               )}
               <button 
                 onClick={handleLogout}
-                className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors flex items-center gap-1.5"
+                className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">로그아웃</span>
@@ -222,8 +222,8 @@ const MyTripsPage: React.FC = () => {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* 헤더 */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">내 여행 일정</h1>
-          <p className="text-gray-600">내가 생성한 여행과 참여한 여행을 관리하세요</p>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-stone-900 mb-2">내 여행 일정</h1>
+          <p className="text-stone-600 text-sm">생성한 여행과 참여한 여행을 관리하세요</p>
         </div>
 
         {/* 새 여행 만들기 버튼 */}
@@ -250,7 +250,7 @@ const MyTripsPage: React.FC = () => {
                 <div
                   key={trip.id}
                   onClick={() => handleTripClick(trip.share_code)}
-                  className="bg-white rounded-xl p-5 shadow-sm border border-orange-100/50 hover:shadow-md transition-all cursor-pointer group"
+                  className="ui-card p-5 hover:border-stone-300 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-lg font-semibold text-gray-900 flex-1">
@@ -320,7 +320,7 @@ const MyTripsPage: React.FC = () => {
                 <div
                   key={trip.id}
                   onClick={() => handleTripClick(trip.share_code)}
-                  className="bg-white rounded-xl p-5 shadow-sm border border-orange-100/50 hover:shadow-md transition-all cursor-pointer group"
+                  className="ui-card p-5 hover:border-stone-300 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-lg font-semibold text-gray-900 flex-1">
@@ -366,10 +366,10 @@ const MyTripsPage: React.FC = () => {
 
         {/* 빈 상태 */}
         {createdTrips.length === 0 && participatedTrips.length === 0 && (
-          <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-orange-100/50">
-            <Plane className="w-16 h-16 text-orange-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">아직 여행 일정이 없어요</h3>
-            <p className="text-gray-600 mb-6">새로운 여행 일정을 만들어보세요!</p>
+          <div className="ui-card p-12 text-center">
+            <Plane className="w-16 h-16 text-stone-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-stone-800 mb-2">아직 여행 일정이 없습니다</h3>
+            <p className="text-stone-600 text-sm mb-6">새 여행 일정을 만들어 보세요</p>
             <Button onClick={handleCreateTrip}>
               <Plus className="w-5 h-5 mr-2" />
               여행 만들기
@@ -396,7 +396,7 @@ const MyTripsPage: React.FC = () => {
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
             placeholder="여행 일정 제목을 입력하세요"
-            className="w-full px-4 py-3 rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-base font-medium placeholder:text-gray-400 text-gray-900"
+            className="w-full px-4 py-3 rounded-lg bg-stone-50 border border-stone-200 focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all text-base font-medium placeholder:text-stone-400 text-stone-900"
             autoFocus
             onKeyDown={(e) => {
               if (e.key === 'Enter') {

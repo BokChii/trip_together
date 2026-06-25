@@ -5,16 +5,49 @@
 @tailwind utilities;
 
 :root {
+  /* Brand (unchanged) */
   --color-brand: #f97316;
   --color-brand-dark: #ea580c;
   --color-brand-light: #fb923c;
-  --color-surface: #faf8f5;
-  --color-surface-warm: #fff7ed;
+
+  /* Surfaces */
+  --color-surface: #fafaf9;
+  --color-surface-elevated: #ffffff;
+  --color-border: rgba(231, 229, 228, 0.9);
+  --color-border-subtle: rgba(245, 245, 244, 1);
+
+  /* Text */
+  --color-text-primary: #1c1917;
+  --color-text-secondary: #57534e;
+  --color-text-muted: #a8a29e;
+
+  /* Radius & shadow */
+  --radius-card: 12px;
+  --radius-button: 8px;
+  --shadow-sm: 0 1px 2px 0 rgb(28 25 23 / 0.04);
+  --shadow-card: 0 1px 3px 0 rgb(28 25 23 / 0.06), 0 1px 2px -1px rgb(28 25 23 / 0.04);
 }
 
 body {
   font-family: 'Pretendard', sans-serif;
   background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .ui-card {
+    @apply bg-white rounded-xl border border-stone-200/80;
+    box-shadow: var(--shadow-card);
+  }
+
+  .ui-section-label {
+    @apply text-xs font-medium uppercase tracking-wide text-stone-500;
+  }
+
+  .ui-accent-bar {
+    @apply border-l-4 border-orange-500 pl-4;
+  }
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -26,10 +59,10 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--color-brand-light);
+  background-color: #d6d3d1;
   border-radius: 20px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-brand);
+  background-color: var(--color-brand-light);
 }

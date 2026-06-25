@@ -9,28 +9,28 @@ interface ModeToggleProps {
 
 export const ModeToggle: React.FC<ModeToggleProps> = ({ mode, setMode }) => {
   return (
-    <div className="flex bg-white border border-gray-100 p-1.5 rounded-full shadow-sm">
+    <div className="flex bg-stone-100 border border-stone-200/80 p-1 rounded-lg">
       <button
         onClick={() => setMode('available')}
-        className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${
+        className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 min-h-[44px] rounded-md text-xs sm:text-sm font-medium transition-colors ${
           mode === 'available'
-            ? 'bg-orange-400 text-white shadow-md transform scale-105'
-            : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+            ? 'bg-orange-600 text-white'
+            : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
         }`}
       >
-        <Check className="w-4 h-4" strokeWidth={3} />
+        <Check className="w-4 h-4" strokeWidth={2.5} />
         <span className="hidden xs:inline">가능해요</span>
         <span className="xs:hidden">가능</span>
       </button>
       <button
         onClick={() => setMode('unavailable')}
-        className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${
+        className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 min-h-[44px] rounded-md text-xs sm:text-sm font-medium transition-colors ${
           mode === 'unavailable'
-            ? 'bg-gray-400 text-white shadow-md transform scale-105'
-            : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+            ? 'bg-stone-600 text-white'
+            : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
         }`}
       >
-        <X className="w-4 h-4" strokeWidth={3} />
+        <X className="w-4 h-4" strokeWidth={2.5} />
         <span className="hidden xs:inline">안돼요</span>
         <span className="xs:hidden">불가</span>
       </button>

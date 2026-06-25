@@ -908,10 +908,10 @@ const TripPage: React.FC = () => {
   // Loading state
   if (isLoadingTrip) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#faf8f5]">
+      <div className="min-h-screen flex items-center justify-center bg-surface">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">일정을 불러오는 중...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <p className="text-stone-600 text-sm">일정을 불러오는 중...</p>
         </div>
       </div>
     );
@@ -919,28 +919,27 @@ const TripPage: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#fff7ed] p-4 font-sans">
+      <div className="min-h-screen flex flex-col bg-surface p-4 font-sans">
         <div className="flex-1 flex items-center justify-center">
-          <div className="bg-white p-10 sm:p-12 rounded-2xl shadow-md max-w-xl w-full text-center border border-orange-100/50">
+          <div className="ui-card p-10 sm:p-12 max-w-xl w-full text-center">
           <div className="mb-4 sm:mb-6 flex justify-center">
-            <div className="bg-orange-50 p-6 rounded-xl">
-              <Plane className="w-12 h-12 text-orange-600" strokeWidth={2.5} />
+            <div className="bg-orange-50 p-5 rounded-xl border border-orange-100/60">
+              <Plane className="w-10 h-10 text-orange-600" strokeWidth={2} />
             </div>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-2 sm:mb-3 tracking-tight">언제갈래 ✈️</h1>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-stone-900 mb-2 sm:mb-3 tracking-tight">언제갈래</h1>
           
-          <p className="text-base sm:text-lg text-gray-500 mb-4 sm:mb-6 leading-relaxed">
-            친구들과 떠나는 설레는 여행!<br/>
-            우리 언제 떠날지 여기에서 정해봐요.
+          <p className="text-base text-stone-600 mb-4 sm:mb-6 leading-relaxed">
+            함께 갈 날짜를 맞춰보세요.
           </p>
           
           {/* 로그인한 사용자에게 표시할 UI */}
           {authUser && (
-            <div className="mb-4 sm:mb-6 p-4 bg-orange-50/50 border border-orange-100 rounded-xl">
+            <div className="mb-4 sm:mb-6 p-4 bg-stone-50 border border-stone-200/80 rounded-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <UserIcon className="w-5 h-5 text-orange-600" />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-stone-700">
                     {userProfile?.display_name || authUser.user_metadata?.full_name || authUser.email}님으로 로그인됨
                   </span>
                 </div>
@@ -967,9 +966,9 @@ const TripPage: React.FC = () => {
           
           {/* 서비스 통계 배너 */}
           {!isLoadingStats && tripsCount !== null && (
-            <div className="mb-3 sm:mb-5 p-3 bg-gray-50 border border-gray-200 rounded-xl">
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed text-center">
-                현재 <span className="font-semibold text-gray-800">언제갈래</span>를 통해{' '}
+            <div className="mb-3 sm:mb-5 p-3 bg-stone-50 border border-stone-200/80 rounded-xl">
+              <p className="text-sm text-stone-600 leading-relaxed text-center">
+                현재 <span className="font-medium text-stone-800">언제갈래</span>를 통해{' '}
                 <span className="font-semibold text-orange-600">{tripsCount.toLocaleString('ko-KR')}개</span>의 여행 일정이 계획되고 있습니다
               </p>
             </div>
@@ -977,12 +976,12 @@ const TripPage: React.FC = () => {
           
           {/* 초대 링크 접속 시 기간 표시 */}
           {currentTripId && (tripStartDate || tripEndDate) && (
-            <div className="mb-3 sm:mb-4 p-4 bg-orange-50/50 border border-orange-100 rounded-xl">
+            <div className="mb-3 sm:mb-4 p-4 bg-stone-50 border border-stone-200/80 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
                 <CalendarIcon className="w-4 h-4 text-orange-600" />
-                <span className="text-sm font-semibold text-gray-800">여행 기간</span>
+                <span className="text-sm font-medium text-stone-800">여행 기간</span>
               </div>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-stone-600">
                 {tripStartDate && tripEndDate 
                   ? `${new Date(tripStartDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} ~ ${new Date(tripEndDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}`
                   : tripStartDate 
@@ -997,27 +996,26 @@ const TripPage: React.FC = () => {
 
           {/* Existing Users Selection for Re-login - 여행 기간과 닉네임 입력칸 사이로 이동 */}
           {users.length > 0 && (
-              <div className="mb-3 sm:mb-4 p-4 bg-white border border-orange-100 rounded-xl">
-                  {/* 다른 참가자의 링크로 접속한 경우 - 최상단에 배치 */}
+              <div className="mb-3 sm:mb-4 p-4 bg-stone-50 border border-stone-200/80 rounded-xl">
                   {currentTripId && (
-                    <p className="text-base font-bold text-orange-700 mb-3 text-center">
+                    <p className="text-base font-medium text-stone-800 mb-3 text-center">
                       {tripTitle && tripTitle !== '이름없는 여행 일정'
-                        ? `"${tripTitle}" 여행일정입니다 ✈️`
+                        ? `"${tripTitle}" 여행 일정`
                         : users.length > 0
-                          ? `${users[0].name}님의 여행일정입니다 ✈️`
-                          : '친구의 여행일정입니다 ✈️'}
+                          ? `${users[0].name}님의 여행 일정`
+                          : '친구의 여행 일정'}
                     </p>
                   )}
-                  <p className="text-sm text-gray-500 mb-3 font-medium text-center">이미 참여하고 있나요? 이름을 클릭하세요 👇</p>
+                  <p className="text-sm text-stone-500 mb-3 text-center">이미 참여 중이라면 이름을 선택하세요</p>
                   <div className="flex flex-wrap justify-center gap-2">
                       {users.map(u => (
                           <button
                             key={u.id}
                             type="button"
                             onClick={() => confirmUser(u)}
-                            className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] bg-orange-50 hover:bg-orange-100 text-gray-700 hover:text-orange-600 rounded-full text-sm border-2 border-orange-200 hover:border-orange-300 transition-all"
+                            className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] bg-white hover:bg-stone-50 text-stone-700 hover:text-orange-700 rounded-lg text-sm border border-stone-200 hover:border-orange-200 transition-colors"
                           >
-                              <span className="font-bold">{u.name}</span>
+                              <span className="font-medium">{u.name}</span>
                               <ArrowRight className="w-3 h-3" />
                           </button>
                       ))}
@@ -1029,7 +1027,7 @@ const TripPage: React.FC = () => {
             <input
               type="text"
               placeholder="닉네임이 뭐에요?"
-              className="w-full px-6 sm:px-8 py-4 sm:py-5 min-h-[56px] rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-center text-lg sm:text-xl font-medium placeholder:text-gray-400 text-gray-900"
+              className="w-full px-6 sm:px-8 py-4 sm:py-5 min-h-[56px] rounded-lg bg-stone-50 border border-stone-200 focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all text-center text-lg font-medium placeholder:text-stone-400 text-stone-900"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               required
@@ -1040,7 +1038,7 @@ const TripPage: React.FC = () => {
               <input
                 type="text"
                 placeholder="여행 일정 제목 (선택)"
-                className="w-full px-6 sm:px-8 py-4 sm:py-5 min-h-[56px] rounded-lg bg-gray-50 border-2 border-transparent focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-200 outline-none transition-all text-center text-lg sm:text-xl font-medium placeholder:text-gray-400 text-gray-900"
+                className="w-full px-6 sm:px-8 py-4 sm:py-5 min-h-[56px] rounded-lg bg-stone-50 border border-stone-200 focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all text-center text-lg font-medium placeholder:text-stone-400 text-stone-900"
                 value={tripTitleInput}
                 onChange={(e) => setTripTitleInput(e.target.value)}
               />
@@ -1049,7 +1047,7 @@ const TripPage: React.FC = () => {
             {/* 최초 유저만 기간 설정 표시 */}
             {!currentTripId && users.length === 0 && (
               <div className="pt-2 pb-1">
-                <div className="bg-white border-2 border-gray-200 rounded-xl p-5 sm:p-6 hover:border-orange-300 transition-colors">
+                <div className="bg-white border border-stone-200 rounded-xl p-5 sm:p-6 hover:border-stone-300 transition-colors">
                   <button
                     type="button"
                     onClick={() => setShowDateRangePicker(!showDateRangePicker)}
@@ -1057,7 +1055,7 @@ const TripPage: React.FC = () => {
                   >
                     <div className="flex items-center gap-2">
                       <CalendarIcon className="w-5 h-5 text-orange-500" />
-                      <p className="text-base font-medium text-gray-700">여행 기간 설정 <span className="text-sm text-gray-400 font-normal">(선택)</span></p>
+                      <p className="text-base font-medium text-stone-700">여행 기간 설정 <span className="text-sm text-stone-400 font-normal">(선택)</span></p>
         </div>
                     <ChevronDown 
                       className={`w-5 h-5 text-orange-500 transition-transform duration-200 ${
@@ -1068,13 +1066,13 @@ const TripPage: React.FC = () => {
                   
                   {/* 선택된 날짜 범위 표시 */}
                   {(dateRangeStart || dateRangeEnd) && (
-                    <div className="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <div className="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-200/60">
                       <div className="flex items-center justify-center gap-2 text-sm">
-                        <span className="font-semibold text-orange-700">
+                        <span className="font-medium text-stone-800">
                           {dateRangeStart ? new Date(dateRangeStart).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '시작일'}
                         </span>
-                        <span className="text-orange-400">~</span>
-                        <span className="font-semibold text-orange-700">
+                        <span className="text-stone-400">~</span>
+                        <span className="font-medium text-stone-800">
                           {dateRangeEnd ? new Date(dateRangeEnd).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '종료일'}
                         </span>
                       </div>
@@ -1095,26 +1093,25 @@ const TripPage: React.FC = () => {
               </div>
             )}
             
-            <Button type="submit" className="w-full text-lg sm:text-xl py-5 sm:py-6 min-h-[56px] shadow-md" size="lg">시작하기</Button>
+            <Button type="submit" className="w-full" size="lg">시작하기</Button>
           </form>
           
           {/* OAuth 로그인 버튼 - 로그인하지 않은 사용자에게만 표시 */}
           {!authUser && (
             <>
               {/* 로그인 유도 텍스트 */}
-              <div className="mb-3 sm:mb-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                <p className="text-xs sm:text-sm text-gray-600 text-center leading-relaxed">
-                  <span className="font-semibold text-orange-600">로그인</span>해서 내 여행 일정을 관리하고 여러 여행을 저장하세요 ✈️
+              <div className="mb-3 sm:mb-4 p-3 bg-stone-50 border border-stone-200/80 rounded-xl">
+                <p className="text-xs sm:text-sm text-stone-600 text-center leading-relaxed">
+                  <span className="font-medium text-orange-600">로그인</span>하면 내 여행 일정을 저장하고 관리할 수 있어요
                 </p>
               </div>
 
-              {/* 구분선 - OAuth 로그인 옵션 */}
               <div className="relative my-4 sm:my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
+                  <div className="w-full border-t border-stone-200"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-gray-500">또는</span>
+                  <span className="bg-white px-2 text-stone-500">또는</span>
                 </div>
               </div>
 
@@ -1180,16 +1177,16 @@ const TripPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] pb-12 sm:pb-20">
+    <div className="min-h-screen bg-surface pb-12 sm:pb-20">
       {/* Navbar */}
-      <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-orange-100/50">
+      <nav className="bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-stone-200/80">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-12 sm:h-16 items-center">
             <div className="flex items-center gap-1.5 sm:gap-2">
                <div className="bg-orange-600 p-1 sm:p-1.5 rounded-lg">
                    <Plane className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="currentColor" />
                </div>
-               <span className="font-bold text-xl sm:text-2xl text-gray-900 tracking-tight">언제갈래</span>
+               <span className="font-semibold text-xl sm:text-2xl text-stone-900 tracking-tight">언제갈래</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <button 
@@ -1204,12 +1201,12 @@ const TripPage: React.FC = () => {
               {/* 로그인한 사용자 */}
               {authUser ? (
                 <>
-                  <span className="hidden sm:inline-block text-sm text-gray-600 bg-orange-50/50 px-3 py-1 rounded-lg">
-                    반가워요, <strong className="text-orange-700">{userProfile?.display_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || '사용자'}</strong>님
+                  <span className="hidden sm:inline-block text-sm text-stone-600 bg-stone-100 px-3 py-1 rounded-lg">
+                    <span className="text-stone-800">{userProfile?.display_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || '사용자'}</span>님
                   </span>
                   <button 
                     onClick={() => navigate('/my-trips')}
-                    className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors"
+                    className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-stone-500 hover:text-stone-800 transition-colors"
                   >
                     <span className="hidden sm:inline">마이 페이지</span>
                     <span className="sm:hidden">마이</span>
@@ -1226,7 +1223,7 @@ const TripPage: React.FC = () => {
                         void alert('로그아웃에 실패했습니다.');
                       }
                     }}
-                    className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors flex items-center gap-1.5"
+                    className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5"
                   >
                     <LogOut className="w-4 h-4" />
                     <span className="hidden sm:inline">로그아웃</span>
@@ -1234,13 +1231,13 @@ const TripPage: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <span className="hidden sm:inline-block text-sm text-gray-600 bg-orange-50/50 px-3 py-1 rounded-lg">
-                    반가워요, <strong className="text-orange-700">{currentUser.name}</strong>님
+                  <span className="hidden sm:inline-block text-sm text-stone-600 bg-stone-100 px-3 py-1 rounded-lg">
+                    <span className="text-stone-800">{currentUser.name}</span>님
                   </span>
                   <div className="flex items-center gap-2">
-                    <div className="hidden sm:block px-2 py-1 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/50 rounded-lg">
-                      <p className="text-xs text-gray-700 whitespace-nowrap">
-                        <span className="font-semibold text-orange-600">로그인</span>해서 여러 여행 저장
+                    <div className="hidden sm:block px-2 py-1 bg-stone-50 border border-stone-200/80 rounded-lg">
+                      <p className="text-xs text-stone-600 whitespace-nowrap">
+                        <span className="font-medium text-orange-600">로그인</span>하면 여행을 저장할 수 있어요
                       </p>
                     </div>
                     <button 
@@ -1255,7 +1252,7 @@ const TripPage: React.FC = () => {
                     </button>
                     <button 
                       onClick={handleExit} 
-                      className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-gray-500 hover:text-orange-600 transition-colors"
+                      className="min-h-[44px] px-2 sm:px-3 text-xs font-medium text-stone-500 hover:text-stone-800 transition-colors"
                     >
                       나가기
                     </button>
@@ -1270,14 +1267,14 @@ const TripPage: React.FC = () => {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-8 space-y-2 sm:space-y-4">
         
         {/* 친구 초대하기 - 가이드 아래, 캘린더 위로 이동 */}
-        <div className="bg-white p-3 sm:p-5 rounded-xl shadow-sm border border-orange-100/50">
+        <div className="ui-card p-3 sm:p-5">
           <div className="flex items-center justify-between gap-3">
              <div className="flex flex-col gap-0.5 sm:gap-1">
-              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <Share2 className="w-4 h-4 text-orange-500" />
+              <h3 className="text-sm font-medium text-stone-800 flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-orange-600" />
                 친구 초대하기
               </h3>
-              <p className="text-xs text-gray-500">링크를 복사해 친구들에게 공유하세요</p>
+              <p className="text-xs text-stone-500">링크를 복사해 공유하세요</p>
              </div>
                <Button 
                   variant="secondary" 
@@ -1293,13 +1290,13 @@ const TripPage: React.FC = () => {
 
            {/* Generated Link Display */}
            {generatedUrl && (
-            <div className="mt-4 pt-4 border-t border-orange-100/50">
-               <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl">
+            <div className="mt-4 pt-4 border-t border-stone-200/80">
+               <div className="flex items-center gap-2 p-3 bg-stone-50 border border-stone-200/80 rounded-lg">
                  <input 
                    type="text" 
                    readOnly 
                    value={generatedUrl} 
-                   className="flex-1 bg-white border border-orange-200 rounded-lg px-4 py-2.5 text-xs sm:text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                   className="flex-1 bg-white border border-stone-200 rounded-lg px-4 py-2.5 text-xs sm:text-sm text-stone-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                    onClick={(e) => e.currentTarget.select()}
                  />
                  <Button size="sm" onClick={() => {
@@ -1309,20 +1306,20 @@ const TripPage: React.FC = () => {
                  }}>
                    {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                  </Button>
-                 <button onClick={() => setGeneratedUrl(null)} className="p-2 text-gray-400 hover:text-gray-600">
+                 <button onClick={() => setGeneratedUrl(null)} className="p-2 text-stone-400 hover:text-stone-600">
                     <X className="w-4 h-4" />
                  </button>
                </div>
-               <p className="text-xs text-orange-600 mt-2 ml-2 font-medium">✨ 이 링크를 친구들에게 보내주세요!</p>
+               <p className="text-xs text-stone-500 mt-2 ml-2">링크를 복사해 초대하세요</p>
              </div>
            )}
         </div>
         
         {/* ModeToggle - 가능/불가 토글 (항상 표시, Sticky) */}
-        <div className="sticky top-12 sm:top-16 z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 shadow-sm -mx-4 sm:mx-0 px-4 sm:px-0 mb-2 sm:mb-4">
-          <div className="bg-white p-2.5 sm:p-4 rounded-b-[1.5rem]">
+        <div className="sticky top-12 sm:top-16 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200/80 -mx-4 sm:mx-0 px-4 sm:px-0 mb-2 sm:mb-4">
+          <div className="bg-white p-2.5 sm:p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-gray-800">날짜 선택 모드</p>
+              <p className="text-sm font-medium text-stone-800">날짜 선택 모드</p>
               <ModeToggle mode={voteMode} setMode={setVoteMode} />
             </div>
           </div>
@@ -1330,22 +1327,22 @@ const TripPage: React.FC = () => {
 
         {/* 참여자 목록 - Sticky로 변경 (캘린더 바로 위) */}
         {users.length > 1 && (
-          <div className="sticky top-[calc(3rem+60px)] sm:top-[calc(4rem+80px)] z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 shadow-sm -mx-4 sm:mx-0 px-4 sm:px-0 mb-2 sm:mb-4">
-            <div className="bg-white p-2.5 sm:p-4 rounded-b-[1.5rem]">
+          <div className="sticky top-[calc(3rem+60px)] sm:top-[calc(4rem+80px)] z-40 bg-white/95 backdrop-blur-md border-b border-stone-200/80 -mx-4 sm:mx-0 px-4 sm:px-0 mb-2 sm:mb-4">
+            <div className="bg-white p-2.5 sm:p-4">
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <UserIcon className="w-5 h-5 text-orange-500" />
-              <h3 className="text-sm font-semibold text-gray-700">참여자</h3>
-              <span className="text-xs text-gray-400">({users.length}명)</span>
+              <UserIcon className="w-5 h-5 text-orange-600" />
+              <h3 className="text-sm font-medium text-stone-800">참여자</h3>
+              <span className="text-xs text-stone-400">({users.length}명)</span>
             </div>
             <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
               <div className="flex gap-2 min-w-max sm:flex-wrap sm:min-w-0">
                 {/* "가장 많이 가능" 버튼 추가 */}
                 <button
                   onClick={() => setSelectedUserId(selectedUserId === 'all' ? null : 'all')}
-                  className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                     selectedUserId === 'all'
-                      ? 'bg-gradient-to-r from-orange-400 to-red-400 text-white shadow-md scale-105'
-                      : 'bg-gradient-to-r from-orange-50 to-rose-50 text-orange-700 hover:from-orange-100 hover:to-rose-100 hover:scale-105 border-2 border-orange-200'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-orange-50 text-orange-800 border border-orange-200/60 hover:bg-orange-100/80'
                   }`}
                 >
                   <Crown className="w-4 h-4" />
@@ -1363,16 +1360,16 @@ const TripPage: React.FC = () => {
                     <button
                       key={user.id}
                       onClick={() => setSelectedUserId(isSelected ? null : user.id)}
-                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap relative ${
+                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap relative ${
                         isSelected
-                          ? 'bg-orange-500 text-white shadow-md scale-105'
+                          ? 'bg-orange-600 text-white'
                           : isCurrentUser
-                            ? 'bg-orange-200 text-orange-800 border-2 border-orange-400 font-semibold hover:bg-orange-300'
-                            : 'bg-orange-50 text-orange-700 hover:bg-orange-100 hover:scale-105'
+                            ? 'bg-orange-50 text-orange-800 border border-orange-300 font-medium hover:bg-orange-100/80'
+                            : 'bg-stone-50 text-stone-700 border border-stone-200 hover:bg-stone-100'
                       }`}
                     >
                       {isCurrentUser && (
-                        <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                        <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">
                           나
                         </span>
                       )}
@@ -1397,13 +1394,13 @@ const TripPage: React.FC = () => {
               </div>
             </div>
               {selectedUserId === 'all' && (
-                <p className="text-xs text-orange-600 mt-3 font-medium">
-                  👆 가장 많은 참여자가 가능한 날짜만 표시됩니다
+                <p className="text-xs text-stone-500 mt-3">
+                  가장 많은 참여자가 가능한 날짜만 표시됩니다
                 </p>
               )}
               {selectedUserId && selectedUserId !== 'all' && (
-                <p className="text-xs text-orange-600 mt-3 font-medium">
-                  👆 {users.find(u => u.id === selectedUserId)?.name}님이 선택한 날짜만 표시됩니다
+                <p className="text-xs text-stone-500 mt-3">
+                  {users.find(u => u.id === selectedUserId)?.name}님이 선택한 날짜만 표시됩니다
                 </p>
               )}
             </div>
@@ -1426,32 +1423,32 @@ const TripPage: React.FC = () => {
         />
 
         {/* Best Dates Copy Section */}
-        <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-orange-100/50">
+        <div className="ui-card p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex-1">
-              <h3 className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                <CalendarHeart className="w-5 h-5 text-orange-500" />
-                📅 가장 많이 가능한 일정
+              <h3 className="text-base font-medium text-stone-900 mb-2 flex items-center gap-2">
+                <CalendarHeart className="w-5 h-5 text-orange-600" />
+                가장 많이 가능한 일정
               </h3>
               {formatBestDates().dates ? (
                 <div className="space-y-1">
-                  <p className="text-sm text-gray-700 font-medium">
+                  <p className="text-sm text-stone-700 font-medium">
                     {formatBestDates().dates}
                   </p>
                   {formatBestDates().participants && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-stone-500">
                       참여자: {formatBestDates().participants}
                     </p>
                   )}
                 </div>
               ) : (
-                <p className="text-xs text-gray-500">아직 선택된 날짜가 없습니다</p>
+                <p className="text-xs text-stone-500">아직 선택된 날짜가 없습니다</p>
               )}
             </div>
             <Button
               onClick={handleCopyBestDates}
               disabled={!formatBestDates().dates}
-              className="bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="whitespace-nowrap"
             >
               <Copy className="w-4 h-4 mr-2" />
               복사하기
@@ -1461,21 +1458,21 @@ const TripPage: React.FC = () => {
 
         {/* Flight Search Section */}
         {formatBestDates().isoDates.length > 0 && (
-          <div className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-orange-100/50 mt-4">
+          <div className="ui-card p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-4">
-              <Plane className="w-5 h-5 text-orange-500" />
-              <h3 className="text-base font-semibold text-gray-800">
-                ✈️ 최저가 항공권 검색
+              <Plane className="w-5 h-5 text-orange-600" />
+              <h3 className="text-base font-medium text-stone-900">
+                최저가 항공권 검색
               </h3>
-              <span className="text-xs text-white bg-orange-600 px-2 py-1 rounded-full font-medium">
-                테스트 단계입니다
+              <span className="text-xs text-orange-700 bg-orange-50 border border-orange-200/60 px-2 py-0.5 rounded-md font-medium">
+                테스트 단계
               </span>
             </div>
             
             <div className="space-y-3 mb-4">
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
                     출발지
                   </label>
                   <AirportAutocompleteInput
@@ -1486,8 +1483,8 @@ const TripPage: React.FC = () => {
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    목적지 <span className="text-gray-400 font-normal">(선택, 비우면 인기 목적지 전체)</span>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">
+                    목적지 <span className="text-stone-400 font-normal">(선택, 비우면 인기 목적지 전체)</span>
                   </label>
                   <AirportAutocompleteInput
                     value={flightDestination}
@@ -1501,7 +1498,7 @@ const TripPage: React.FC = () => {
                 onClick={handleSearchFlights}
                 isLoading={isSearchingFlights}
                 disabled={isSearchingFlights}
-                className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white"
+                className="w-full sm:w-auto"
               >
                 {isSearchingFlights ? '검색 중...' : '항공권 검색'}
               </Button>
@@ -1510,19 +1507,19 @@ const TripPage: React.FC = () => {
             {/* 검색 결과 */}
             {flightResults.length > 0 && (
               <div className="mt-4 space-y-3">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-xs text-blue-700">
-                    ⚠️ 표시된 가격은 Amadeus API 기준 참고용 가격입니다. 실제 예약 시 Google Flights에서 확인되는 가격과 다를 수 있습니다.
+                <div className="bg-stone-50 border border-stone-200 rounded-lg p-3">
+                  <p className="text-xs text-stone-600">
+                    표시된 가격은 Amadeus API 기준 참고용입니다. 실제 예약 시 Google Flights에서 확인되는 가격과 다를 수 있습니다.
                   </p>
                 </div>
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-stone-700">
                   검색 결과 ({flightResults.length}개)
                 </p>
                 <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
                   {flightResults.map((flight, idx) => (
                     <div
                       key={idx}
-                      className="border border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors bg-gray-50/50"
+                      className="border border-stone-200 rounded-lg p-4 hover:border-stone-300 transition-colors bg-stone-50/50"
                     >
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div className="flex-1">
@@ -1576,76 +1573,66 @@ const TripPage: React.FC = () => {
         )}
 
         {/* 사용법 보기 */}
-        <div className="bg-white rounded-xl shadow-sm border border-orange-100/50 p-4">
+        <div className="ui-card p-4">
           <button
             onClick={() => setShowTutorial(true)}
-            className="w-full flex items-center justify-between hover:bg-orange-50 transition-colors rounded-lg p-2 -m-2"
+            className="w-full flex items-center justify-between hover:bg-stone-50 transition-colors rounded-lg p-2 -m-2"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-orange-50 p-2 rounded-lg">
+              <div className="bg-orange-50 p-2 rounded-lg border border-orange-100/60">
                 <BookOpen className="w-5 h-5 text-orange-600" />
               </div>
               <div className="text-left">
-                <h3 className="text-sm font-bold text-gray-800">사용법 보기</h3>
-                <p className="text-xs text-gray-500">언제갈래? 서비스 이용 방법</p>
+                <h3 className="text-sm font-medium text-stone-800">사용법 보기</h3>
+                <p className="text-xs text-stone-500">서비스 이용 방법 안내</p>
               </div>
             </div>
-            <ChevronDown className="w-5 h-5 text-gray-400 -rotate-90" />
+            <ChevronDown className="w-5 h-5 text-stone-400 -rotate-90" />
           </button>
         </div>
 
         {/* AI Itinerary Section */}
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 sm:p-10 text-white shadow-md overflow-hidden relative">
-           {/* Background Decoration */}
-           <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-           <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-
-           <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
+        <div className="ui-card p-6 sm:p-8 ui-accent-bar">
+           <div className="flex flex-col md:flex-row gap-8 items-start">
              <div className="flex-1 space-y-4">
-                <div className="flex items-center gap-2 text-white font-medium bg-white/20 w-fit px-3 py-1 rounded-lg backdrop-blur-sm">
-                  <MapPin className="w-4 h-4" />
-                  <span>AI 여행 플래너</span>
-                </div>
-                <h3 className="text-2xl sm:text-4xl font-bold leading-tight">
-                    어디로 떠나볼까요?
+                <p className="ui-section-label">AI 여행 플래너</p>
+                <h3 className="text-xl sm:text-2xl font-semibold text-stone-900 leading-tight">
+                    여행지를 알려주세요
                 </h3>
-                <p className="text-white/90 max-w-md">
-                    날짜가 정해졌나요? 여행지만 알려주세요.<br/>
-                    <strong>Gemini</strong>가 <strong>딱 맞는 일정</strong>을 추천해드릴게요! 🏝️
+                <p className="text-sm text-stone-600 max-w-md leading-relaxed">
+                    선택한 날짜를 기준으로 AI가 여행 일정 초안을 생성합니다.
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-2 max-w-md mt-6">
+                <div className="flex flex-col sm:flex-row gap-2 max-w-md mt-4">
                     <div className="relative flex-grow">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 pointer-events-none" />
                         <input 
                             type="text" 
                             value={destination}
                             onChange={(e) => handleDestinationChange(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3.5 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-300/50 border-none shadow-md"
+                            className="w-full pl-11 pr-4 py-3 rounded-lg bg-stone-50 border border-stone-200 text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-orange-400 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                             placeholder="예: 제주도, 오사카..."
                         />
                     </div>
                     <Button 
                         onClick={handleGenerateItinerary} 
                         isLoading={isGenerating}
-                        variant="ai-planner"
-                        className="px-8 py-3.5"
+                        className="px-6 py-3 shrink-0"
                     >
-                        추천받기
+                        일정 생성
                     </Button>
                 </div>
              </div>
              
-             {/* Itinerary Result */}
              {itinerary && (
-                 <div className="flex-1 w-full bg-white/90 backdrop-blur-md rounded-xl p-6 text-gray-800 shadow-md border border-white/50">
-                    <h4 className="font-bold text-lg mb-1 flex items-center gap-2 text-orange-600">
-                        <Plane className="w-5 h-5" />
+                 <div className="flex-1 w-full bg-stone-50 rounded-xl p-6 border border-stone-200/80">
+                    <h4 className="font-medium text-base mb-1 flex items-center gap-2 text-stone-900">
+                        <Plane className="w-4 h-4 text-orange-600" />
                         {destination} 추천 코스
                     </h4>
-                    <p className="text-xs text-gray-500 mb-4">참여자 모두와 공유되는 일정입니다</p>
-                    <div className="prose prose-sm prose-orange max-h-80 overflow-y-auto custom-scrollbar pr-2">
-                        <div className="whitespace-pre-wrap leading-relaxed text-sm text-gray-600">
+                    <p className="text-xs text-stone-500 mb-4">참여자 모두와 공유되는 일정입니다</p>
+                    <div className="max-h-80 overflow-y-auto custom-scrollbar pr-2">
+                        <div className="whitespace-pre-wrap leading-relaxed text-sm text-stone-600">
                            {itinerary}
                         </div>
                     </div>
@@ -1678,7 +1665,7 @@ const TripPage: React.FC = () => {
           </Button>
           <Button
             onClick={confirmNewTrip}
-            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+            className="flex-1 min-h-[48px]"
           >
             만들기
           </Button>
@@ -1699,7 +1686,7 @@ const TripPage: React.FC = () => {
           </Button>
           <Button
             onClick={confirmExit}
-            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+            className="flex-1 min-h-[48px]"
           >
             나가기
           </Button>
@@ -1711,12 +1698,12 @@ const TripPage: React.FC = () => {
         <ModalHeader icon={CalendarHeart} title="날짜를 선택해주세요" titleId="no-date-title" />
         <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
           AI 여행 일정을 추천받으려면<br />
-          먼저 캘린더에서 <strong className="text-orange-600">가능한 날짜를 선택</strong>해주세요! 📅
+          먼저 캘린더에서 <strong className="text-orange-600">가능한 날짜를 선택</strong>해주세요.
         </p>
         <ModalFooter>
           <Button
             onClick={() => setShowNoDateModal(false)}
-            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+            className="flex-1 min-h-[48px]"
           >
             확인
           </Button>
@@ -1737,13 +1724,13 @@ const TripPage: React.FC = () => {
           iconClassName="w-5 h-5 text-green-600"
         />
         <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-          가장 많이 가능한 일정이 클립보드에 복사되었습니다!<br />
-          친구들에게 공유해보세요! 📋✨
+          가장 많이 가능한 일정이 클립보드에 복사되었습니다.<br />
+          친구들에게 공유해 보세요.
         </p>
         <ModalFooter>
           <Button
             onClick={() => setShowCopySuccessModal(false)}
-            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+            className="flex-1 min-h-[48px]"
           >
             확인
           </Button>

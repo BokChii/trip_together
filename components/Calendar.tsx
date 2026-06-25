@@ -448,12 +448,10 @@ export const Calendar: React.FC<CalendarProps> = ({
     // 드래그 중 시각적 피드백을 먼저 체크 (다른 달 날짜에도 적용되도록 else 블록 밖으로 이동)
     if (isInDragRange) {
         if (dragMode === 'remove') {
-            // "Eraser" visual feedback
-            return classes + "bg-gray-50 opacity-60 ring-1 ring-inset ring-gray-300 rounded-lg scale-[0.95] grayscale z-10 " + opacityClass;
+            return classes + "bg-stone-50 opacity-60 ring-1 ring-inset ring-stone-300 rounded-lg z-10 " + opacityClass;
         } else {
-            // "Adding" visual feedback
-            if (voteMode === 'available') return classes + "bg-orange-100 ring-2 ring-inset ring-orange-400 rounded-lg scale-[0.95] z-10 " + opacityClass;
-            if (voteMode === 'unavailable') return classes + "bg-gray-200 ring-2 ring-inset ring-gray-400 rounded-lg scale-[0.95] z-10 " + opacityClass;
+            if (voteMode === 'available') return classes + "bg-orange-50 ring-2 ring-inset ring-orange-300 rounded-lg z-10 " + opacityClass;
+            if (voteMode === 'unavailable') return classes + "bg-stone-100 ring-2 ring-inset ring-stone-300 rounded-lg z-10 " + opacityClass;
         }
     }
     
@@ -473,22 +471,20 @@ export const Calendar: React.FC<CalendarProps> = ({
       // Heatmap Logic (Orange Theme)
       // selectedUserId가 있으면 해당 유저만 필터링된 결과를 표시
       if (isPerfectMatch) {
-        // 모두 가능: 진한 오렌지/레드오렌지
-        classes += "bg-gradient-to-br from-orange-400 to-red-400 text-white shadow-md scale-[1.03] z-[5] rounded-xl " + opacityClass + " " + myVoteBorder;
+        classes += "bg-orange-50 text-stone-800 ring-2 ring-orange-500/45 z-[5] rounded-lg " + opacityClass + " " + myVoteBorder;
       } else if (totalUsers > 0 && availableCount > 0) {
-        // selectedUserId가 있으면 intensity는 항상 1.0 (해당 유저가 선택한 날짜)
         const intensity = selectedUserId ? 1.0 : availableCount / totalUsers;
-        if (intensity >= 0.75) classes += "bg-orange-300 text-white hover:bg-orange-400 rounded-lg " + opacityClass + " " + myVoteBorder;
-        else if (intensity >= 0.5) classes += "bg-orange-200 text-orange-900 hover:bg-orange-300 rounded-lg " + opacityClass + " " + myVoteBorder;
-        else if (intensity >= 0.25) classes += "bg-orange-100 text-orange-800 hover:bg-orange-200 rounded-lg " + opacityClass + " " + myVoteBorder;
-        else classes += "bg-orange-50 text-orange-800 hover:bg-orange-100 rounded-lg " + opacityClass + " " + myVoteBorder;
+        if (intensity >= 0.75) classes += "bg-orange-100 text-stone-800 hover:bg-orange-100/90 rounded-lg " + opacityClass + " " + myVoteBorder;
+        else if (intensity >= 0.5) classes += "bg-orange-50 text-stone-800 hover:bg-orange-100 rounded-lg " + opacityClass + " " + myVoteBorder;
+        else if (intensity >= 0.25) classes += "bg-orange-50/80 text-stone-700 hover:bg-orange-50 rounded-lg " + opacityClass + " " + myVoteBorder;
+        else classes += "bg-stone-50 text-stone-700 hover:bg-orange-50/50 rounded-lg " + opacityClass + " " + myVoteBorder;
       } else if (availableCount === 0 && unavailableCount > 0) {
-         classes += "bg-gray-100 text-gray-400 hover:bg-gray-200 rounded-lg " + opacityClass + " " + myVoteBorder;
+         classes += "bg-stone-100 text-stone-400 hover:bg-stone-100 rounded-lg " + opacityClass + " " + myVoteBorder;
       } else {
         const defaultEmpty = isCurrentMonth
-          ? "bg-white hover:bg-orange-50"
-          : "bg-gray-50/50 hover:bg-gray-100";
-        classes += (periodStyles || defaultEmpty + " ") + " text-gray-700 rounded-lg " + opacityClass + " " + myVoteBorder;
+          ? "bg-white hover:bg-stone-50"
+          : "bg-stone-50/50 hover:bg-stone-100";
+        classes += (periodStyles || defaultEmpty + " ") + " text-stone-700 rounded-lg " + opacityClass + " " + myVoteBorder;
       }
     }
     
@@ -512,23 +508,23 @@ export const Calendar: React.FC<CalendarProps> = ({
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   return (
-    <div className="w-full max-w-5xl mx-auto bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-orange-100/50 overflow-hidden select-none">
+    <div className="w-full max-w-5xl mx-auto ui-card overflow-hidden select-none">
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-orange-100/50 bg-orange-50/30">
+      <div className="p-4 sm:p-6 border-b border-stone-200/80 bg-stone-50/50">
         <div className="flex flex-col gap-1 mb-4">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
-            <CalendarHeart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />
-            언제가 좋으세요?
+          <h2 className="text-lg sm:text-xl font-semibold text-stone-900 flex items-center gap-2">
+            <CalendarHeart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
+            날짜 선택
           </h2>
-          <p className="text-xs sm:text-sm text-gray-500 pl-1">드래그해서 여러 날짜를 쓱- 선택해보세요.</p>
+          <p className="text-xs sm:text-sm text-stone-500 pl-1">드래그로 여러 날짜를 한 번에 선택할 수 있어요.</p>
         </div>
 
         {tripPeriodLabel && (
-          <div className="mb-4 flex items-center gap-2 px-3 py-2.5 bg-orange-100/60 border border-orange-200 rounded-xl">
+          <div className="mb-4 flex items-center gap-2 px-3 py-2.5 bg-orange-50 border border-orange-200/60 rounded-lg">
             <CalendarHeart className="w-4 h-4 text-orange-600 flex-shrink-0" />
-            <p className="text-xs sm:text-sm text-orange-800">
-              <span className="font-semibold">{tripPeriodLabel}</span>
-              <span className="text-orange-700/90"> 중에서 날짜를 선택해주세요</span>
+            <p className="text-xs sm:text-sm text-stone-700">
+              <span className="font-medium text-stone-900">{tripPeriodLabel}</span>
+              <span className="text-stone-600"> 중에서 날짜를 선택해주세요</span>
             </p>
           </div>
         )}
@@ -541,13 +537,13 @@ export const Calendar: React.FC<CalendarProps> = ({
               disabled={!canGoToPreviousMonth()}
               className={`min-w-[44px] min-h-[44px] p-2 rounded-full transition-colors flex items-center justify-center ${
                 canGoToPreviousMonth()
-                  ? 'hover:bg-orange-50 text-orange-400 cursor-pointer active:bg-orange-100'
-                  : 'text-gray-300 cursor-not-allowed opacity-50'
+                  ? 'hover:bg-stone-100 text-stone-500 cursor-pointer'
+                  : 'text-stone-300 cursor-not-allowed opacity-50'
               }`}
             >
               <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
             </button>
-            <h2 className="text-lg sm:text-2xl font-bold text-gray-800 tracking-wide text-center flex-1">
+            <h2 className="text-lg sm:text-2xl font-semibold text-stone-900 tracking-tight text-center flex-1">
               {currentDate.toLocaleString('ko-KR', { month: 'long', year: 'numeric' })}
             </h2>
             <button 
@@ -555,15 +551,15 @@ export const Calendar: React.FC<CalendarProps> = ({
               disabled={!canGoToNextMonth()}
               className={`min-w-[44px] min-h-[44px] p-2 rounded-full transition-colors flex items-center justify-center ${
                 canGoToNextMonth()
-                  ? 'hover:bg-orange-50 text-orange-400 cursor-pointer active:bg-orange-100'
-                  : 'text-gray-300 cursor-not-allowed opacity-50'
+                  ? 'hover:bg-stone-100 text-stone-500 cursor-pointer'
+                  : 'text-stone-300 cursor-not-allowed opacity-50'
               }`}
             >
               <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
             </button>
           </div>
           
-          <div className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] bg-orange-50 rounded-full text-xs sm:text-sm text-orange-600 font-medium">
+          <div className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] bg-stone-100 rounded-lg text-xs sm:text-sm text-stone-600 font-medium">
             <UserIcon className="w-4 h-4" />
             <span>{users.length}명 참여중</span>
           </div>
@@ -571,16 +567,16 @@ export const Calendar: React.FC<CalendarProps> = ({
       </div>
 
       {/* Grid Header */}
-      <div className="grid grid-cols-7 border-b border-orange-50 bg-white">
+      <div className="grid grid-cols-7 border-b border-stone-100 bg-white">
         {weekDays.map((day, i) => (
-          <div key={day} className={`py-3 sm:py-4 text-center text-xs sm:text-sm font-bold ${i === 0 ? 'text-rose-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
+          <div key={day} className={`py-3 sm:py-4 text-center text-xs sm:text-sm font-medium ${i === 0 ? 'text-rose-500' : i === 6 ? 'text-blue-500' : 'text-stone-400'}`}>
             {day}
           </div>
         ))}
       </div>
 
       {/* Grid Body */}
-      <div className="grid grid-cols-7 auto-rows-fr p-1 sm:p-2 gap-0.5 sm:gap-2 bg-orange-50/30" style={{ touchAction: 'pan-y' }}>
+      <div className="grid grid-cols-7 auto-rows-fr p-1 sm:p-2 gap-0.5 sm:gap-2 bg-stone-50/40" style={{ touchAction: 'pan-y' }}>
         {daysInMonth.map((day, idx) => {
           const { availableCount, dateVotes } = getDayStats(day.isoString);
           const totalUsers = users.length;
@@ -614,13 +610,13 @@ export const Calendar: React.FC<CalendarProps> = ({
               }}
               onTouchEnd={handleTouchEnd}
               className={`
-                min-h-[80px] sm:min-h-[100px] md:min-h-[120px] p-1.5 sm:p-2 flex flex-col items-start justify-start shadow-sm
+                min-h-[80px] sm:min-h-[100px] md:min-h-[120px] p-1.5 sm:p-2 flex flex-col items-start justify-start
                 ${getCellStyles(day.isoString, day.isCurrentMonth)}
               `}
             >
               <div className="w-full flex justify-between items-start mb-1 pointer-events-none">
                 <div className="flex flex-col items-start">
-                  <span className={`text-xs sm:text-sm font-bold ${day.isToday ? 'bg-orange-400 text-white shadow-sm w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full' : ''} ${!day.isCurrentMonth ? 'text-gray-400' : ''}`}>
+                  <span className={`text-xs sm:text-sm font-medium ${day.isToday ? 'bg-orange-600 text-white w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full' : ''} ${!day.isCurrentMonth ? 'text-stone-400' : ''}`}>
                     {day.date.getDate()}
                   </span>
                   {isKoreanHoliday(day.isoString) && day.isCurrentMonth && (
@@ -630,7 +626,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   )}
                 </div>
                 {isPerfectMatch && day.isCurrentMonth && (
-                  <Crown className="w-5 h-5 text-yellow-300 fill-yellow-300" />
+                  <Crown className="w-4 h-4 text-orange-600" />
                 )}
               </div>
 
@@ -648,13 +644,13 @@ export const Calendar: React.FC<CalendarProps> = ({
                     // Contrast Logic Improved
                     // Perfect Match: White text with shadow
                     // Others: Dark text (Gray-900 or Gray-500) for readability
-                    const textColor = isDayPerfectMatch 
-                        ? 'text-white drop-shadow-md' 
-                        : (isAvailable ? (day.isCurrentMonth ? 'text-gray-900' : 'text-gray-700') : 'text-gray-500');
+                    const textColor = isDayPerfectMatch
+                        ? 'text-stone-900'
+                        : (isAvailable ? (day.isCurrentMonth ? 'text-stone-800' : 'text-stone-600') : 'text-stone-400');
 
-                    const iconColor = isAvailable 
-                        ? (isDayPerfectMatch ? 'text-yellow-200 drop-shadow-sm' : (day.isCurrentMonth ? 'text-orange-500' : 'text-orange-400'))
-                        : 'text-gray-400';
+                    const iconColor = isAvailable
+                        ? (isDayPerfectMatch ? 'text-orange-600' : (day.isCurrentMonth ? 'text-orange-500' : 'text-orange-400'))
+                        : 'text-stone-400';
 
                     return (
                       <div key={vote.userId + vote.date} className={`text-[10px] sm:text-[11px] flex items-center gap-1 leading-tight ${textColor}`}>
@@ -663,7 +659,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                          ) : (
                              <span className={`${iconColor} font-bold text-[9px] sm:text-[10px] flex-shrink-0`}>-</span>
                          )}
-                         <span className="truncate max-w-[60px] sm:max-w-[70px] md:max-w-[80px] font-semibold">{user.name}</span>
+                         <span className="truncate max-w-[60px] sm:max-w-[70px] md:max-w-[80px] font-medium">{user.name}</span>
                       </div>
                     );
                   })}
@@ -675,40 +671,40 @@ export const Calendar: React.FC<CalendarProps> = ({
       </div>
       
       {/* Legend */}
-      <div className="p-5 bg-white flex flex-wrap gap-x-6 gap-y-3 text-xs text-gray-500 justify-center border-t border-orange-100 font-medium">
+      <div className="p-5 bg-white flex flex-wrap gap-x-6 gap-y-3 text-xs text-stone-500 justify-center border-t border-stone-200/80 font-medium">
         {hasTripPeriod && (
           <>
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 bg-orange-50 ring-1 ring-inset ring-orange-200 rounded-lg"></div>
+              <div className="w-5 h-5 bg-orange-50 ring-1 ring-inset ring-orange-200/80 rounded-md"></div>
               <span>선택 가능</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 bg-gray-100 opacity-40 rounded-lg"></div>
+              <div className="w-5 h-5 bg-stone-100 opacity-50 rounded-md"></div>
               <span>선택 불가</span>
             </div>
           </>
         )}
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-white border-2 border-orange-100 rounded-lg"></div>
+          <div className="w-5 h-5 bg-white border border-stone-200 rounded-md"></div>
           <span>선택안함</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-orange-100 rounded-lg"></div>
+          <div className="w-5 h-5 bg-orange-50 rounded-md"></div>
           <span>가능</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-orange-300 rounded-lg"></div>
+          <div className="w-5 h-5 bg-orange-100 rounded-md"></div>
           <span>인기</span>
         </div>
-        <div className="flex items-center gap-2 font-bold text-orange-600">
-            <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-red-400 rounded-lg flex items-center justify-center shadow-sm">
-                <Crown className="w-3 h-3 text-white" />
+        <div className="flex items-center gap-2 font-medium text-orange-700">
+            <div className="w-5 h-5 bg-orange-50 ring-2 ring-orange-500/40 rounded-md flex items-center justify-center">
+                <Crown className="w-3 h-3 text-orange-600" />
             </div>
-            <span>모두 가능!</span>
+            <span>모두 가능</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-gray-100 rounded-lg flex items-center justify-center">
-            <span className="w-2 h-2 bg-gray-300 rounded-full"></span>
+          <div className="w-5 h-5 bg-stone-100 rounded-md flex items-center justify-center">
+            <span className="w-2 h-2 bg-stone-300 rounded-full"></span>
           </div>
           <span>불가능</span>
         </div>

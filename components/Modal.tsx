@@ -63,7 +63,7 @@ export const Modal: React.FC<ModalProps> = ({
         aria-modal="true"
         aria-labelledby={titleId ? labelledBy : undefined}
         aria-label={!titleId ? ariaLabel : undefined}
-        className={`bg-white rounded-2xl shadow-md border border-orange-100/50 max-w-md w-full p-5 sm:p-6 ${sizeClass} ${scrollClass} ${panelClassName}`}
+        className={`bg-white rounded-xl shadow-card border border-stone-200/80 max-w-md w-full p-5 sm:p-6 ${sizeClass} ${scrollClass} ${panelClassName}`}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
@@ -87,7 +87,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
   title,
   titleId,
   icon,
-  iconWrapperClassName = 'bg-orange-50 p-2 rounded-lg',
+  iconWrapperClassName = 'bg-orange-50 p-2 rounded-lg border border-orange-100/60',
   iconClassName = 'w-5 h-5 text-orange-600',
   showClose = false,
   onClose,
@@ -105,17 +105,17 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
   if (showClose) {
     return (
       <div className={`flex items-center justify-between mb-4 ${className}`}>
-        <h3 id={titleId} className="text-lg font-bold text-gray-900">
+        <h3 id={titleId} className="text-lg font-semibold text-stone-900">
           {title}
         </h3>
         {onClose && (
           <button
             type="button"
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1 hover:bg-stone-100 rounded-lg transition-colors"
             aria-label="닫기"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-stone-400" />
           </button>
         )}
       </div>
@@ -125,7 +125,7 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({
   return (
     <div className={`flex items-center gap-3 mb-4 ${className}`}>
       {icon && <div className={iconWrapperClassName}>{renderIcon()}</div>}
-      <h3 id={titleId} className="text-lg sm:text-xl font-bold text-gray-800">
+      <h3 id={titleId} className="text-lg font-semibold text-stone-900">
         {title}
       </h3>
     </div>

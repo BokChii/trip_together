@@ -56,7 +56,7 @@ export function useAppDialog() {
           )}
           <Button
             onClick={() => close(true)}
-            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+            className="flex-1 min-h-[48px] bg-orange-600 hover:bg-orange-700 text-white"
           >
             확인
           </Button>

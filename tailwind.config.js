@@ -6,6 +6,7 @@ export default {
     './index.tsx',
     './components/**/*.{js,ts,jsx,tsx}',
     './pages/**/*.{js,ts,jsx,tsx}',
+    './hooks/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
@@ -21,12 +22,18 @@ export default {
           700: '#c2410c',
         },
         surface: {
-          DEFAULT: '#faf8f5',
-          warm: '#fff7ed',
+          DEFAULT: '#fafaf9',
+          elevated: '#ffffff',
         },
       },
       fontFamily: {
         sans: ['Pretendard', 'sans-serif'],
+      },
+      borderRadius: {
+        card: '12px',
+      },
+      boxShadow: {
+        card: '0 1px 3px 0 rgb(28 25 23 / 0.06), 0 1px 2px -1px rgb(28 25 23 / 0.04)',
       },
     },
   },

@@ -65,7 +65,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose }) =
             <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
               <p className="text-xs text-orange-800 leading-relaxed">
                 캘린더에서 드래그로 여러 날짜를 한 번에 선택하고, &quot;가능해요&quot; 또는
-                &quot;안돼요&quot;로 투표하세요. 모든 참여자가 가능한 날짜는 👑 표시로
+                &quot;안돼요&quot;로 투표하세요. 모든 참여자가 가능한 날짜는 왕관 아이콘으로
                 보여집니다!
               </p>
             </div>
@@ -91,7 +91,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose }) =
               {
                 icon: Crown,
                 title: '가장 많이 가능한 날짜',
-                desc: '👑 표시가 있는 날짜는 가장 많은 참여자가 가능한 날짜입니다!',
+                desc: '왕관 아이콘이 있는 날짜는 가장 많은 참여자가 가능한 날짜입니다.',
               },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex gap-3">
@@ -203,14 +203,14 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose }) =
         {step < TOTAL_STEPS - 1 ? (
           <Button
             onClick={() => setStep(step + 1)}
-            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+              className="flex-1 min-h-[48px] bg-orange-600 hover:bg-orange-700 text-white"
           >
             다음
           </Button>
         ) : (
           <Button
             onClick={handleClose}
-            className="flex-1 min-h-[48px] bg-orange-500 hover:bg-orange-600 text-white"
+              className="flex-1 min-h-[48px] bg-orange-600 hover:bg-orange-700 text-white"
           >
             완료
           </Button>

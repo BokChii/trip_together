@@ -127,7 +127,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     
     // 시작일 또는 종료일
     if (isStartDate(isoDate) || isEndDate(isoDate)) {
-      classes += "bg-orange-500 text-white font-bold z-10 scale-110 shadow-lg ";
+      classes += "bg-orange-600 text-white font-medium z-10 ";
       if (isStartDate(isoDate) && !isEndDate(isoDate)) {
         classes += "rounded-l-full rounded-r-lg ";
       } else if (isEndDate(isoDate) && !isStartDate(isoDate)) {
@@ -143,7 +143,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     }
     // 기본 스타일
     else {
-      classes += isCurrentMonth ? "hover:bg-orange-50 text-gray-700 " : "text-gray-400 ";
+      classes += isCurrentMonth ? "hover:bg-stone-50 text-stone-700 " : "text-stone-400 ";
     }
     
     // 오늘 날짜 강조
@@ -157,9 +157,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
   return (
-    <div className="w-full bg-white rounded-xl border border-orange-100 overflow-hidden shadow-sm">
-      {/* Header */}
-      <div className="p-4 flex items-center justify-between border-b border-orange-100 bg-orange-50/50">
+    <div className="w-full bg-white rounded-xl border border-stone-200 overflow-hidden shadow-card">
+      <div className="p-4 flex items-center justify-between border-b border-stone-200/80 bg-stone-50/50">
         <button
           type="button"
           onClick={() => changeMonth(-1)}
@@ -183,33 +182,33 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
               return prevMonthStart < currentMonthStart;
             })()
               ? 'text-gray-300 cursor-not-allowed opacity-50'
-              : 'hover:bg-orange-100 text-orange-600'
+              : 'hover:bg-stone-100 text-stone-600'
           }`}
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
           <CalendarIcon className="w-5 h-5 text-orange-500" />
-          <span className="text-lg font-semibold text-gray-800">
+          <span className="text-lg font-medium text-stone-800">
             {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
           </span>
         </div>
         <button
           type="button"
           onClick={() => changeMonth(1)}
-          className="p-2 hover:bg-orange-100 rounded-lg transition-colors"
+          className="p-2 hover:bg-stone-100 rounded-lg transition-colors"
         >
           <ChevronRight className="w-5 h-5 text-orange-600" />
         </button>
       </div>
 
       {/* Grid Header */}
-      <div className="grid grid-cols-7 border-b border-orange-50 bg-white">
+      <div className="grid grid-cols-7 border-b border-stone-100 bg-white">
         {weekDays.map((day, i) => (
           <div
             key={day}
-            className={`py-2 text-center text-xs font-bold ${
-              i === 0 ? 'text-rose-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'
+            className={`py-2 text-center text-xs font-medium ${
+              i === 0 ? 'text-rose-500' : i === 6 ? 'text-blue-500' : 'text-stone-400'
             }`}
           >
             {day}
@@ -252,11 +251,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       </div>
 
       {/* 안내 메시지 */}
-      <div className="p-3 bg-orange-50/50 border-t border-orange-100">
-        <p className="text-xs text-center text-gray-600">
-          {!startDate && !endDate && '📅 시작일을 선택해주세요'}
-          {startDate && !endDate && '📅 종료일을 선택해주세요'}
-          {startDate && endDate && '✅ 날짜 범위가 선택되었습니다'}
+      <div className="p-3 bg-stone-50 border-t border-stone-200/80">
+        <p className="text-xs text-center text-stone-600">
+          {!startDate && !endDate && '시작일을 선택해주세요'}
+          {startDate && !endDate && '종료일을 선택해주세요'}
+          {startDate && endDate && '날짜 범위가 선택되었습니다'}
         </p>
       </div>
     </div>
