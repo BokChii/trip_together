@@ -927,10 +927,10 @@ const TripPage: React.FC = () => {
               <Plane className="w-10 h-10 text-orange-600" strokeWidth={2} />
             </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold text-stone-900 mb-2 sm:mb-3 tracking-tight">언제갈래</h1>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-stone-900 mb-2 sm:mb-3 tracking-tight">언제갈래 ✈️</h1>
           
           <p className="text-base text-stone-600 mb-4 sm:mb-6 leading-relaxed">
-            함께 갈 날짜를 맞춰보세요.
+            친구들과 떠날 날, <span className="font-medium text-stone-800">언제가 좋을까요?</span>
           </p>
           
           {/* 로그인한 사용자에게 표시할 UI */}
@@ -1006,7 +1006,7 @@ const TripPage: React.FC = () => {
                           : '친구의 여행 일정'}
                     </p>
                   )}
-                  <p className="text-sm text-stone-500 mb-3 text-center">이미 참여 중이라면 이름을 선택하세요</p>
+                  <p className="text-sm text-stone-500 mb-3 text-center">이미 참여 중인가요? 👋 이름을 눌러주세요</p>
                   <div className="flex flex-wrap justify-center gap-2">
                       {users.map(u => (
                           <button
@@ -1102,7 +1102,7 @@ const TripPage: React.FC = () => {
               {/* 로그인 유도 텍스트 */}
               <div className="mb-3 sm:mb-4 p-3 bg-stone-50 border border-stone-200/80 rounded-xl">
                 <p className="text-xs sm:text-sm text-stone-600 text-center leading-relaxed">
-                  <span className="font-medium text-orange-600">로그인</span>하면 내 여행 일정을 저장하고 관리할 수 있어요
+                  <span className="font-medium text-orange-600">로그인</span>하면 내 여행을 저장하고, 여러 번 떠날 수 있어요
                 </p>
               </div>
 
@@ -1237,7 +1237,7 @@ const TripPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <div className="hidden sm:block px-2 py-1 bg-stone-50 border border-stone-200/80 rounded-lg">
                       <p className="text-xs text-stone-600 whitespace-nowrap">
-                        <span className="font-medium text-orange-600">로그인</span>하면 여행을 저장할 수 있어요
+                        <span className="font-medium text-orange-600">로그인</span>하면 내 여행을 저장하고, 여러 번 떠날 수 있어요
                       </p>
                     </div>
                     <button 
@@ -1274,7 +1274,7 @@ const TripPage: React.FC = () => {
                 <Share2 className="w-4 h-4 text-orange-600" />
                 친구 초대하기
               </h3>
-              <p className="text-xs text-stone-500">링크를 복사해 공유하세요</p>
+              <p className="text-xs text-stone-500">친구들에게 보낼 링크예요 — 복사해서 공유해주세요</p>
              </div>
                <Button 
                   variant="secondary" 
@@ -1310,7 +1310,7 @@ const TripPage: React.FC = () => {
                     <X className="w-4 h-4" />
                  </button>
                </div>
-               <p className="text-xs text-stone-500 mt-2 ml-2">링크를 복사해 초대하세요</p>
+               <p className="text-xs text-stone-500 mt-2 ml-2">링크를 복사해서 친구들을 초대해보세요</p>
              </div>
            )}
         </div>
@@ -1319,7 +1319,7 @@ const TripPage: React.FC = () => {
         <div className="sticky top-12 sm:top-16 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200/80 -mx-4 sm:mx-0 px-4 sm:px-0 mb-2 sm:mb-4">
           <div className="bg-white p-2.5 sm:p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-stone-800">날짜 선택 모드</p>
+              <p className="text-sm font-medium text-stone-800">가능한 날짜를 골라볼까요?</p>
               <ModeToggle mode={voteMode} setMode={setVoteMode} />
             </div>
           </div>
@@ -1400,7 +1400,7 @@ const TripPage: React.FC = () => {
               )}
               {selectedUserId && selectedUserId !== 'all' && (
                 <p className="text-xs text-stone-500 mt-3">
-                  {users.find(u => u.id === selectedUserId)?.name}님이 선택한 날짜만 표시됩니다
+                  <span className="font-medium text-orange-700">{users.find(u => u.id === selectedUserId)?.name}</span>님이 고른 날짜만 강조해서 보여드려요
                 </p>
               )}
             </div>
@@ -1442,7 +1442,7 @@ const TripPage: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <p className="text-xs text-stone-500">아직 선택된 날짜가 없습니다</p>
+                <p className="text-xs text-stone-500">아직 모두 가능한 날짜가 없어요 — 캘린더에서 날짜를 골라주세요</p>
               )}
             </div>
             <Button
@@ -1597,10 +1597,10 @@ const TripPage: React.FC = () => {
              <div className="flex-1 space-y-4">
                 <p className="ui-section-label">AI 여행 플래너</p>
                 <h3 className="text-xl sm:text-2xl font-semibold text-stone-900 leading-tight">
-                    여행지를 알려주세요
+                    어디로 떠나고 싶으세요? ✨
                 </h3>
                 <p className="text-sm text-stone-600 max-w-md leading-relaxed">
-                    선택한 날짜를 기준으로 AI가 여행 일정 초안을 생성합니다.
+                    날짜가 정해졌다면, AI가 딱 맞는 여행 일정을 추천해드릴게요.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-2 max-w-md mt-4">
@@ -1619,7 +1619,7 @@ const TripPage: React.FC = () => {
                         isLoading={isGenerating}
                         className="px-6 py-3 shrink-0"
                     >
-                        일정 생성
+                        추천받기
                     </Button>
                 </div>
              </div>
@@ -1630,7 +1630,7 @@ const TripPage: React.FC = () => {
                         <Plane className="w-4 h-4 text-orange-600" />
                         {destination} 추천 코스
                     </h4>
-                    <p className="text-xs text-stone-500 mb-4">참여자 모두와 공유되는 일정입니다</p>
+                    <p className="text-xs text-stone-500 mb-4">함께하는 친구들 모두에게 공유되는 일정이에요</p>
                     <div className="max-h-80 overflow-y-auto custom-scrollbar pr-2">
                         <div className="whitespace-pre-wrap leading-relaxed text-sm text-stone-600">
                            {itinerary}

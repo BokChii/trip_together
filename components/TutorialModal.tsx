@@ -86,7 +86,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose }) =
               {
                 icon: Share2,
                 title: '드래그 선택',
-                desc: '날짜를 드래그하면 여러 날짜를 한 번에 선택할 수 있습니다. 모바일에서도 가능해요!',
+                desc: '날짜를 쓱— 드래그하면 여러 날짜를 한 번에 골라볼 수 있어요. 모바일에서도 OK!',
               },
               {
                 icon: Crown,
@@ -121,7 +121,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose }) =
               {
                 icon: UserIcon,
                 title: '개별 참여자 보기',
-                desc: '참여자 이름을 클릭하면 해당 참여자가 선택한 날짜만 볼 수 있습니다.',
+                desc: '참여자 이름을 누르면, 그 친구가 고른 날짜만 쏙— 골라서 볼 수 있어요.',
               },
               {
                 icon: Crown,

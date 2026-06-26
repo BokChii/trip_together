@@ -88,12 +88,12 @@ const LoginPage: React.FC = () => {
               </div>
               <h1 className="text-2xl font-semibold text-stone-900 tracking-tight">언제갈래</h1>
             </div>
-            <p className="text-sm text-stone-600">친구들과 함께 여행 날짜를 맞춰보세요</p>
+            <p className="text-sm text-stone-600">친구들과 함께, 설레는 여행 날짜를 맞춰보세요</p>
           </div>
 
           <div className="p-3 bg-stone-50 border border-stone-200/80 rounded-lg">
             <p className="text-xs sm:text-sm text-stone-600 text-center leading-relaxed">
-              <span className="font-medium text-orange-600">로그인</span>하면 내 여행 일정을 저장하고 관리할 수 있어요
+              <span className="font-medium text-orange-600">로그인</span>하면 내 여행을 저장하고, 여러 번 떠날 수 있어요
             </p>
           </div>
 
@@ -116,7 +116,7 @@ const LoginPage: React.FC = () => {
           </Button>
 
           <p className="text-xs text-stone-500 text-center">
-            로그인하면 여러 여행 일정을 저장할 수 있습니다.
+            로그인하면 여러 여행을 저장하고 다시 돌아올 수 있어요.
           </p>
         </Card>
       </div>
