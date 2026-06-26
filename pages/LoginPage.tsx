@@ -78,7 +78,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+    <div className="min-h-screen ui-page-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Card padding="lg" className="space-y-6">
           <div className="text-center space-y-3">

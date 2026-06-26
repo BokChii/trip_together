@@ -930,7 +930,7 @@ const TripPage: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen flex flex-col bg-surface p-4 font-sans">
+      <div className="min-h-screen flex flex-col ui-page-bg p-4 font-sans">
         <div className="flex-1 flex items-center justify-center">
           <div className="ui-card p-10 sm:p-12 max-w-xl w-full text-center">
           <div className="mb-4 sm:mb-6 flex justify-center">
@@ -938,7 +938,7 @@ const TripPage: React.FC = () => {
               <Plane className="w-10 h-10 text-orange-600" strokeWidth={2} />
             </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold text-stone-900 mb-2 sm:mb-3 tracking-tight">언제갈래 ✈️</h1>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-stone-900 mb-2 sm:mb-3 tracking-tight">언제갈래</h1>
           
           <p className="text-base text-stone-600 mb-4 sm:mb-6 leading-relaxed">
             친구들과 떠날 날, <span className="font-medium text-stone-800">언제가 좋을까요?</span>
@@ -1188,7 +1188,7 @@ const TripPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface pb-12 sm:pb-20">
+    <div className="min-h-screen ui-page-bg pb-12 sm:pb-20">
       {/* Navbar */}
       <nav className="bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-stone-200/80">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1350,9 +1350,9 @@ const TripPage: React.FC = () => {
                 {/* "가장 많이 가능" 버튼 추가 */}
                 <button
                   onClick={() => setSelectedUserId(selectedUserId === 'all' ? null : 'all')}
-                  className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                  className={`ui-pill-btn flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap ${
                     selectedUserId === 'all'
-                      ? 'bg-orange-600 text-white'
+                      ? 'bg-orange-600 text-white shadow-md scale-[1.02]'
                       : 'bg-orange-50 text-orange-800 border border-orange-200/60 hover:bg-orange-100/80'
                   }`}
                 >
@@ -1371,9 +1371,9 @@ const TripPage: React.FC = () => {
                     <button
                       key={user.id}
                       onClick={() => setSelectedUserId(isSelected ? null : user.id)}
-                      className={`flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap relative ${
+                      className={`ui-pill-btn flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap relative ${
                         isSelected
-                          ? 'bg-orange-600 text-white'
+                          ? 'bg-orange-600 text-white shadow-md scale-[1.02]'
                           : isCurrentUser
                             ? 'bg-orange-50 text-orange-800 border border-orange-300 font-medium hover:bg-orange-100/80'
                             : 'bg-stone-50 text-stone-700 border border-stone-200 hover:bg-stone-100'

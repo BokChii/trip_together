@@ -522,7 +522,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         <div className="flex flex-col gap-1 mb-4">
           <h2 className="text-lg sm:text-xl font-semibold text-stone-900 flex items-center gap-2">
             <CalendarHeart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
-            언제가 좋으세요? 📅
+            언제가 좋으세요?
           </h2>
           <p className="text-xs sm:text-sm text-stone-500 pl-1">쓱— 드래그해서 여러 날짜를 한 번에 골라보세요.</p>
         </div>
@@ -623,7 +623,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               }}
               onTouchEnd={handleTouchEnd}
               className={`
-                min-h-[80px] sm:min-h-[100px] md:min-h-[120px] p-1.5 sm:p-2 flex flex-col items-start justify-start
+                ui-calendar-cell min-h-[80px] sm:min-h-[100px] md:min-h-[120px] p-1.5 sm:p-2 flex flex-col items-start justify-start
                 ${getCellStyles(day.isoString, day.isCurrentMonth)}
               `}
             >
