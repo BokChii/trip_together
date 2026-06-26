@@ -7,6 +7,7 @@ import { ModeToggle } from './components/ModeToggle';
 import { Button } from './components/Button';
 import { SocialLoginButton } from './components/SocialLoginButton';
 import { Footer } from './components/Footer';
+import { Toast } from './components/Toast';
 import { TutorialModal } from './components/TutorialModal';
 import { Modal, ModalFooter, ModalHeader } from './components/Modal';
 import { useAppDialog } from './hooks/useAppDialog';
@@ -37,6 +38,7 @@ import {
 import { parseLocalDate } from './utils/dateUtils';
 import { validateDestination } from './utils/inputValidation';
 import { getBestDates, groupContiguousDates, getLongestContiguousRange } from './utils/bestDateRange';
+import { copyTextToClipboard } from './utils/clipboard';
 import LoginPage from './pages/LoginPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import MyTripsPage from './pages/MyTripsPage';
@@ -159,7 +161,8 @@ const TripPage: React.FC = () => {
   const [showNewTripModal, setShowNewTripModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showNoDateModal, setShowNoDateModal] = useState(false);
-  const [showCopySuccessModal, setShowCopySuccessModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimeoutRef = useRef<number | null>(null);
 
   // Selected User for Highlighting
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -776,6 +779,17 @@ const TripPage: React.FC = () => {
   };
 
   // 복사 핸들러
+  const showToast = (message: string) => {
+    if (toastTimeoutRef.current) {
+      window.clearTimeout(toastTimeoutRef.current);
+    }
+    setToastMessage(message);
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setToastMessage(null);
+      toastTimeoutRef.current = null;
+    }, 2500);
+  };
+
   const handleCopyBestDates = async () => {
     const { dates, participants } = formatBestDates();
     
@@ -784,19 +798,16 @@ const TripPage: React.FC = () => {
       return;
     }
 
-    // 텍스트 형식 변경
     const textToCopy = participants 
       ? `가장 많이 가능한 일정:\n\n${dates}\n\n참여자: ${participants}`
       : `가장 많이 가능한 일정:\n\n${dates}`;
 
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      setShowCopySuccessModal(true);
-      
-      // 클릭 추적 추가
+    const copied = await copyTextToClipboard(textToCopy);
+    if (copied) {
+      showToast('일정이 복사되었어요');
       trackButtonClick('copy_dates', currentTripId || undefined, currentUser?.id);
-    } catch (error) {
-      void alert('복사에 실패했습니다.');
+    } else {
+      showToast('복사에 실패했어요. 다시 시도해주세요');
     }
   };
 
@@ -1710,32 +1721,7 @@ const TripPage: React.FC = () => {
         </ModalFooter>
       </Modal>
 
-      {/* 복사 성공 모달 */}
-      <Modal
-        open={showCopySuccessModal}
-        onClose={() => setShowCopySuccessModal(false)}
-        titleId="copy-success-title"
-      >
-        <ModalHeader
-          icon={Check}
-          title="복사 완료!"
-          titleId="copy-success-title"
-          iconWrapperClassName="bg-green-100 p-2 rounded-full"
-          iconClassName="w-5 h-5 text-green-600"
-        />
-        <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-          가장 많이 가능한 일정이 클립보드에 복사되었습니다.<br />
-          친구들에게 공유해 보세요.
-        </p>
-        <ModalFooter>
-          <Button
-            onClick={() => setShowCopySuccessModal(false)}
-            className="flex-1 min-h-[48px]"
-          >
-            확인
-          </Button>
-        </ModalFooter>
-      </Modal>
+      <Toast message={toastMessage} />
       {/* Analytics는 프로덕션 환경에서만 활성화 (로컬 개발 환경 타입 오류 방지) */}
       {/* @ts-ignore - import.meta.env.PROD는 Vite에서 제공하는 환경 변수 */}
       {import.meta.env.PROD && <Analytics />}
