@@ -55,7 +55,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose }) =
     >
       {step === 0 && (
         <>
-          <ModalHeader icon={Plane} title="언제갈래? 시작하기" titleId={TITLE_ID} />
+          <ModalHeader icon={Plane} title="언제갈래? 시작하기" titleId={TITLE_ID} showClose onClose={handleClose} />
           <div className="mb-6">
             <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">
               <strong className="text-orange-600">언제갈래?</strong>는 친구들과 함께 여행 일정을
@@ -75,7 +75,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose }) =
 
       {step === 1 && (
         <>
-          <ModalHeader icon={CalendarHeart} title="날짜 선택하기" titleId={TITLE_ID} />
+          <ModalHeader icon={CalendarHeart} title="날짜 선택하기" titleId={TITLE_ID} showClose onClose={handleClose} />
           <div className="mb-6 space-y-3">
             {[
               {
@@ -110,7 +110,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose }) =
 
       {step === 2 && (
         <>
-          <ModalHeader icon={UserIcon} title="참여자 필터 & 투표" titleId={TITLE_ID} />
+          <ModalHeader icon={UserIcon} title="참여자 필터 & 투표" titleId={TITLE_ID} showClose onClose={handleClose} />
           <div className="mb-6 space-y-3">
             {[
               {
@@ -145,7 +145,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ open, onClose }) =
 
       {step === 3 && (
         <>
-          <ModalHeader icon={Share2} title="친구 초대하기" titleId={TITLE_ID} />
+          <ModalHeader icon={Share2} title="친구 초대하기" titleId={TITLE_ID} showClose onClose={handleClose} />
           <div className="mb-6 space-y-3">
             <div className="flex gap-3">
               <div className="bg-orange-100 p-2 rounded-lg flex-shrink-0">

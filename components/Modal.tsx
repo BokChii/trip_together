@@ -1,4 +1,5 @@
 import React, { useCallback, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { LucideIcon, X } from 'lucide-react';
 import { useModalA11y } from '../hooks/useModalA11y';
 
@@ -50,7 +51,7 @@ export const Modal: React.FC<ModalProps> = ({
   const sizeClass = size === 'lg' ? 'sm:max-w-lg' : '';
   const scrollClass = scrollable ? 'max-h-[90vh] overflow-y-auto' : '';
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
       style={{ zIndex }}
@@ -68,7 +69,8 @@ export const Modal: React.FC<ModalProps> = ({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -12,7 +12,7 @@ import { TutorialModal } from './components/TutorialModal';
 import { Modal, ModalFooter, ModalHeader } from './components/Modal';
 import { useAppDialog } from './hooks/useAppDialog';
 import { DateVote, User, VoteType } from './types';
-import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronDown, LogOut } from 'lucide-react';
+import { MapPin, Plane, Share2, Check, Copy, X, ArrowRight, CalendarHeart, Calendar as CalendarIcon, PlusCircle, User as UserIcon, Crown, BookOpen, ChevronDown, ChevronRight, LogOut } from 'lucide-react';
 import { generateItinerary as generateItineraryGemini } from './services/geminiService';
 import { searchCheapestFlights, searchFlight, FlightResult } from './services/flightSearchService';
 import { AirportOption } from './services/airportSearchService';
@@ -1169,7 +1169,9 @@ const TripPage: React.FC = () => {
 
           {/* 사용법 보기 버튼 */}
           <button
+            type="button"
             onClick={() => setShowTutorial(true)}
+            aria-haspopup="dialog"
             className="w-full mt-3 text-sm text-gray-500 hover:text-orange-600 transition-colors flex items-center justify-center gap-2"
           >
             <BookOpen className="w-4 h-4" />
@@ -1345,14 +1347,15 @@ const TripPage: React.FC = () => {
               <h3 className="text-sm font-medium text-stone-800">참여자</h3>
               <span className="text-xs text-stone-400">({users.length}명)</span>
             </div>
-            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-              <div className="flex gap-2 min-w-max sm:flex-wrap sm:min-w-0">
+            <div className="-mx-4 sm:mx-0 px-4 sm:px-0">
+              <div className="flex flex-wrap gap-2">
                 {/* "가장 많이 가능" 버튼 추가 */}
                 <button
+                  type="button"
                   onClick={() => setSelectedUserId(selectedUserId === 'all' ? null : 'all')}
                   className={`ui-pill-btn flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap ${
                     selectedUserId === 'all'
-                      ? 'bg-orange-600 text-white shadow-md scale-[1.02]'
+                      ? 'bg-orange-600 text-white shadow-md ring-2 ring-orange-400/60'
                       : 'bg-orange-50 text-orange-800 border border-orange-200/60 hover:bg-orange-100/80'
                   }`}
                 >
@@ -1369,18 +1372,21 @@ const TripPage: React.FC = () => {
                   
                   return (
                     <button
+                      type="button"
                       key={user.id}
                       onClick={() => setSelectedUserId(isSelected ? null : user.id)}
-                      className={`ui-pill-btn flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap relative ${
+                      className={`ui-pill-btn flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap ${
                         isSelected
-                          ? 'bg-orange-600 text-white shadow-md scale-[1.02]'
+                          ? 'bg-orange-600 text-white shadow-md ring-2 ring-orange-400/60'
                           : isCurrentUser
                             ? 'bg-orange-50 text-orange-800 border border-orange-300 font-medium hover:bg-orange-100/80'
                             : 'bg-stone-50 text-stone-700 border border-stone-200 hover:bg-stone-100'
                       }`}
                     >
                       {isCurrentUser && (
-                        <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${
+                          isSelected ? 'bg-white/25 text-white' : 'bg-orange-600 text-white'
+                        }`}>
                           나
                         </span>
                       )}
@@ -1586,7 +1592,9 @@ const TripPage: React.FC = () => {
         {/* 사용법 보기 */}
         <div className="ui-card p-4">
           <button
+            type="button"
             onClick={() => setShowTutorial(true)}
+            aria-haspopup="dialog"
             className="w-full flex items-center justify-between hover:bg-stone-50 transition-colors rounded-lg p-2 -m-2"
           >
             <div className="flex items-center gap-3">
@@ -1598,7 +1606,7 @@ const TripPage: React.FC = () => {
                 <p className="text-xs text-stone-500">서비스 이용 방법 안내</p>
               </div>
             </div>
-            <ChevronDown className="w-5 h-5 text-stone-400 -rotate-90" />
+            <ChevronRight className="w-5 h-5 text-stone-400" aria-hidden="true" />
           </button>
         </div>
 
